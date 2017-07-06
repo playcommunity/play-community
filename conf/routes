@@ -2,13 +2,21 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# An example controller showing a sample home page
-GET     /                                         controllers.HomeController.index
-GET     /login                                    controllers.HomeController.login(login: Option[String])
-POST    /login                                    controllers.HomeController.doLogin
+# Application
+GET     /                                         controllers.Application.index
+GET     /login                                    controllers.Application.login(login: Option[String])
+POST    /login                                    controllers.Application.doLogin
+GET     /404                                      controllers.Application.notFound
+
+# Home
+GET     /home                                     controllers.HomeController.index
 
 # Article
+GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", page: Int ?= 1)
 GET     /article/add                              controllers.ArticleController.add
+POST    /article/add                              controllers.ArticleController.doAdd
+POST    /article/reply                            controllers.ArticleController.doReply
+GET     /article/view                             controllers.ArticleController.view(_id: String)
 GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
 
 # Map static resources from the /public folder to the /assets URL path

@@ -16,13 +16,4 @@ class HomeController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends C
     Ok(views.html.index())
   }
 
-  def login(login: Option[String]) = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.login())
-  }
-
-  def doLogin = Action { implicit request: Request[AnyContent] =>
-    val login = request.body.asFormUrlEncoded.get.get("login").getOrElse(List(""))(0)
-    val password = request.body.asFormUrlEncoded.get.get("password").getOrElse(List(""))(0)
-    Redirect(routes.HomeController.index()).withSession("login" -> login, "name" -> login)
-  }
 }

@@ -7,6 +7,8 @@ import play.api.libs.json.Json
   */
 object JsonFormats {
 
+  implicit val articleTimeStatFormat = Json.format[ArticleTimeStat]
+  implicit val categoryFormat = Json.format[Category]
   implicit val viewStatFormat = Json.format[ViewStat]
   implicit val voteStatFormat = Json.format[VoteStat]
   implicit val authorFormat = Json.format[Author]

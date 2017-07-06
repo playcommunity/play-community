@@ -1,4 +1,4 @@
-@()(implicit request: Request[AnyContent])
+@(categoryList: List[Category])(implicit request: Request[AnyContent])
 
 @main("欢迎来到社区！", request) {
 <div class="main layui-clear">
@@ -25,15 +25,15 @@
         <div class="layui-inline">
           <label class="layui-form-label">所在类别</label>
           <div class="layui-input-block">
-            <select lay-verify="required" name="class">
+            <select lay-verify="required" name="categoryPath">
               <option></option>
-              <option value="1" >layui框架综合</option>
-              <option value="2" >layui.mobile模块</option>
-              <option value="3" >layer弹出层</option>
+              @for(c <- categoryList){
+              <option value="@c.path" >@c.name</option>
+              }
             </select>
           </div>
         </div>
-        <div class="layui-inline">
+        <!--<div class="layui-inline">
           <label class="layui-form-label">悬赏飞吻</label>
           <div class="layui-input-block">
             <select name="experience">
@@ -43,7 +43,7 @@
               <option value="100">100</option>
             </select>
           </div>
-        </div>
+        </div>-->
       </div>
       <!--<div class="layui-form-item">
         <label for="L_vercode" class="layui-form-label">人类验证</label>
@@ -55,10 +55,30 @@
         </div>
       </div>-->
       <div class="layui-form-item">
-        <button class="layui-btn" lay-filter="*" lay-submit>立即发布</button>
+        <button class="layui-btn" lay-submit>立即发布</button>
       </div>
       </form>
     </div>
   </div>
 </div>
 }
+
+<script>
+layui.cache.page = 'jie';
+layui.cache.user = {
+  username: '游客'
+  ,uid: -1
+  ,avatar: '/assets/images/avatar/00.jpg'
+  ,experience: 83
+  ,sex: '男'
+};
+layui.config({
+  version: "2.0.0"
+  ,base: '/assets/mods/'
+}).extend({
+  fly: 'index'
+}).use('fly', function(){
+  var $ = layui.jquery;
+  var fly = layui.fly;
+});
+</script>

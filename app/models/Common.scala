@@ -3,7 +3,7 @@ package models
 import org.joda.time.DateTime
 
 case class User(_id: Int, login: String, password: String, name: String, gender: String, introduction: String, headImg: String, ip: String, createTime: DateTime, updateTime: DateTime, lastLoginTime: DateTime, enabled: Boolean)
-case class Category(_id: String, name: String, path: String, parentPath: String, disabled: Boolean)
+case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
 
 // 已整理文档
 case class Document(
@@ -47,19 +47,20 @@ case class Article(
   editorType: String,
   author: Author,
   categoryPath: String,
+  categoryName: String,
   tags: List[String],
-  createTime: DateTime,
-  updateTime: DateTime,
   replies: List[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
+  timeStat: ArticleTimeStat,
   top: Boolean, // 置顶
   recommended: Boolean // 精华
 )
 
 case class Author(_id: String, login: String, name: String, headImg: String)
-case class ViewStat(viewCount: Int, viewBitMap: String)
-case class VoteStat(voteCount: Int, voteBitMap: String)
-case class Reply(_id: String, content: String, editorType: String, replier: Author, replyTime: DateTime, viewStat: ViewStat, comments: List[Comment])
+case class ViewStat(count: Int, bitMap: String)
+case class VoteStat(count: Int, bitMap: String)
+case class ArticleTimeStat(createTime: DateTime, updateTime: DateTime, lastViewTime: DateTime, lastVoteTime: DateTime, lastReplyTime: DateTime)
+case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: DateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
 case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: DateTime)
 
