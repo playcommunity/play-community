@@ -27,17 +27,17 @@
 
         <div class="nav-user">
 
-            @request.session.get("login") match {
-                case Some(login) => {
+            @request.session.get("name") match {
+                case Some(name) => {
                     <!-- 登入后的状态 -->
-                    <a class="avatar" href="user/index.html">
+                    <a class="avatar" href="/user/home">
                         <img src="http://tp4.sinaimg.cn/1345566427/180/5730976522/0">
-                        <cite>@login</cite>
-                        <i>VIP2</i>
+                        <cite>@name</cite>
+                        <!--<i>VIP2</i>-->
                     </a>
                     <div class="nav">
-                        <a href="/user/set/"><i class="iconfont icon-shezhi"></i>设置</a>
-                        <a href="/user/logout/"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>
+                        <a href="/user/setting"><i class="iconfont icon-shezhi"></i>设置</a>
+                        <a href="/logout"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>
                     </div>
                 }
                 case None => {

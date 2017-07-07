@@ -15,7 +15,7 @@ class CounterService @Inject()(val reactiveMongoApi: ReactiveMongoApi) {
   def getNextSequence(name: String): Future[Int] = {
     articleColFuture.flatMap{ articleCol =>
       articleCol.findAndModify(
-        Json.obj("_id" -> "user-sequence"),
+        Json.obj("_id" -> name),
         articleCol.updateModifier(Json.obj("$inc" -> Json.obj("value" -> 1)), true, true)
       ).map(_.result[JsObject]).map{
         case Some(obj) => (obj \ "value").as[Int]

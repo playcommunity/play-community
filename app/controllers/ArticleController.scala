@@ -75,7 +75,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
           articleCol <- articleColFuture
           categoryCol <- categoryColFuture
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
-          wr <- articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author("", request.session("login"), "沐风", ""), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ArticleTimeStat(DateTime.now, DateTime.now, DateTime.now, DateTime.now, DateTime.now), false, false))
+          wr <- articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author("", request.session("login"), "沐风", ""), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ArticleTimeStat(DateTime.now, DateTime.now, DateTime.now, DateTime.now, DateTime.now), false, false))
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
         }
@@ -88,7 +88,13 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (_id, content) = tuple
-        articleColFuture.flatMap(_.update(Json.obj("_id" -> _id), Json.obj("$push" -> Json.obj("replies" -> Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author("", request.session("login"), "沐风", ""), DateTime.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment]))))).map{ wr =>
+        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author("", request.session("login"), "沐风", ""), DateTime.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        articleColFuture.flatMap(_.update(
+          Json.obj("_id" -> _id),
+          Json.obj(
+            "$push" -> Json.obj("replies" -> reply),
+            "$set" -> Json.obj("lastReply" -> reply)
+          ))).map{ wr =>
           Redirect(routes.ArticleController.index("0", 1))
         }
       }

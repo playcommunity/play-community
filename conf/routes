@@ -6,10 +6,15 @@
 GET     /                                         controllers.Application.index
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
+GET     /register                                 controllers.Application.register
+POST    /register                                 controllers.Application.doRegister
+GET     /logout                                   controllers.Application.logout
 GET     /404                                      controllers.Application.notFound
+GET     /message                                  controllers.Application.message(title: String, message: String)
 
 # Home
-GET     /home                                     controllers.HomeController.index
+GET     /user/home                                controllers.UserController.home
+GET     /user/activate                            controllers.UserController.activate
 
 # Article
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", page: Int ?= 1)

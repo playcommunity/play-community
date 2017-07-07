@@ -1,0 +1,12 @@
+@(title: String, message: String)(implicit request: Request[AnyContent])
+
+@main(title, request) {
+<div class="main">
+  <div class="fly-panel">
+    <div class="fly-none">
+      <h2><i class="iconfont icon-tishilian"></i></h2>
+      <p>@message</p>
+    </div>
+  </div>
+</div>
+}
