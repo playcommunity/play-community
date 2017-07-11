@@ -1,4 +1,4 @@
-@(nav: String, articles: List[Article], page: Int, total: Int)(implicit request: Request[AnyContent])
+@(nav: String, articles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 
 @main("欢迎来到社区！", request) {
 <div class="main layui-clear">

@@ -5,7 +5,6 @@ import javax.inject._
 import models._
 import models.JsonFormats.userFormat
 import reactivemongo.play.json._
-import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -15,13 +14,15 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import service.CounterService
-import utils.HashUtil
+import utils.{DateTimeUtil, HashUtil}
 
 import scala.concurrent.Future
 import scala.util.Random
+import java.time.LocalDateTime
 
 @Singleton
 class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService) extends Controller {
+//class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
 
   def index() = Action { implicit request: Request[AnyContent] =>
@@ -53,7 +54,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
                 val verifyCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                 for{
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <-  userCol.insert(User(uid, Role.COMMON_USER, login, HashUtil.sha256(password), name, "", "", "", request.remoteAddress, UserTimeStat(DateTime.now, DateTime.now, DateTime.now, DateTime.now()), 0, true, verifyCode))
+                  wr <-  userCol.insert(User(uid, Role.COMMON_USER, login, HashUtil.sha256(password), name, "", "", "", request.remoteAddress, UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
                 } yield {
                   if (wr.ok && wr.n == 1) {
                     Redirect(routes.UserController.home())
@@ -90,7 +91,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
         } yield {
           userOpt match {
             case Some(u) =>
-              Ok(views.html.user.home(u))
+              Redirect(routes.UserController.home())
                 .withSession("uid" -> u._id.toString, "login" -> u.login, "name" -> u.name)
             case None =>
               Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))

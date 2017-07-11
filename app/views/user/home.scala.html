@@ -1,4 +1,4 @@
-@(u: User)(implicit request: Request[AnyContent])
+@(u: User)(implicit request: RequestHeader)
 
 @main("欢迎来到社区！", request) {
 <div class="fly-home" style="background-image: url();">
@@ -14,7 +14,7 @@
   </h1>
   <p class="fly-home-info">
     <i class="iconfont icon-zuichun" title="飞吻"></i><span style="color: #FF7200;">@{u.score}飞吻</span>
-    <i class="iconfont icon-shijian"></i><span>@{u.timeStat.createTime.toString("yyyy-MM-dd")} 加入</span>
+    <i class="iconfont icon-shijian"></i><span>@{u.timeStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))} 加入</span>
     <i class="iconfont icon-chengshi"></i><span>来自中国某城</span>
   </p>
   <p class="fly-home-sign">（人生仿若一场修行）</p>

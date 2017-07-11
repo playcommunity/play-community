@@ -1,20 +1,23 @@
 package utils
 
-import org.joda.time.{DateTime, Duration, Interval, Period}
+import java.time.format.DateTimeFormatter
+import java.time.{Duration, OffsetDateTime, ZoneOffset}
+
 
 /**
-  * Created by Le'novo on 2017/7/6.
+  * Created by joymufeng on 2017/7/6.
   */
 object DateTimeUtil {
-  def toPrettyString(time: DateTime): String = {
-    val d = Duration.millis(DateTime.now().getMillis - time.getMillis)
-    val days = d.getStandardDays
-    val hours = d.getStandardHours
-    val minutes = d.getStandardMinutes
-    val seconds = d.getStandardSeconds
+  def toPrettyString(time: OffsetDateTime): String = {
+    val d = Duration.between(time, now())
+    // val d = Duration.millis(DateTime.now().getMillis - time.getMillis)
+    val days = d.toDays
+    val hours = d.toHours
+    val minutes = d.toMinutes
+    val seconds = d.getSeconds
 
     if (days > 31){
-      time.toString("yyyy-MM-dd")
+      time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     } else if (days >= 1){
       s"${days}天前"
     } else if (hours >= 1) {
@@ -24,6 +27,9 @@ object DateTimeUtil {
     } else {
       s"${seconds}秒前"
     }
+  }
 
+  def now() : OffsetDateTime = {
+    OffsetDateTime.now(ZoneOffset.ofHours(8))
   }
 }

@@ -1,5 +1,5 @@
-@(article: Article)(implicit request: Request[AnyContent])
-
+@(article: Article)(implicit request: RequestHeader)
+@import helper._
 @main("欢迎来到社区！", request) {
 <div class="main layui-clear">
   <div class="wrap">
@@ -118,6 +118,7 @@
               </div>
             </div>
             <div class="layui-form-item">
+              @CSRF.formField
               <input type="hidden" name="_id" value="@article._id">
               <button class="layui-btn" lay-submit>提交回答</button>
             </div>

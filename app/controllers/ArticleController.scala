@@ -8,10 +8,9 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.play.json.collection.JSONCollection
-import utils.{HashUtil, RoaringBitmapUtil}
+import utils.{DateTimeUtil, HashUtil, RoaringBitmapUtil}
 import reactivemongo.play.json._
 import models.JsonFormats._
-import org.joda.time.DateTime
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -19,6 +18,7 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.Future
+import java.time._
 
 @Singleton
 class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends Controller {
@@ -26,6 +26,9 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
 
   def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+
+    //println(Json.obj("time" -> OffsetDateTime.now(ZoneOffset.ofHours(8))))
+
     val cPage = if(page < 1){1}else{page}
     var q = Json.obj()
     var sort = Json.obj("timeStat.createTime" -> -1)
@@ -75,7 +78,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
           articleCol <- articleColFuture
           categoryCol <- categoryColFuture
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
-          wr <- articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author("", request.session("login"), "沐风", ""), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ArticleTimeStat(DateTime.now, DateTime.now, DateTime.now, DateTime.now, DateTime.now), false, false))
+          wr <- articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author("", request.session("login"), "沐风", ""), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
         }
@@ -88,7 +91,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (_id, content) = tuple
-        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author("", request.session("login"), "沐风", ""), DateTime.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author("", request.session("login"), "沐风", ""), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
         articleColFuture.flatMap(_.update(
           Json.obj("_id" -> _id),
           Json.obj(
@@ -120,7 +123,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
       articleCol <- articleColFuture
       objOpt <- articleCol.find(Json.obj("_id" -> articleId)).one[JsObject]
     } yield {
-      //articleCol.insert(Article("0", "", "", "", "", "", "", "", "", List.empty[String], DateTime.now(DateTimeZone.UTC), DateTime.now(DateTimeZone.UTC), List.empty[Reply], 0, List.empty[Long], 0, List.empty[Long], 0)).foreach(println _)
+      //articleCol.insert(Article("0", "", "", "", "", "", "", "", "", List.empty[String], LocalDateTime.now(LocalDateTimeZone.UTC), LocalDateTime.now(LocalDateTimeZone.UTC), List.empty[Reply], 0, List.empty[Long], 0, List.empty[Long], 0)).foreach(println _)
 
       objOpt.fold(Ok(Json.obj("success" -> false))){ obj =>
         val bitmapStr = (obj \ "viewBitMap").as[String].trim

@@ -20,7 +20,7 @@ class UserController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends C
   def home() = Action.async { implicit request: Request[AnyContent] =>
     for{
       userCol <- userColFuture
-      userOpt <- userCol.find(Json.obj("_id" -> request.session("uid"))).one[User]
+      userOpt <- userCol.find(Json.obj("_id" -> request.session("uid").toInt)).one[User]
     } yield {
       userOpt match {
         case Some(u) =>

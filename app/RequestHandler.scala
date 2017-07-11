@@ -15,10 +15,13 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler,
       //未登录
     } else {
       if(request.path == null) {
+        println("NotAcceptable Request ...")
         Some(Action(Results.NotAcceptable))
         //公开请求
       } else if(request.path.startsWith("/favicon.ico") ||
         request.path.startsWith("/assets/")||
+        request.path.startsWith("/message")||
+        request.path.startsWith("/404")||
         request.path.startsWith("/register") ||
         request.path.startsWith("/doRegister") ||
         request.path.startsWith("/login") ||

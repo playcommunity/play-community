@@ -1,6 +1,6 @@
 package models
 
-import org.joda.time.DateTime
+import java.time.OffsetDateTime
 
 case class User(
   _id: Int,
@@ -28,8 +28,8 @@ case class Document(
   author: Author,
   categoryPath: String,
   tags: List[String],
-  createTime: DateTime,
-  updateTime: DateTime,
+  createTime: OffsetDateTime,
+  upOffsetDateTime: OffsetDateTime,
   replies: List[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
@@ -45,8 +45,7 @@ case class Question(
   author: Author,
   categoryPath: String,
   tags: List[String],
-  createTime: DateTime,
-  updateTime: DateTime,
+  timeStat: QuestionTimeStat,
   replies: List[Reply],
   lastReply: Option[Reply],
   answer: Option[Reply],
@@ -76,8 +75,9 @@ case class Article(
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitMap: String)
 case class VoteStat(count: Int, bitMap: String)
-case class UserTimeStat(createTime: DateTime, updateTime: DateTime, lastLoginTime: DateTime, lastReplyTime: DateTime)
-case class ArticleTimeStat(createTime: DateTime, updateTime: DateTime, lastViewTime: DateTime, lastVoteTime: DateTime, lastReplyTime: DateTime)
-case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: DateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
-case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: DateTime)
+case class UserTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
+case class QuestionTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
+case class ArticleTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
+case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
+case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: OffsetDateTime)
 
