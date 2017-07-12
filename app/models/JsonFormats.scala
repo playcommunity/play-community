@@ -10,6 +10,7 @@ object JsonFormats {
   implicit val questionTimeStatFormat = Json.format[QuestionTimeStat]
   implicit val articleTimeStatFormat = Json.format[ArticleTimeStat]
   implicit val userTimeStatFormat = Json.format[UserTimeStat]
+  implicit val userSettingFormat = Json.format[UserSetting]
   implicit val categoryFormat = Json.format[Category]
   implicit val viewStatFormat = Json.format[ViewStat]
   implicit val voteStatFormat = Json.format[VoteStat]

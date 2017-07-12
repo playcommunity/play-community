@@ -11,14 +11,11 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import service.CounterService
 import utils.{DateTimeUtil, HashUtil}
-
 import scala.concurrent.Future
 import scala.util.Random
-import java.time.LocalDateTime
 
 @Singleton
 class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService) extends Controller {
@@ -54,7 +51,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
                 val verifyCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                 for{
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <-  userCol.insert(User(uid, Role.COMMON_USER, login, HashUtil.sha256(password), name, "", "", "", request.remoteAddress, UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
+                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "", ""), request.remoteAddress, UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
                 } yield {
                   if (wr.ok && wr.n == 1) {
                     Redirect(routes.UserController.home())
@@ -92,7 +89,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
           userOpt match {
             case Some(u) =>
               Redirect(routes.UserController.home())
-                .withSession("uid" -> u._id.toString, "login" -> u.login, "name" -> u.name)
+                .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name)
             case None =>
               Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
           }

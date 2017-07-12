@@ -6,7 +6,7 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.2"
 
-//resolvers += "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
   guice,

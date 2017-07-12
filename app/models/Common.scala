@@ -3,14 +3,11 @@ package models
 import java.time.OffsetDateTime
 
 case class User(
-  _id: Int,
+  _id: String,
   role: String,
   login: String,
   password: String,
-  name: String,
-  gender: String,
-  introduction: String,
-  headImg: String,
+  setting: UserSetting,
   ip: String,
   timeStat: UserTimeStat,
   score: Int,
@@ -72,6 +69,7 @@ case class Article(
   recommended: Boolean // 精华
 )
 
+case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitMap: String)
 case class VoteStat(count: Int, bitMap: String)

@@ -15,6 +15,9 @@ GET     /message                                  controllers.Application.messag
 # Home
 GET     /user/home                                controllers.UserController.home
 GET     /user/activate                            controllers.UserController.activate
+GET     /user/setting                             controllers.UserController.setting
+POST    /user/setting                             controllers.UserController.doSetting
+POST    /user/password                            controllers.UserController.doSetPassword
 
 # Article
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", page: Int ?= 1)
