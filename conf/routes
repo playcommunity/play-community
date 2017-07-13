@@ -29,6 +29,8 @@ GET     /article/edit                             controllers.ArticleController.
 POST    /article/reply                            controllers.ArticleController.doReply
 GET     /article/view                             controllers.ArticleController.view(_id: String)
 GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
++ nocsrf
+POST    /article/reply/vote                       controllers.ArticleController.doVoteReply
 
 # Resource
 + nocsrf

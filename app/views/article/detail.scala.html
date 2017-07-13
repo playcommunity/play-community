@@ -1,6 +1,7 @@
-@(article: Article)(implicit request: RequestHeader)
+@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
 @import helper._
-@main("欢迎来到社区！", request) {
+@uid() = @{request.session.get("uid").getOrElse("-1").toInt}
+@main("欢迎来到社区！") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content detail">
@@ -60,11 +61,12 @@
         <a name="comment"></a>
         <ul class="jieda photos" id="jieda">
           @for(r <- article.replies){
-          <li data-id="@{r._id}">
+          @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
+          <li data-aid="@{article._id}" data-rid="@{r._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="">
-                <img src="/assets/images/avatar/default.png" alt="">
+                <img src="@{r.author.headImg}" alt="">
                 <cite>
                   <i>@{r.author.name}</i>
                 </cite>
@@ -77,7 +79,7 @@
               @Html(r.content)
             </div>
             <div class="jieda-reply">
-              <span class="jieda-zan" type="zan"><i class="iconfont icon-zan"></i><em>0</em></span>
+              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <span type="edit">编辑</span>
@@ -86,6 +88,7 @@
               </div>
             </div>
           </li>
+          }
           }
           @if(article.replies.isEmpty){
           <li class="fly-none">没有任何回答</li>
@@ -113,74 +116,22 @@
   <div class="edge">
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">最近热帖</dt>
+      @for(a <- topViewArticles){
       <dd>
-        <a href="">使用 layui 秒搭后台大布局（基本结构）</a>
-        <span><i class="iconfont">&#xe60b;</i> 6087</span>
+        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
       </dd>
-      <dd>
-        <a href="">Java实现LayIM后端的核心代码</a>
-        <span><i class="iconfont">&#xe60b;</i> 767</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局（基本结构）</a>
-        <span><i class="iconfont">&#xe60b;</i> 6087</span>
-      </dd>
-      <dd>
-        <a href="">Java实现LayIM后端的核心代码</a>
-        <span><i class="iconfont">&#xe60b;</i> 767</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局（基本结构）</a>
-        <span><i class="iconfont">&#xe60b;</i> 6087</span>
-      </dd>
-      <dd>
-        <a href="">Java实现LayIM后端的核心代码</a>
-        <span><i class="iconfont">&#xe60b;</i> 767</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局（基本结构）</a>
-        <span><i class="iconfont">&#xe60b;</i> 6087</span>
-      </dd>
-      <dd>
-        <a href="">Java实现LayIM后端的核心代码</a>
-        <span><i class="iconfont">&#xe60b;</i> 767</span>
-      </dd>
+      }
     </dl>
 
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">近期热议</dt>
+      @for(a <- topReplyArticles){
       <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
+        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
       </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
-      <dd>
-        <a href="">使用 layui 秒搭后台大布局之基本结构</a>
-        <span><i class="iconfont">&#xe60c;</i> 96</span>
-      </dd>
+      }
     </dl>
   </div>
 </div>

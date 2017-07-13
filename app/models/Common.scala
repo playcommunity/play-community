@@ -64,6 +64,7 @@ case class Article(
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
+  replyStat: ReplyStat,
   collectStat: CollectStat,
   timeStat: ArticleTimeStat,
   top: Boolean, // 置顶
@@ -74,6 +75,7 @@ case class UserSetting(name: String, gender: String, introduction: String, headI
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
+case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
 case class UserTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class QuestionTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)

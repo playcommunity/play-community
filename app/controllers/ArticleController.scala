@@ -106,7 +106,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                    articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
@@ -120,14 +120,27 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (_id, content) = tuple
-        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author("", request.session("login"), "沐风", ""), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
-        articleColFuture.flatMap(_.update(
-          Json.obj("_id" -> _id),
-          Json.obj(
-            "$push" -> Json.obj("replies" -> reply),
-            "$set" -> Json.obj("lastReply" -> reply)
-          ))).map{ wr =>
-          Redirect(routes.ArticleController.index("0", 1))
+        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val uid = request.session("uid").toInt
+        for{
+          articleCol <- articleColFuture
+          replyStat <- articleCol.find(Json.obj("_id" -> _id), Json.obj("replyStat" -> 1)).one[JsObject].map{ objOpt => (objOpt.get \ "replyStat").as[ReplyStat]}
+          replyBitmap = BitmapUtil.fromBase64String(replyStat.bitmap)
+          newReplyStat =
+            if (replyBitmap.contains(uid)) {
+              replyStat.copy(count = replyStat.count + 1)
+            } else {
+              replyBitmap.add(uid)
+              replyStat.copy(count = replyStat.count + 1, userCount = replyStat.userCount + 1, bitmap = BitmapUtil.toBase64String(replyBitmap))
+            }
+          wr <- articleCol.update(
+            Json.obj("_id" -> _id),
+            Json.obj(
+              "$push" -> Json.obj("replies" -> reply),
+              "$set" -> Json.obj("lastReply" -> reply, "replyStat" -> newReplyStat)
+            ))
+        } yield {
+          Redirect(routes.ArticleController.view(_id))
         }
       }
     )
@@ -137,12 +150,59 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
     for {
       articleCol <- articleColFuture
       article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
+      topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
+      topReplyArticles <- articleCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Article]().collect[List](10)
     } yield {
       article match {
-        case Some(a) => Ok(views.html.article.detail(a))
+        case Some(a) =>
+          request.session.get("uid") match{
+            case Some(uid) =>
+              val uid = request.session("uid").toInt
+              val viewBitmap = BitmapUtil.fromBase64String(a.viewStat.bitmap)
+              if (!viewBitmap.contains(uid)) {
+                viewBitmap.add(uid)
+                articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+                Ok(views.html.article.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1)), topViewArticles, topReplyArticles))
+              } else {
+                Ok(views.html.article.detail(a, topViewArticles, topReplyArticles))
+              }
+            case None =>
+              Ok(views.html.article.detail(a, topViewArticles, topReplyArticles))
+          }
         case None => Redirect(routes.Application.notFound)
       }
     }
+  }
+
+  def doVoteReply = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("aid" -> nonEmptyText,"rid" -> nonEmptyText, "up" -> boolean)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
+      tuple => {
+        val (aid, rid, up) = tuple
+        val uid = request.session("uid").toInt
+        for{
+          articleCol <- articleColFuture
+          reply <- articleCol.find(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("replies" -> 1)).one[JsObject].map( objOpt => (objOpt.get \ "replies")(0).as[Reply])
+        } yield {
+          println(reply)
+          val bitmap = BitmapUtil.fromBase64String(reply.voteStat.bitmap)
+          // 投票
+          if (up && !bitmap.contains(uid)) {
+            bitmap.add(uid)
+            articleCol.update(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          }
+          // 取消投票
+          else if (!up && bitmap.contains(uid)) {
+            bitmap.remove(uid)
+            articleCol.update(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          } else {
+            Ok(Json.obj("status" -> 1, "msg" -> "operate failed."))
+          }
+        }
+      }
+    )
   }
 
   def vote(articleId: String, up: Boolean) = Action.async { implicit request: Request[AnyContent] =>

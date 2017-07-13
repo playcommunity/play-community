@@ -118,9 +118,10 @@ layui.define(['laypage', 'fly'], function(exports){
   gather.jiedaActive = {
     zan: function(li){ //赞
       var othis = $(this), ok = othis.hasClass('zanok');
-      fly.json('/api/jieda-zan/', {
-        ok: ok
-        ,id: li.data('id')
+      fly.json('/article/reply/vote', {
+        up: !ok
+        ,aid: li.data('aid')
+        ,rid: li.data('rid')
       }, function(res){
         if(res.status === 0){
           var zans = othis.find('em').html()|0;
