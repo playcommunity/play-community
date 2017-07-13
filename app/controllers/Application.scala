@@ -51,11 +51,11 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
                 val verifyCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                 for{
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "", ""), request.remoteAddress, UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
+                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), request.remoteAddress, UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
                 } yield {
                   if (wr.ok && wr.n == 1) {
                     Redirect(routes.UserController.home())
-                      .withSession("login" -> login, "uid" -> uid.toString, "name" -> name)
+                      .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                   } else {
                     Redirect(routes.Application.message("注册出错了", "很抱歉，似乎是发生了系统错误！"))
                   }
@@ -89,7 +89,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
           userOpt match {
             case Some(u) =>
               Redirect(routes.UserController.home())
-                .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name)
+                .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg)
             case None =>
               Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
           }

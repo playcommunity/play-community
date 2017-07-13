@@ -24,7 +24,7 @@
         @for(a <- articles){
         <li class="fly-list-li">
           <a href="javascript:void(0);" class="fly-list-avatar">
-            <img src="/assets/images/avatar/default.png" alt="">
+            <img src="@a.author.headImg" alt="">
           </a>
           <h2 class="fly-tip">
             <a href="/article/view?_id=@a._id">@a.title</a>

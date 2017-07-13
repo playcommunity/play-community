@@ -21,7 +21,7 @@ import utils.{DateTimeUtil, HashUtil}
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   val userAction = new UserAction(new BodyParsers.Default())
@@ -88,6 +88,29 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
           Json.obj("_id" -> request.session("uid")),
           Json.obj(
             "$set" -> Json.obj("setting.name" -> name, "setting.gender" -> gender, "setting.city" -> city, "setting.introduction" -> introduction)
+          ))).map{ wr =>
+          Redirect(routes.UserController.setting())
+        }
+      }
+    )
+  }
+
+  // 演示如何将请求转发至ResourceController.saveResource
+  /*def doSetHeadImg() = Action.async { implicit request: Request[AnyContent] =>
+    resourceController.saveResource("")(request).mapFuture(_.body.consumeData.map(_.utf8String)).run().map(s => (Json.parse(s) \ "rid").asOpt[String]).map{
+      case Some(rid) => Ok(Json.obj("success" -> true, "url" -> s"/resource/${rid}"))
+      case None      => Ok(Json.obj("success" -> false, "message" -> "Upload failed."))
+    }
+  }*/
+
+  def doSetHeadImg = Action.async { implicit request: Request[AnyContent] =>
+    Form(single("url" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
+      url => {
+        userColFuture.flatMap(_.update(
+          Json.obj("_id" -> request.session("uid")),
+          Json.obj(
+            "$set" -> Json.obj("setting.headImg" -> url)
           ))).map{ wr =>
           Redirect(routes.UserController.setting())
         }

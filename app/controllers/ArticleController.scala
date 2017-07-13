@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.play.json.collection.JSONCollection
-import utils.{DateTimeUtil, HashUtil, RoaringBitmapUtil}
+import utils.{DateTimeUtil, HashUtil, BitmapUtil}
 import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
@@ -24,6 +24,8 @@ import java.time._
 class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends Controller {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
+  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+
 
   def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
 
@@ -65,20 +67,47 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
       categoryCol <- categoryColFuture
       categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
     } yield {
-      Ok(views.html.article.add(categoryList))
+      Ok(views.html.article.add(None, categoryList))
+    }
+  }
+
+  def edit(_id: String) = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      articleCol <- articleColFuture
+      article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
+      categoryCol <- categoryColFuture
+      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
+    } yield {
+      article match {
+        case Some(a) => Ok(views.html.article.add(Some(a), categoryList))
+        case None => Redirect(routes.Application.notFound)
+      }
     }
   }
 
   def doAdd = Action.async { implicit request: Request[AnyContent] =>
-    Form(tuple("title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
+    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
-        val (title, content, categoryPath) = tuple
+        val (_idOpt, title, content, categoryPath) = tuple
         for {
           articleCol <- articleColFuture
           categoryCol <- categoryColFuture
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
-          wr <- articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author("", request.session("login"), "沐风", ""), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+          wr <-  _idOpt match {
+                  case Some(_id) =>
+                    articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
+                      "title" -> title,
+                      "content" -> content,
+                      "categoryPath" -> categoryPath,
+                      "categoryName" -> category.map(_.name).getOrElse[String]("-"),
+                      "author.name" -> request.session("name"),
+                      "author.headImg" -> request.session("headImg"),
+                      "timeStat.updateTime" -> DateTimeUtil.now()
+                    )))
+                  case None =>
+                    articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
         }
@@ -127,13 +156,13 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
 
       objOpt.fold(Ok(Json.obj("success" -> false))){ obj =>
         val bitmapStr = (obj \ "viewBitMap").as[String].trim
-        val bitmap = RoaringBitmapUtil.fromBase64String(bitmapStr)
+        val bitmap = BitmapUtil.fromBase64String(bitmapStr)
         val userHash = HashUtil.toInt(login)
         println(bitmap.contains(userHash))
         if (!bitmap.contains(userHash)) {
           println("add user")
           bitmap.add(userHash)
-          articleCol.update(Json.obj("_id" -> articleId), Json.obj("$inc" -> Json.obj("voteCount" -> 1), "$set" -> Json.obj("viewBitMap" -> RoaringBitmapUtil.toBase64String(bitmap))))
+          articleCol.update(Json.obj("_id" -> articleId), Json.obj("$inc" -> Json.obj("voteCount" -> 1), "$set" -> Json.obj("viewBitMap" -> BitmapUtil.toBase64String(bitmap))))
         } else {
           println("Already voted.")
         }

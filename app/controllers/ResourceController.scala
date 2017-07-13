@@ -12,9 +12,9 @@ import play.api.mvc._
 import play.modules.reactivemongo.MongoController.JsReadFile
 import play.modules.reactivemongo.{JSONFileToSave, MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.api.gridfs.{GridFS, ReadFile}
+import MongoController.readFileReads
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-import utils.HashUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -37,10 +37,10 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
     // when the upload is complete, we add the owner id to the file entry (in order to find the attachments of the owner)
     for {
       file <- futureFile
-      wr <- gridFS.files.update(Json.obj("_id" -> file.id), Json.obj("$set" -> Json.obj("owner" -> ownerId)))
+      wr <- gridFS.files.update(Json.obj("_id" -> file.id), Json.obj("$set" -> Json.obj("owner" -> ownerId, "uid" -> request.session("uid"))))
     } yield {
       if(wr.ok && wr.n == 1){
-        Ok(Json.obj("success" -> true, "rid" -> file.id.as[String]))
+        Ok(Json.obj("success" -> true, "url" -> s"/resource/${file.id.as[String]}"))
       } else {
         Ok(Json.obj("success" -> false, "message" -> "Upload failed."))
       }

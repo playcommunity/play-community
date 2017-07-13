@@ -31,7 +31,7 @@
                 case Some(name) => {
                     <!-- 登入后的状态 -->
                     <a class="avatar" href="/user/home">
-                        <img src="http://tp4.sinaimg.cn/1345566427/180/5730976522/0">
+                        <img src="@request.session("headImg")">
                         <cite>@name</cite>
                         <!--<i>VIP2</i>-->
                     </a>

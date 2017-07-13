@@ -64,6 +64,7 @@ case class Article(
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
+  collectStat: CollectStat,
   timeStat: ArticleTimeStat,
   top: Boolean, // 置顶
   recommended: Boolean // 精华
@@ -71,11 +72,12 @@ case class Article(
 
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 case class Author(_id: String, login: String, name: String, headImg: String)
-case class ViewStat(count: Int, bitMap: String)
-case class VoteStat(count: Int, bitMap: String)
+case class ViewStat(count: Int, bitmap: String)
+case class VoteStat(count: Int, bitmap: String)
+case class CollectStat(count: Int, bitmap: String)
 case class UserTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class QuestionTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
-case class ArticleTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
+case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
 case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: OffsetDateTime)
 

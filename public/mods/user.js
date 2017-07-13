@@ -159,14 +159,14 @@ layui.define(['laypage', 'fly', 'element'], function(exports){
       layui.upload({
         elem: '.upload-img input'
         ,method: 'post'
-        ,url: '/user/upload/'
+        ,url: '/resource/owner/head'
         ,before: function(){
           avatarAdd.find('.loading').show();
         }
         ,success: function(res){
-          if(res.status == 0){
-            $.post('/user/set/', {
-              avatar: res.url
+          if(res.success){
+            $.post('/user/head', {
+              url: res.url
             }, function(res){
               location.reload();
             });

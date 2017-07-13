@@ -96,10 +96,10 @@ layui.define(['laypage', 'fly'], function(exports){
     }
   };
 
-  $('body').on('click', '.jie-admin', function(){
+  /*$('body').on('click', '.jie-admin', function(){
     var othis = $(this), type = othis.attr('type');
     gather.jieAdmin[type].call(this, othis.parent());
-  });
+  });*/
 
   //异步渲染
   var asyncRender = function(){

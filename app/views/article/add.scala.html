@@ -1,4 +1,4 @@
-@(categoryList: List[Category])(implicit request: RequestHeader)
+@(articleOpt: Option[Article], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
 @main("欢迎来到社区！", request) {
 <div class="main layui-clear">
@@ -9,15 +9,18 @@
 
     <div class="layui-form layui-form-pane">
       <form action="/article/add" method="post">
+      @if(articleOpt.nonEmpty){
+      <input type="hidden" name="_id" value="@articleOpt.get._id"/>
+      }
       <div class="layui-form-item">
         <label for="L_title" class="layui-form-label">标题</label>
         <div class="layui-input-block">
-          <input type="text" id="L_title" name="title" required lay-verify="required" autocomplete="off" class="layui-input">
+          <input value="@articleOpt.map(_.title).getOrElse("")" type="text" id="L_title" name="title" required lay-verify="required" autocomplete="off" class="layui-input">
         </div>
       </div>
       <div class="layui-form-item layui-form-text">
         <div class="layui-input-block">
-          <textarea id="L_content" name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea fly-editor" style="height: 260px;"></textarea>
+          <textarea id="L_content" name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea fly-editor" style="height: 260px;">@articleOpt.map(_.content).getOrElse("")</textarea>
         </div>
         <label for="L_content" class="layui-form-label" style="top: -2px;">描述</label>
       </div>
@@ -28,7 +31,7 @@
             <select lay-verify="required" name="categoryPath">
               <option></option>
               @for(c <- categoryList){
-              <option value="@c.path" >@c.name</option>
+              <option value="@c.path" @if(articleOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
               }
             </select>
           </div>

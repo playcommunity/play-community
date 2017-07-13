@@ -11,7 +11,7 @@ import java.util.Base64;
 /**
  * Created by Le'novo on 2017/7/3.
  */
-public class RoaringBitmapUtil {
+public class BitmapUtil {
     public static String toBase64String(RoaringBitmap bitmap) throws IOException {
         bitmap.runOptimize();
         ByteBuffer buffer = ByteBuffer.allocate(bitmap.serializedSizeInBytes());

@@ -7,10 +7,17 @@
       <div class="fly-panel detail-box">
         <h1>@article.title</h1>
         <div class="fly-tip fly-detail-hint" data-id="{{rows.id}}">
+          @if(article.top){
           <span class="fly-tip-stick">置顶帖</span>
+          }
+          @if(article.recommended){
           <span class="fly-tip-jing">精帖</span>
-
-          <span>未结贴</span>
+          }
+          @if(article.replies.isEmpty){
+          <span>无回复</span>
+          }else{
+          <span>已回复</span>
+          }
           <!-- <span class="fly-tip-jie">已采纳</span> -->
 
           <!-- <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
@@ -26,16 +33,21 @@
         </div>
         <div class="detail-about">
           <a class="jie-user" href="">
-            <img src="http://tp4.sinaimg.cn/1345566427/180/5730976522/0" alt="">
+            <img src="@article.author.headImg" alt="">
             <cite>
               @article.author.name
               <em>1分钟前发布</em>
             </cite>
           </a>
           <div class="detail-hits" data-id="{{rows.id}}">
-            <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/jie/edit/{{rows.id}}">编辑此贴</a></span>
+            @if(article.author._id == request.session.get("uid").getOrElse("")){
+            <span class="layui-btn layui-btn-mini jie-admin"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
+            }
+            @if(utils.BitmapUtil.fromBase64String(article.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
+            <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="add">取消收藏</span>
+            }else{
             <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add">收藏</span>
-            <!--<span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="add">取消收藏</span>-->
+            }
           </div>
         </div>
 
@@ -47,37 +59,6 @@
       <div class="fly-panel detail-box" style="padding-top: 0;">
         <a name="comment"></a>
         <ul class="jieda photos" id="jieda">
-          <li data-id="12" class="jieda-daan">
-            <a name="item-121212121212"></a>
-            <div class="detail-about detail-about-reply">
-              <a class="jie-user" href="">
-                <img src="/assets/images/avatar/default.png" alt="">
-                <cite>
-                  <i>纸飞机</i>
-                  <!-- <em>(楼主)</em>
-                  <em style="color:#5FB878">(管理员)</em>
-                  <em style="color:#FF9E3F">（活雷锋）</em>
-                  <em style="color:#999">（该号已被封）</em> -->
-                </cite>
-              </a>
-              <div class="detail-hits">
-                <span>3分钟前</span>
-              </div>
-              <i class="iconfont icon-caina" title="最佳答案"></i>
-            </div>
-            <div class="detail-body jieda-body">
-              <p>么么哒</p>
-            </div>
-            <div class="jieda-reply">
-              <span class="jieda-zan zanok" type="zan"><i class="iconfont icon-zan"></i><em>12</em></span>
-              <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
-              <!-- <div class="jieda-admin">
-                <span type="edit">编辑</span>
-                <span type="del">删除</span>
-                <span class="jieda-accept" type="accept">采纳</span>
-              </div> -->
-            </div>
-          </li>
           @for(r <- article.replies){
           <li data-id="@{r._id}">
             <a name="item-@{r._id}"></a>
@@ -106,8 +87,9 @@
             </div>
           </li>
           }
-
-          <!-- <li class="fly-none">没有任何回答</li> -->
+          @if(article.replies.isEmpty){
+          <li class="fly-none">没有任何回答</li>
+          }
         </ul>
 
         <div class="layui-form layui-form-pane">
