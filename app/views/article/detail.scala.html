@@ -79,7 +79,7 @@
               @Html(r.content)
             </div>
             <div class="jieda-reply">
-              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
+              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <span type="edit">编辑</span>

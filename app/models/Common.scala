@@ -71,14 +71,21 @@ case class Article(
   recommended: Boolean // 精华
 )
 
+/**
+  * 消息提醒
+  * @param source system/article/question
+  * @param action view/vote/reply/comment
+  */
+case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime)
+
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
-case class UserTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
-case class QuestionTimeStat(createTime: OffsetDateTime, upOffsetDateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
+case class UserTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
+case class QuestionTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
 case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: OffsetDateTime)

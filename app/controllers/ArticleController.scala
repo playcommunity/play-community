@@ -25,7 +25,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-
+  def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
 
   def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
 
@@ -124,7 +124,10 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
         val uid = request.session("uid").toInt
         for{
           articleCol <- articleColFuture
-          replyStat <- articleCol.find(Json.obj("_id" -> _id), Json.obj("replyStat" -> 1)).one[JsObject].map{ objOpt => (objOpt.get \ "replyStat").as[ReplyStat]}
+          Some(articleObj) <- articleCol.find(Json.obj("_id" -> _id), Json.obj("replyStat" -> 1, "author" -> 1, "title" -> 1)).one[JsObject]
+          articleAuthor = (articleObj \ "author").as[Author]
+          articleTitle = (articleObj \ "title").as[String]
+          replyStat = (articleObj \ "replyStat").as[ReplyStat]
           replyBitmap = BitmapUtil.fromBase64String(replyStat.bitmap)
           newReplyStat =
             if (replyBitmap.contains(uid)) {
@@ -140,6 +143,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
               "$set" -> Json.obj("lastReply" -> reply, "replyStat" -> newReplyStat)
             ))
         } yield {
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), "reply", content, DateTimeUtil.now())))
           Redirect(routes.ArticleController.view(_id))
         }
       }

@@ -117,11 +117,12 @@ layui.define(['laypage', 'fly'], function(exports){
   //解答操作
   gather.jiedaActive = {
     zan: function(li){ //赞
-      var othis = $(this), ok = othis.hasClass('zanok');
+      var othis = $(this), ok = othis.hasClass('zanok'), token = othis.data('token');
       fly.json('/article/reply/vote', {
         up: !ok
         ,aid: li.data('aid')
         ,rid: li.data('rid')
+        ,csrfToken: token
       }, function(res){
         if(res.status === 0){
           var zans = othis.find('em').html()|0;

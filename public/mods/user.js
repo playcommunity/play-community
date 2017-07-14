@@ -156,17 +156,19 @@ layui.define(['laypage', 'fly', 'element'], function(exports){
   if($('.upload-img')[0]){
     layui.use('upload', function(upload){
       var avatarAdd = $('.avatar-add');
+      var token = $('#LAY-file').data('token');
       layui.upload({
         elem: '.upload-img input'
         ,method: 'post'
-        ,url: '/resource/owner/head'
+        ,url: '/resource/owner/head?csrfToken=' + token
         ,before: function(){
           avatarAdd.find('.loading').show();
         }
         ,success: function(res){
           if(res.success){
             $.post('/user/head', {
-              url: res.url
+              url: res.url,
+              csrfToken: token
             }, function(res){
               location.reload();
             });
@@ -251,12 +253,14 @@ layui.define(['laypage', 'fly', 'element'], function(exports){
     
     //阅读后删除
     dom.minemsg.on('click', '.mine-msg li .fly-delete', function(){
-      var othis = $(this).parents('li'), id = othis.data('id');
-      layer.confirm('确定删除该消息吗？', function(index){
-        fly.json('/message/remove/', {
-          id: id
+      var othis = $(this).parents('li'), id = othis.data('id'), token = othis.data('token');
+      layer.confirm('确定删除该消息吗？', {}, function(index){
+        fly.json('/user/message/remove', {
+          _id: id,
+          csrfToken: token
         }, function(res){
           if(res.status === 0){
+            layer.close(index);
             othis.remove();
             delEnd();
           }
@@ -266,10 +270,10 @@ layui.define(['laypage', 'fly', 'element'], function(exports){
 
     //删除全部
     $('#LAY_delallmsg').on('click', function(){
-      var othis = $(this);
+      var othis = $(this), token = othis.data('token');
       layer.confirm('确定清空吗？', function(index){
-        fly.json('/message/remove/', {
-          all: true
+        fly.json('/user/message/clear', {
+          csrfToken: token
         }, function(res){
           if(res.status === 0){
             layer.close(index);

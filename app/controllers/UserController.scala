@@ -1,11 +1,9 @@
 package controllers
 
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject._
-
 import akka.stream.Materializer
-import models.{Role, User, UserSetting, UserTimeStat}
-import models.JsonFormats.userFormat
+import models._
+import models.JsonFormats._
 import reactivemongo.play.json._
 import play.api._
 import play.api.data.Form
@@ -16,7 +14,7 @@ import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.Json
 
 import scala.concurrent.{ExecutionContext, Future}
-import utils.{DateTimeUtil, HashUtil}
+import utils.HashUtil
 
 import scala.concurrent.duration._
 
@@ -24,6 +22,9 @@ import scala.concurrent.duration._
 class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+  def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
+  def collectColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-collect"))
+  def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   val userAction = new UserAction(new BodyParsers.Default())
 
   class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
@@ -61,9 +62,60 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   }*/
 
 
-  def home() = Action.async { implicit request: Request[AnyContent] =>
-    getUser(request.session("uid")).map{ u =>
-      Ok(views.html.user.home(u))
+  def index() = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      articleCol <- articleColFuture
+      collectCol <- collectColFuture
+      articles <- articleCol.find(Json.obj("author._id" -> request.session("uid"))).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
+      articlesCount <- articleCol.count(Some(Json.obj("author._id" -> request.session("uid"))))
+      collectRes <- articleCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("collectTime" -> -1)).cursor[StatCollect]().collect[List](15)
+      collectResCount <- articleCol.count(Some(Json.obj("uid" -> request.session("uid"))))
+    } yield {
+      Ok(views.html.user.index(articles, articlesCount, collectRes, collectResCount))
+    }
+  }
+
+  def home(uid: String) = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      articleCol <- articleColFuture
+      myArticles <- articleCol.find(Json.obj("author._id" -> uid)).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
+      myReplyArticles <- articleCol.find(Json.obj("replies.author._id" -> uid)).sort(Json.obj("replies.replyTime" -> -1)).cursor[Article]().collect[List](15)
+      u <- getUser(uid)
+    } yield {
+      Ok(views.html.user.home(u, myArticles, myReplyArticles))
+    }
+  }
+
+  def message() = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      msgCol <- msgColFuture
+      messages <- msgCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("createTime" -> -1)).cursor[Message]().collect[List](15)
+      count <- msgCol.count(Some(Json.obj("uid" -> request.session("uid"))))
+    } yield {
+      Ok(views.html.user.message(messages, count))
+    }
+  }
+
+  def removeMessage = Action.async { implicit request: Request[AnyContent] =>
+    Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
+      _id => {
+        for {
+          msgCol <- msgColFuture
+          wr <- msgCol.remove(Json.obj("_id" -> _id, "uid" -> request.session("uid")))
+        } yield {
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  def clearMessage() = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      msgCol <- msgColFuture
+      wr <- msgCol.remove(Json.obj("uid" -> request.session("uid")))
+    } yield {
+      Ok(Json.obj("status" -> 0))
     }
   }
 

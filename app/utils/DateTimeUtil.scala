@@ -29,6 +29,10 @@ object DateTimeUtil {
     }
   }
 
+  def toString(time: OffsetDateTime, format: String): String = {
+    time.format(DateTimeFormatter.ofPattern(format))
+  }
+
   def now() : OffsetDateTime = {
     OffsetDateTime.now(ZoneOffset.ofHours(8))
   }

@@ -30,7 +30,7 @@
             @request.session.get("name") match {
                 case Some(name) => {
                     <!-- 登入后的状态 -->
-                    <a class="avatar" href="/user/home">
+                    <a class="avatar" href="/user/home?uid=@request.session("uid")">
                         <img src="@request.session("headImg")">
                         <cite>@name</cite>
                         <!--<i>VIP2</i>-->

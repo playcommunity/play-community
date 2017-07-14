@@ -12,13 +12,16 @@ GET     /logout                                   controllers.Application.logout
 GET     /404                                      controllers.Application.notFound
 GET     /message                                  controllers.Application.message(title: String, message: String)
 
-# Home
-GET     /user/home                                controllers.UserController.home
+# User
+GET     /user                                     controllers.UserController.index
+GET     /user/home                                controllers.UserController.home(uid: String)
+GET     /user/message                             controllers.UserController.message
+POST    /user/message/remove                      controllers.UserController.removeMessage
+POST    /user/message/clear                       controllers.UserController.clearMessage
 GET     /user/activate                            controllers.UserController.activate
 GET     /user/setting                             controllers.UserController.setting
 POST    /user/setting                             controllers.UserController.doSetting
 POST    /user/password                            controllers.UserController.doSetPassword
-+ nocsrf
 POST    /user/head                                controllers.UserController.doSetHeadImg()
 
 # Article
@@ -29,11 +32,9 @@ GET     /article/edit                             controllers.ArticleController.
 POST    /article/reply                            controllers.ArticleController.doReply
 GET     /article/view                             controllers.ArticleController.view(_id: String)
 GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
-+ nocsrf
 POST    /article/reply/vote                       controllers.ArticleController.doVoteReply
 
 # Resource
-+ nocsrf
 POST   /resource/owner/:ownerId                   controllers.ResourceController.saveResource(ownerId: String)
 GET    /resource/:rid                             controllers.ResourceController.getResource(rid: String)
 DELETE /resource/:rid                             controllers.ResourceController.removeResource(rid: String)

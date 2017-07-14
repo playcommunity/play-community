@@ -1,0 +1,81 @@
+@(messages: List[Message], count: Int)(implicit request: RequestHeader)
+@import helper._
+@main("欢迎来到社区！") {
+<div class="main fly-user-main layui-clear">
+  <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="user">
+    <li class="layui-nav-item">
+      <a href="/user/home?uid=@request.session("uid")">
+        <i class="layui-icon">&#xe609;</i>
+        我的主页
+      </a>
+    </li>
+    <li class="layui-nav-item">
+      <a href="/user">
+        <i class="layui-icon">&#xe612;</i>
+        用户中心
+      </a>
+    </li>
+    <li class="layui-nav-item">
+      <a href="/user/setting">
+        <i class="layui-icon">&#xe620;</i>
+        基本设置
+      </a>
+    </li>
+    <li class="layui-nav-item layui-this">
+      <a href="/user/message">
+        <i class="layui-icon">&#xe611;</i>
+        我的消息
+      </a>
+    </li>
+  </ul>
+
+  <div class="site-tree-mobile layui-hide">
+    <i class="layui-icon">&#xe602;</i>
+  </div>
+  <div class="site-mobile-shade"></div>
+
+  <div class="fly-panel fly-panel-user" pad20>
+    <div class="layui-tab layui-tab-brief" lay-filter="user" id="LAY_msg" style="margin-top: 15px;">
+      <button class="layui-btn layui-btn-danger" id="LAY_delallmsg" data-token="@CSRF.getToken.value">清空全部消息</button>
+      <div  id="LAY_minemsg" style="margin-top: 10px;">
+        @if(messages.isEmpty){
+        <div class="fly-none">您暂时没有最新消息</div>
+        }
+        <ul class="mine-msg">
+          @for(m <- messages){
+          @if(m.source == "article" && m.action == "reply"){
+          <li data-id="@m._id" data-token="@CSRF.getToken.value">
+            <blockquote class="layui-elem-quote">
+              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>回复了您的文章<a target="_blank" href="/article/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>
+            </blockquote>
+            <p><span>@utils.DateTimeUtil.toPrettyString(m.createTime)</span><a href="javascript:;" class="layui-btn layui-btn-small layui-btn-danger fly-delete">删除</a></p>
+          </li>
+          }
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+}
+
+<script>
+layui.cache.page = 'user';
+layui.cache.user = {
+  username: '游客'
+  ,uid: -1
+  ,avatar: '/assets/images/avatar/00.jpg'
+  ,experience: 83
+  ,sex: '男'
+};
+layui.config({
+  version: "2.0.0"
+  ,base: '/assets/mods/'
+}).extend({
+  fly: 'index'
+}).use('fly', function(){
+  var $ = layui.jquery;
+  var fly = layui.fly;
+});
+</script>
