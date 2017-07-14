@@ -14,7 +14,7 @@
   </h1>
   <p class="fly-home-info">
     <i class="iconfont icon-zuichun" title="飞吻"></i><span style="color: #FF7200;">@{u.score}飞吻</span>
-    <i class="iconfont icon-shijian"></i><span>@{u.timeStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))} 加入</span>
+    <i class="iconfont icon-shijian"></i><span>@{u.userStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))} 加入</span>
     <i class="iconfont icon-chengshi"></i><span>来自中国某城</span>
   </p>
   <p class="fly-home-sign">@{u.setting.introduction}</p>
@@ -39,7 +39,7 @@
 
   <div class="layui-inline fly-home-da">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">贤心 最近的回答</h3>
+      <h3 class="fly-panel-title">@{u.setting.name} 最近的回答</h3>
       <ul class="home-jieda">
         @for(a <- myReplyArticles){
         <li>
@@ -58,7 +58,7 @@
 }
 
 <script>
-layui.cache.page = 'home';
+layui.cache.page = 'user';
 layui.cache.user = {
   username: '游客'
   ,uid: -1

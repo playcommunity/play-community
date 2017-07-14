@@ -164,7 +164,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
           Json.obj(
             "$set" -> Json.obj("setting.headImg" -> url)
           ))).map{ wr =>
-          Redirect(routes.UserController.setting())
+          Redirect(routes.UserController.setting()).addingToSession("headImg" -> url)
         }
       }
     )

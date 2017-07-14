@@ -9,7 +9,7 @@ case class User(
   password: String,
   setting: UserSetting,
   ip: String,
-  timeStat: UserTimeStat,
+  userStat: UserStat,
   score: Int,
   enabled: Boolean,
   verifyCode: String
@@ -26,7 +26,7 @@ case class Document(
   categoryPath: String,
   tags: List[String],
   createTime: OffsetDateTime,
-  upOffsetDateTime: OffsetDateTime,
+  updateTime: OffsetDateTime,
   replies: List[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
@@ -84,7 +84,7 @@ case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
-case class UserTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
+case class UserStat(articleCount: Int, questionCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class QuestionTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])

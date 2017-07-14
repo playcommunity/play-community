@@ -370,7 +370,7 @@ layui.define(['layer', 'laytpl', 'form', 'upload', 'util'], function(exports){
 
   //右下角固定Bar
   util.fixbar({
-    bar1: true
+    bar1: '&#xe63a;'
     ,click: function(type){
       if(type === 'bar1'){
         layer.msg('bar1');
