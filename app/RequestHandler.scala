@@ -22,6 +22,7 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler,
         request.path.startsWith("/assets/")||
         request.path.startsWith("/message")||
         request.path.startsWith("/404")||
+        request.path.startsWith("/test/")||
         request.path.startsWith("/register") ||
         request.path.startsWith("/doRegister") ||
         request.path.startsWith("/login") ||

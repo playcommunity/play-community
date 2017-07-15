@@ -2,28 +2,30 @@ package controllers
 
 import javax.inject._
 
+import akka.stream.Materializer
 import models._
 import models.JsonFormats._
 import reactivemongo.play.json._
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
+import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
-import service.CounterService
+import service.{CounterService, ElasticService}
 import utils.{DateTimeUtil, HashUtil}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
+
 @Singleton
-class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService) extends Controller {
-//class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
+  def oplogColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("oplog.rs"))
 
   def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
@@ -130,6 +132,8 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi, counterServi
   }
 
   def notFound = Action { implicit request: Request[AnyContent] =>
+    elasticService.search("localhost", 9200, "中国").map(println _)
     Ok(views.html.notFound())
   }
+
 }

@@ -10,3 +10,4 @@ import java.time.OffsetDateTime
   * @param resType article/question/document/file
   */
 case class StatCollect(_id: String, uid: Author, resType: String, resId: String, resOwner: Author, resTitle: String, resCreateTime: OffsetDateTime, collectTime: OffsetDateTime)
+
