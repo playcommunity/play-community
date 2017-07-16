@@ -2,15 +2,17 @@ package service
 
 import java.io.{File, FileInputStream}
 import javax.inject.{Inject, Singleton}
+
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.{NamedDatabase, ReactiveMongoApi}
 import reactivemongo.akkastream.State
 import reactivemongo.api.QueryOpts
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONDocument, BSONTimestamp}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
+
 import scala.concurrent.{ExecutionContext, Future}
 import akka.stream.scaladsl.Source
 import pl.allegro.tech.embeddedelasticsearch.{EmbeddedElastic, IndexSettings, PopularProperties}
@@ -18,6 +20,7 @@ import reactivemongo.akkastream.{State, cursorProducer}
 import java.lang.ClassLoader._
 import java.nio.file.{Files, Paths}
 import java.util.concurrent.TimeUnit
+
 import models.{Article, IndexedDocument}
 import play.api.Environment
 import models.JsonFormats.articleFormat
@@ -45,7 +48,7 @@ class InitializeService @Inject()(env: Environment,  @NamedDatabase("local") val
     * Tail oplog.
     */
   oplogColFuture.map{ oplogCol =>
-    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj()).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ts" -> Json.obj("$gte" -> BSONTimestamp(System.currentTimeMillis()/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     source.runForeach{ doc =>
       println("oplog: " + BSONDocument.pretty(doc))
       val plate =

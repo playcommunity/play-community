@@ -28,6 +28,9 @@ object JsonFormats {
 
   // Stat
   implicit val statCollectFormat = Json.format[StatCollect]
+  implicit val statTrafficFormat = Json.format[StatTraffic]
+  implicit val statIPFormat = Json.format[StatIP]
+  implicit val statVisitorFormat = Json.format[StatVisitor]
 
   // Search
   implicit val indexedDocumentFormat = Json.format[IndexedDocument]

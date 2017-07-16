@@ -27,7 +27,7 @@
       <ul class="jie-row">
         @for(a <- myArticles){
         <li>
-          <a href="/jie/{{item.id}}.html" class="jie-title">@a.title</a>
+          <a href="/article/view?_id=@a._id" class="jie-title">@a.title</a>
           <i>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</i>
           <em>@{a.viewStat.count}阅/@{a.replyStat.count}答</em>
         </li>
@@ -45,7 +45,7 @@
         <li>
           <p>
             <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
-            在<a href="" target="_blank">@{a.title}</a>回复了@{a.replies.count(_.author._id == request.session("uid"))}条
+            在<a href="/article/view?_id=@a._id" target="_blank">@{a.title}</a>回复了@{a.replies.count(_.author._id == request.session("uid"))}条
           </p>
         </li>
         }
