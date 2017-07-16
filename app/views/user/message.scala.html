@@ -43,14 +43,20 @@
         }
         <ul class="mine-msg">
           @for(m <- messages){
-          @if(m.source == "article" && m.action == "reply"){
+          @if(m.source == "article"){
           <li data-id="@m._id" data-token="@CSRF.getToken.value">
             <blockquote class="layui-elem-quote">
+              @if(m.action == "reply"){
               <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>回复了您的文章<a target="_blank" href="/article/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>
+              }
+              @if(m.action == "at"){
+              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>在文章<a target="_blank" href="/article/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>的回复中提到了您。
+              }
             </blockquote>
             <p><span>@utils.DateTimeUtil.toPrettyString(m.createTime)</span><a href="javascript:;" class="layui-btn layui-btn-small layui-btn-danger fly-delete">删除</a></p>
           </li>
           }
+
           }
         </ul>
       </div>

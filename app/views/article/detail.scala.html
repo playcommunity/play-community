@@ -40,14 +40,14 @@
               <em>1分钟前发布</em>
             </cite>
           </a>
-          <div class="detail-hits" data-id="{{rows.id}}">
+          <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
             }
             @if(utils.BitmapUtil.fromBase64String(article.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
-            <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="add">取消收藏</span>
+            <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="remove" data-token="@CSRF.getToken.value">取消收藏</span>
             }else{
-            <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add">收藏</span>
+            <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-token="@CSRF.getToken.value">收藏</span>
             }
           </div>
         </div>
@@ -62,7 +62,7 @@
         <ul class="jieda photos" id="jieda">
           @for(r <- article.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-aid="@{article._id}" data-rid="@{r._id}">
+          <li data-aid="@{article._id}" data-rid="@{r._id}" data-uid="@{r.author._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="">
@@ -105,6 +105,7 @@
             <div class="layui-form-item">
               @CSRF.formField
               <input type="hidden" name="_id" value="@article._id">
+              <input id="at-input" type="hidden" name="at" value="">
               <button class="layui-btn" lay-submit>提交回答</button>
             </div>
           </form>

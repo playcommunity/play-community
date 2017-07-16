@@ -1,20 +1,23 @@
 package controllers
 
+import java.time.OffsetDateTime
 import javax.inject._
+
 import akka.stream.Materializer
 import models._
 import models.JsonFormats._
 import reactivemongo.play.json._
 import play.api._
 import play.api.data.Form
-import play.api.mvc._
-import play.api.data.Forms._
+import play.api.mvc.{Action, _}
+import play.api.data.Forms.{tuple, _}
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
+import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.{ExecutionContext, Future}
-import utils.HashUtil
+import utils.{BitmapUtil, DateTimeUtil, HashUtil}
 
 import scala.concurrent.duration._
 
@@ -68,8 +71,8 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
       collectCol <- collectColFuture
       articles <- articleCol.find(Json.obj("author._id" -> request.session("uid"))).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
       articlesCount <- articleCol.count(Some(Json.obj("author._id" -> request.session("uid"))))
-      collectRes <- articleCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("collectTime" -> -1)).cursor[StatCollect]().collect[List](15)
-      collectResCount <- articleCol.count(Some(Json.obj("uid" -> request.session("uid"))))
+      collectRes <- collectCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("collectTime" -> -1)).cursor[StatCollect]().collect[List](15)
+      collectResCount <- collectCol.count(Some(Json.obj("uid" -> request.session("uid"))))
     } yield {
       Ok(views.html.user.index(articles, articlesCount, collectRes, collectResCount))
     }
@@ -185,6 +188,42 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
             Redirect(routes.Application.message("系统提示", "密码修改成功！"))
           } else {
             Redirect(routes.Application.message("系统提示", "您的输入有误！"))
+          }
+        }
+      }
+    )
+  }
+
+  def doCollect() = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
+      tuple => {
+        val (resType, resId) = tuple
+        val uid = request.session("uid").toInt
+        val resColFuture = if (resType == "article") { articleColFuture } else { articleColFuture }
+        for {
+          collectCol <- collectColFuture
+          resCol <- resColFuture
+          Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1, "timeStat" -> 1, "collectStat" -> 1)).one[JsObject]
+        } yield {
+          val collectStat = resObj("collectStat").as[CollectStat]
+          val resOwner = resObj("author").as[Author]
+          val resTitle = resObj("title").as[String]
+          val resCreateTime = resObj("timeStat")("createTime").as[OffsetDateTime]
+          val bitmap = BitmapUtil.fromBase64String(collectStat.bitmap)
+          // 收藏
+          if (!bitmap.contains(uid)) {
+            bitmap.add(uid)
+            resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("collectStat" -> CollectStat(collectStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            collectCol.insert(StatCollect(BSONObjectID.generate().stringify, request.session("uid"), resType, resId, resOwner, resTitle, resCreateTime, DateTimeUtil.now()))
+            Ok(Json.obj("status" -> 0))
+          }
+          // 取消收藏
+          else {
+            bitmap.remove(uid)
+            resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("collectStat" -> CollectStat(collectStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            collectCol.remove(Json.obj("uid" -> request.session("uid"), "resId" -> resId, "resType" -> resType))
+            Ok(Json.obj("status" -> 0))
           }
         }
       }

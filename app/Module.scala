@@ -16,7 +16,7 @@ import service.InitializeService
 class Module extends AbstractModule {
 
   override def configure() = {
-    bind(classOf[InitializeService]).asEagerSingleton
+    //bind(classOf[InitializeService]).asEagerSingleton
   }
 
 }
