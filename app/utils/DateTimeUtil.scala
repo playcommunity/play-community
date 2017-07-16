@@ -1,7 +1,7 @@
 package utils
 
 import java.time.format.DateTimeFormatter
-import java.time.{Duration, OffsetDateTime, ZoneOffset}
+import java.time.{Duration, Instant, OffsetDateTime, ZoneOffset}
 
 
 /**
@@ -29,11 +29,23 @@ object DateTimeUtil {
     }
   }
 
+  def toPrettyString(epochMillis: Long): String = {
+    val time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneOffset.ofHours(8))
+    toPrettyString(time)
+  }
+
   def toString(time: OffsetDateTime, format: String): String = {
     time.format(DateTimeFormatter.ofPattern(format))
+  }
+
+  def toString(epochMillis: Long, format: String): String = {
+    val time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneOffset.ofHours(8))
+    toString(time, format)
   }
 
   def now() : OffsetDateTime = {
     OffsetDateTime.now(ZoneOffset.ofHours(8))
   }
+
+
 }

@@ -13,9 +13,9 @@
           <a href="/?nav=4" @if(nav == "4"){class="tab-this"}>精帖</a>
           <!--<a href="/?nav=5" @if(nav == "5"){class="tab-this"}>我的帖</a>-->
         </span>
-        <form action="http://cn.bing.com/search" class="fly-search">
+        <form action="/search" class="fly-search">
           <i class="iconfont icon-sousuo"></i>
-          <input class="layui-input" autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q">
+          <input class="layui-input" autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q" value="@query">
         </form>
         <a href="/article/add" class="layui-btn jie-add">发布问题</a>
       </div>

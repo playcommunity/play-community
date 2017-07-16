@@ -29,6 +29,9 @@
       "authorId": {
         "type": "keyword"
       },
+      "authorHeadImg": {
+        "type": "keyword"
+      },
       "createTime": {
         "type": "date",
         "format": "epoch_millis"

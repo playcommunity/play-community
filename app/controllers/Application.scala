@@ -63,6 +63,14 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     Ok(views.html.tips(title, message))
   }
 
+  def search(q: String, plate: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+    val cPage = if(page < 1){1}else{page}
+
+    elasticService.search("localhost", 9200, q).map{ t =>
+      Ok(views.html.search(q, plate, t._2, cPage, t._1))
+    }
+  }
+
   def register = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.register())
   }
@@ -132,7 +140,6 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   }
 
   def notFound = Action { implicit request: Request[AnyContent] =>
-    elasticService.search("localhost", 9200, "中国").map(println _)
     Ok(views.html.notFound())
   }
 

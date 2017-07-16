@@ -29,5 +29,9 @@ object JsonFormats {
   // Stat
   implicit val statCollectFormat = Json.format[StatCollect]
 
+  // Search
+  implicit val indexedDocumentFormat = Json.format[IndexedDocument]
+
+
 
 }

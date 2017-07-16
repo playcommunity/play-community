@@ -4,6 +4,7 @@
 
 # Application
 GET     /                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
+GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
 GET     /register                                 controllers.Application.register
