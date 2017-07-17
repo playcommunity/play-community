@@ -37,6 +37,9 @@ POST    /article/reply                            controllers.ArticleController.
 GET     /article/view                             controllers.ArticleController.view(_id: String)
 GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
 POST    /article/reply/vote                       controllers.ArticleController.doVoteReply
+GET     /article/reply/edit                       controllers.ArticleController.editReply(aid: String, rid: String)
+POST    /article/reply/edit                       controllers.ArticleController.doEditReply
+POST    /article/reply/remove                     controllers.ArticleController.doRemoveReply
 
 # Resource
 POST   /resource/owner/:ownerId                   controllers.ResourceController.saveResource(ownerId: String)
@@ -45,4 +48,5 @@ DELETE /resource/:rid                             controllers.ResourceController
 
 
 # Map static resources from the /public folder to the /assets URL path
+GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
 GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)

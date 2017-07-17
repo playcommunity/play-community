@@ -167,8 +167,9 @@ layui.define(['laypage', 'fly'], function(exports){
       });
     }
     ,edit: function(li){ //编辑
-      fly.json('/jie/getDa/', {
-        id: li.data('id')
+      fly.json('/article/reply/edit', {
+        aid: li.data('aid'),
+        rid: li.data('rid')
       }, function(res){
         var data = res.rows;
         layer.prompt({
@@ -176,21 +177,25 @@ layui.define(['laypage', 'fly'], function(exports){
          ,value: data.content
          ,maxlength: 100000
         }, function(value, index){
-          fly.json('/jie/updateDa/', {
-            id: li.data('id')
+          fly.json('/article/reply/edit', {
+            aid: li.data('aid')
+            ,rid: li.data('rid')
             ,content: value
+            ,csrfToken: li.data('token')
           }, function(res){
             layer.close(index);
             li.find('.detail-body').html(fly.content(value));
           });
         });
-      });
+      }, {type: 'get'});
     }
     ,del: function(li){ //删除
       layer.confirm('确认删除该回答么？', function(index){
         layer.close(index);
-        fly.json('/api/jieda-delete/', {
-          id: li.data('id')
+        fly.json('/article/reply/remove', {
+          aid: li.data('aid')
+          ,rid: li.data('rid')
+          ,csrfToken: li.data('token')
         }, function(res){
           if(res.status === 0){
             var count = dom.jiedaCount.text()|0;

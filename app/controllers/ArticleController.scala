@@ -132,12 +132,12 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
           replyStat = (articleObj \ "replyStat").as[ReplyStat]
           replyBitmap = BitmapUtil.fromBase64String(replyStat.bitmap)
           newReplyStat =
-            if (replyBitmap.contains(uid)) {
-              replyStat.copy(count = replyStat.count + 1)
-            } else {
-              replyBitmap.add(uid)
-              replyStat.copy(count = replyStat.count + 1, userCount = replyStat.userCount + 1, bitmap = BitmapUtil.toBase64String(replyBitmap))
-            }
+          if (replyBitmap.contains(uid)) {
+            replyStat.copy(count = replyStat.count + 1)
+          } else {
+            replyBitmap.add(uid)
+            replyStat.copy(count = replyStat.count + 1, userCount = replyStat.userCount + 1, bitmap = BitmapUtil.toBase64String(replyBitmap))
+          }
           wr <- articleCol.update(
             Json.obj("_id" -> _id),
             Json.obj(
@@ -151,7 +151,52 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
           atIds.foreach{ uid =>
             msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, viewHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
+          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
+
           Redirect(routes.ArticleController.view(_id))
+        }
+      }
+    )
+  }
+
+  def editReply(aid: String, rid: String) = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      articleCol <- articleColFuture
+      reply <- articleCol.find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).one[JsObject].map(objOpt => (objOpt.get)("replies")(0).as[Reply])
+    } yield {
+      Ok(Json.obj("status" -> 0, "rows" -> Json.obj("content" -> reply.content)))
+    }
+  }
+
+  def doEditReply = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText, "content" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok("err")),
+      tuple => {
+        val (aid, rid, content) = tuple
+        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val uid = request.session("uid").toInt
+        for{
+          articleCol <- articleColFuture
+          wr <- articleCol.update(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
+        } yield {
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  def doRemoveReply = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok("err")),
+      tuple => {
+        val (aid, rid) = tuple
+        val uid = request.session("uid").toInt
+        for{
+          articleCol <- articleColFuture
+          wr <- articleCol.update(Json.obj("_id" -> aid), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.count" -> -1)))
+        } yield {
+          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> -1))))
+          Ok(Json.obj("status" -> 0))
         }
       }
     )
@@ -193,7 +238,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
         val uid = request.session("uid").toInt
         for{
           articleCol <- articleColFuture
-          reply <- articleCol.find(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("replies" -> 1)).one[JsObject].map(objOpt => (objOpt.get \ "replies").as[List[Reply]].find(_._id == rid).get)
+          reply <- articleCol.find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).one[JsObject].map(objOpt => (objOpt.get \ "replies")(0).as[Reply])
         } yield {
           val bitmap = BitmapUtil.fromBase64String(reply.voteStat.bitmap)
           // 投票
