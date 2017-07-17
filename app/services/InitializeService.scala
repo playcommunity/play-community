@@ -1,4 +1,4 @@
-package service
+package services
 
 import java.io.{File, FileInputStream}
 import javax.inject.{Inject, Singleton}

@@ -38,13 +38,14 @@
                     </a>
                     <div class="nav">
                         <a href="/user/setting"><i class="iconfont icon-shezhi"></i>设置</a>
+                        <!--<a href="/user/message"><i class="iconfont icon-xiaoxi"></i>消息</a>-->
                         <a href="/logout"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>
                     </div>
                 }
                 case None => {
                     <!-- 未登入状态 -->
-                    <a class="unlogin" href="user/login.html"><i class="iconfont icon-touxiang"></i></a>
-                    <span><a href="user/login.html">登入</a><a href="user/reg.html">注册</a></span>
+                    <a class="unlogin" href="/login"><i class="iconfont icon-touxiang"></i></a>
+                    <span><a href="/login">登入</a><a href="/register">注册</a></span>
                     <p class="out-login">
                         <a href="" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-qq" title="QQ登入"></a>
                         <a href="" onclick="layer.msg('正在通过微博登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-weibo" title="微博登入"></a>
@@ -64,5 +65,28 @@
     </p>
 </div>
 <script src="/assets/layui/layui.js"></script>
+<script>
+layui.cache.user = {
+  username: '@request.session.get("name").getOrElse("游客")'
+  ,uid: @request.session.get("uid").getOrElse("-1").toInt
+  ,avatar: '@request.session.get("headImg").getOrElse("/assets/images/head.png")'
+  ,experience: 0
+  ,sex: '男'
+};
+layui.config({
+  version: "2.0.0"
+  ,base: '/assets/mods/'
+}).extend({
+  fly: 'index'
+}).use('fly', function(){
+  var $ = layui.jquery;
+  var fly = layui.fly;
+  //如果你是采用模版自带的编辑器，你需要开启以下语句来解析。
+  $('.detail-body').each(function(){
+    var othis = $(this), html = othis.html();
+    othis.html(fly.content(html));
+  });
+});
+</script>
 </body>
 </html>

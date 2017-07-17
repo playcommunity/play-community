@@ -1,4 +1,4 @@
-package service
+package services
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.{JsObject, Json}

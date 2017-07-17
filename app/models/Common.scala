@@ -76,7 +76,7 @@ case class Article(
   * @param source system/article/question
   * @param action view/vote/reply/comment
   */
-case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime)
+case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)
 
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 case class Author(_id: String, login: String, name: String, headImg: String)

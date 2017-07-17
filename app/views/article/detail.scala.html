@@ -1,4 +1,4 @@
-@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
+@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader, viewHelper: services.ViewHelper)
 @import helper._
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main("欢迎来到社区！") {
@@ -40,6 +40,7 @@
               <em>1分钟前发布</em>
             </cite>
           </a>
+          @if(viewHelper.isLogin){
           <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
@@ -50,6 +51,7 @@
             <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-token="@CSRF.getToken.value">收藏</span>
             }
           </div>
+          }
         </div>
 
         <div class="detail-body photos" style="margin-bottom: 20px;">
@@ -78,6 +80,7 @@
             <div class="detail-body jieda-body">
               @Html(r.content)
             </div>
+            @if(viewHelper.isLogin){
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
@@ -87,6 +90,7 @@
                 <span class="jieda-accept" type="accept">采纳</span>
               </div>
             </div>
+            }
           </li>
           }
           }
@@ -94,7 +98,7 @@
           <li class="fly-none">没有任何回答</li>
           }
         </ul>
-
+        @if(viewHelper.isLogin){
         <div class="layui-form layui-form-pane">
           <form action="/article/reply" method="post">
             <div class="layui-form-item layui-form-text">
@@ -110,6 +114,7 @@
             </div>
           </form>
         </div>
+        }
       </div>
     </div>
   </div>
@@ -140,25 +145,4 @@
 
 <script>
 layui.cache.page = 'jie';
-layui.cache.user = {
-  username: '游客'
-  ,uid: -1
-  ,avatar: '/assets/images/avatar/00.jpg'
-  ,experience: 83
-  ,sex: '男'
-};
-layui.config({
-  version: "2.0.0"
-  ,base: '/assets/mods/'
-}).extend({
-  fly: 'index'
-}).use('fly', function(){
-  var $ = layui.jquery;
-  var fly = layui.fly;
-  //如果你是采用模版自带的编辑器，你需要开启以下语句来解析。
-  $('.detail-body').each(function(){
-    var othis = $(this), html = othis.html();
-    othis.html(fly.content(html));
-  });
-});
 </script>

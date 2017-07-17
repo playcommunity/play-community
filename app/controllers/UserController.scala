@@ -99,6 +99,24 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
+  def messageCount() = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      msgCol <- msgColFuture
+      count <- msgCol.count(Some(Json.obj("uid" -> request.session("uid"), "read" -> false)))
+    } yield {
+      Ok(Json.obj("status" -> 0, "count" -> count))
+    }
+  }
+
+  def readMessage() = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      msgCol <- msgColFuture
+      wr <- msgCol.update(Json.obj("uid" -> request.session("uid"), "read" -> false), Json.obj("$set" -> Json.obj("read" -> true)), multi = true)
+    } yield {
+      Ok(Json.obj("status" -> 0))
+    }
+  }
+
   def removeMessage = Action.async { implicit request: Request[AnyContent] =>
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),

@@ -14,7 +14,7 @@ import reactivemongo.play.json._
 
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
   val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404")
-  val protectPathPattern = Pattern.compile("/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
+  val protectPathPattern = Pattern.compile("/|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
@@ -54,7 +54,7 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
         // 已登录用户
         case Some(uid) =>
           // 统计用户流量
-          statIPColFuture.map(_.update(
+          statVisitorColFuture.map(_.update(
             Json.obj("uid" -> uid, "hourStr" -> hourStr),
             Json.obj(
               "$inc" -> Json.obj("count" -> 1),
@@ -70,7 +70,7 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
           if (protectPathPattern.matcher(request.path).matches()) {
             if (request.session.get("visitor").nonEmpty) {
               // 统计访客流量
-              statIPColFuture.map(_.update(
+              statVisitorColFuture.map(_.update(
                 Json.obj("uid" -> request.session.get("visitor").get, "hourStr" -> hourStr),
                 Json.obj(
                   "$inc" -> Json.obj("count" -> 1),

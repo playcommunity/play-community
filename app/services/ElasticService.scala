@@ -1,4 +1,4 @@
-package service
+package services
 
 import models.JsonFormats.indexedDocumentFormat
 import javax.inject.{Inject, Singleton}

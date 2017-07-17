@@ -14,7 +14,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
-import service.{CounterService, ElasticService}
+import services.{CounterService, ElasticService}
 import utils.{DateTimeUtil, HashUtil}
 
 import scala.concurrent.{ExecutionContext, Future}

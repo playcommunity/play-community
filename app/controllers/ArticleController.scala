@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.play.json.collection.JSONCollection
-import utils.{DateTimeUtil, HashUtil, BitmapUtil}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil}
 import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
@@ -20,8 +20,10 @@ import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
 import java.time._
 
+import services.ViewHelper
+
 @Singleton
-class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends Controller {
+class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit viewHelper: ViewHelper) extends Controller {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -144,11 +146,10 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
             ))
         } yield {
           // 消息提醒
-          val replier = Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg"))
-          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, replier, "reply", content, DateTimeUtil.now())))
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, viewHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), false)))
           val atIds = at.split(",").filter(_.trim != "")
           atIds.foreach{ uid =>
-            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, replier, "at", content, DateTimeUtil.now())))
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, viewHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
           Redirect(routes.ArticleController.view(_id))
         }
@@ -192,7 +193,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
         val uid = request.session("uid").toInt
         for{
           articleCol <- articleColFuture
-          reply <- articleCol.find(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("replies" -> 1)).one[JsObject].map( objOpt => (objOpt.get \ "replies")(0).as[Reply])
+          reply <- articleCol.find(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("replies" -> 1)).one[JsObject].map(objOpt => (objOpt.get \ "replies").as[List[Reply]].find(_._id == rid).get)
         } yield {
           val bitmap = BitmapUtil.fromBase64String(reply.voteStat.bitmap)
           // 投票

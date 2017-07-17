@@ -18,6 +18,8 @@ GET     /user                                     controllers.UserController.ind
 GET     /user/home                                controllers.UserController.home(uid: String)
 GET     /user/message                             controllers.UserController.message
 POST    /user/message/remove                      controllers.UserController.removeMessage
+GET     /user/message/count                       controllers.UserController.messageCount()
+GET     /user/message/read                        controllers.UserController.readMessage()
 POST    /user/message/clear                       controllers.UserController.clearMessage
 GET     /user/activate                            controllers.UserController.activate
 GET     /user/setting                             controllers.UserController.setting
