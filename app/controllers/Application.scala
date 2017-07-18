@@ -1,8 +1,10 @@
 package controllers
 
+import java.io.ByteArrayOutputStream
 import javax.inject._
 
 import akka.stream.Materializer
+import akka.util.ByteString
 import models._
 import models.JsonFormats._
 import reactivemongo.play.json._
@@ -15,7 +17,7 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService}
-import utils.{DateTimeUtil, HashUtil}
+import utils.{DateTimeUtil, HashUtil, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
@@ -141,6 +143,14 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
   def notFound = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.notFound())
+  }
+
+  def verifyCode() = Action { implicit request: Request[AnyContent] =>
+    val verifyCode = VerifyCodeUtils.generateVerifyCode(4)
+    val baos: ByteArrayOutputStream = new ByteArrayOutputStream
+    VerifyCodeUtils.outputImage(200, 80, baos, verifyCode)
+    Ok(ByteString(baos.toByteArray))
+        .as("image/jpeg")
   }
 
 }

@@ -12,6 +12,7 @@ POST    /register                                 controllers.Application.doRegi
 GET     /logout                                   controllers.Application.logout
 GET     /404                                      controllers.Application.notFound
 GET     /message                                  controllers.Application.message(title: String, message: String)
+GET     /verifyCode                               controllers.Application.verifyCode
 
 # User
 GET     /user                                     controllers.UserController.index

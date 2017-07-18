@@ -14,7 +14,7 @@ import reactivemongo.play.json._
 
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
   val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404")
-  val protectPathPattern = Pattern.compile("/|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
+  val protectPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
