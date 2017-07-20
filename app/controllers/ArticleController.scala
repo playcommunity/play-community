@@ -53,13 +53,14 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
     }
     for {
       articleCol <- articleColFuture
+      topArticles <- articleCol.find(Json.obj("$or" -> Json.arr(Json.obj("top" -> true), Json.obj("recommended" -> true)))).cursor[Article]().collect[List](5)
       articles <- articleCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Article]().collect[List](15)
       total <- articleCol.count(None)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(routes.ArticleController.index(nav, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.article.index(nav, articles, cPage, total))
+        Ok(views.html.article.index(nav, topArticles, articles, cPage, total))
       }
     }
   }

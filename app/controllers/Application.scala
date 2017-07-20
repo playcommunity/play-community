@@ -51,7 +51,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     for {
       userCol <- userColFuture
       articleCol <- articleColFuture
-      topArticles <- articleCol.find(Json.obj("top" -> true, "recommended" -> true)).cursor[Article]().collect[List](5)
+      topArticles <- articleCol.find(Json.obj("$or" -> Json.arr(Json.obj("top" -> true), Json.obj("recommended" -> true)))).cursor[Article]().collect[List](5)
       articles <- articleCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Article]().collect[List](15)
       topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
       topReplyArticles <- articleCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Article]().collect[List](10)

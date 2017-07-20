@@ -4,24 +4,22 @@
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">
-      <div class="fly-tab fly-tab-index">
-        <span>
-          <a href="/?nav=0" @if(nav == "0"){class="tab-this"}>全部</a>
-          <a href="/?nav=1" @if(nav == "1"){class="tab-this"}>最新回答</a>
-          <a href="/?nav=2" @if(nav == "2"){class="tab-this"}>最新提问</a>
-          <!--<a href="/?nav=3" @if(nav == "3"){class="tab-this"}>尚未回答</a>-->
-          <a href="/?nav=4" @if(nav == "4"){class="tab-this"}>精帖</a>
-          <!--<a href="/?nav=5" @if(nav == "5"){class="tab-this"}>我的帖</a>-->
-        </span>
-        <form action="/search" class="fly-search">
-          <i class="iconfont icon-sousuo"></i>
-          <input class="layui-input" autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q">
-        </form>
-        <a href="/article/add" class="layui-btn jie-add">发布问题</a>
+      <div class="fly-tab">
+        <div class="layui-tab layui-tab-brief">
+          <ul class="layui-tab-title">
+            <li> <a href="/?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
+            <li> <a href="/?nav=1" @if(nav == "1"){class="layui-this"}>最新回答</a> </li>
+            <li> <a href="/?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
+            <li> <a href="/?nav=3" @if(nav == "3"){class="layui-this"}>尚未回答</a> </li>
+            <li> <a href="/?nav=4" @if(nav == "4"){class="layui-this"}>精帖</a> </li>
+            <li> <a href="/?nav=5" @if(nav == "5"){class="layui-this"}>我的帖</a> </li>
+          </ul>
+        </div>
+        <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
       @if(topArticles.nonEmpty){
-      <ul class="fly-list fly-list-top">
+      <ul class="fly-panel fly-list fly-list-top">
         @for(a <- topArticles){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
@@ -50,7 +48,7 @@
       </ul>
       }
 
-      <ul class="fly-list">
+      <ul class="fly-panel fly-list">
         @for(a <- articles){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
@@ -81,6 +79,10 @@
   </div>
 
   <div class="edge">
+    <div class="jie-add">
+      <a href="/jie/add/" class="layui-btn layui-btn-big">发表新帖</a>
+      <a href="javascript:layer.msg('尚未开放');" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">共享组件</a>
+    </div>
     <div class="fly-panel leifeng-rank">
       <h3 class="fly-panel-title">近一月回答榜 - TOP 12</h3>
       <dl>

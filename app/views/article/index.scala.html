@@ -1,26 +1,54 @@
-@(nav: String, articles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
+@(nav: String, topArticles: List[Article], articles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 
 @main("欢迎来到社区！") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content" style="margin-right:0">
       <div class="fly-tab">
-        <span>
-          <a href="/articles?nav=0" @if(nav == "0"){class="tab-this"}>全部</a>
-          <a href="/articles?nav=1" @if(nav == "1"){class="tab-this"}>最新回答</a>
-          <a href="/articles?nav=2" @if(nav == "2"){class="tab-this"}>最新提问</a>
-          <!--<a href="/articles?nav=3" @if(nav == "3"){class="tab-this"}>尚未回答</a>-->
-          <a href="/articles?nav=4" @if(nav == "4"){class="tab-this"}>精帖</a>
-          <!--<a href="/articles?nav=5" @if(nav == "5"){class="tab-this"}>我的帖</a>-->
-        </span>
-        <form action="/search" class="fly-search">
-          <i class="iconfont icon-sousuo"></i>
-          <input class="layui-input" autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q">
-        </form>
-        <a href="/article/add" class="layui-btn jie-add">发布问题</a>
+        <div class="layui-tab layui-tab-brief">
+          <ul class="layui-tab-title">
+            <li> <a href="/?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
+            <li> <a href="/articles?nav=1" @if(nav == "1"){class="layui-this"}>最新回答</a> </li>
+            <li> <a href="/articles?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
+            <li> <a href="/articles?nav=3" @if(nav == "3"){class="layui-this"}>尚未回答</a> </li>
+            <li> <a href="/articles?nav=4" @if(nav == "4"){class="layui-this"}>精帖</a> </li>
+            <li> <a href="/articles?nav=5" @if(nav == "5"){class="layui-this"}>我的帖</a> </li>
+          </ul>
+        </div>
+        <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
-      <ul class="fly-list">
+      @if(topArticles.nonEmpty){
+      <ul class="fly-panel fly-list fly-list-top">
+        @for(a <- topArticles){
+        <li class="fly-list-li">
+          <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
+            <img src="@a.author.headImg" alt="">
+          </a>
+          <h2 class="fly-tip">
+            <a href="/article/view?_id=@a._id">@a.title</a>
+            @if(a.top){
+            <span class="fly-tip-stick">置顶</span>
+            }
+            @if(a.recommended){
+            <span class="fly-tip-jing">精帖</span>
+            }
+          </h2>
+          <p>
+            <span><a href="user/home.html">贤心</a></span>
+            <span>刚刚</span>
+            <span>layui框架综合</span>
+            <span class="fly-list-hint">
+              <i class="iconfont" title="回答">&#xe60c;</i> 317
+              <i class="iconfont" title="人气">&#xe60b;</i> 6830
+            </span>
+          </p>
+        </li>
+        }
+      </ul>
+      }
+
+      <ul class="fly-panel fly-list">
         @for(a <- articles){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
@@ -42,13 +70,9 @@
         }
       </ul>
 
-      @if(articles.isEmpty){
-      <div class="fly-none">并无相关数据</div>
-      }
-
       <div style="text-align: center">
         <div class="laypage-main">
-          <a href="/articles?nav=@nav&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(articles.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/articles?nav=@nav&page=@{page+1}" class="laypage-next">下一页</a></div>
+          <a href="/articles?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(articles.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/articles?page=@{page+1}" class="laypage-next">下一页</a></div>
       </div>
 
     </div>
