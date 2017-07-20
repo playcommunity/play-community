@@ -2,6 +2,16 @@
 @import helper._
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main("欢迎来到社区！") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<style>
+/* Set default font-family */
+#quill-container {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  height: 200px;
+}
+.layui-upload-file, .layui-upload-button { display: none;}
+</style>
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content detail">
@@ -33,7 +43,7 @@
           </div>
         </div>
         <div class="detail-about">
-          <a class="jie-user" href="">
+          <a class="jie-user" href="/user/home?uid=@{article.author._id}">
             <img src="@article.author.headImg" alt="">
             <cite>
               @article.author.name
@@ -43,7 +53,7 @@
           @if(viewHelper.isLogin){
           <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
-            <span class="layui-btn layui-btn-mini jie-admin"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
+            <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
             }
             @if(utils.BitmapUtil.fromBase64String(article.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
             <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="remove" data-token="@CSRF.getToken.value">取消收藏</span>
@@ -84,11 +94,11 @@
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
-              <div class="jieda-admin">
+              <!--<div class="jieda-admin">
                 <span type="edit">编辑</span>
                 <span type="del">删除</span>
                 <span class="jieda-accept" type="accept">采纳</span>
-              </div>
+              </div>-->
             </div>
             }
           </li>
@@ -99,17 +109,15 @@
           }
         </ul>
         @if(viewHelper.isLogin){
-        <div class="layui-form layui-form-pane">
-          <form action="/article/reply" method="post">
-            <div class="layui-form-item layui-form-text">
-              <div class="layui-input-block">
-                <textarea id="L_content" name="content" required lay-verify="required" placeholder="我要回答"  class="layui-textarea fly-editor" style="height: 150px;"></textarea>
-              </div>
-            </div>
+        <div id="quill-container"></div>
+        <div class="layui-form layui-form-pane" style="margin-top: 15px;">
+          <form id="form" action="/article/reply" method="post">
             <div class="layui-form-item">
               @CSRF.formField
               <input type="hidden" name="_id" value="@article._id">
+              <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
+              <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">
               <button class="layui-btn" lay-submit>提交回答</button>
             </div>
           </form>
@@ -142,7 +150,32 @@
   </div>
 </div>
 }
-
+<script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script>
 layui.cache.page = 'jie';
+
+var quill = new Quill('#quill-container', {
+  placeholder: '正文',
+  theme: 'snow',
+  modules: {
+    toolbar: {
+      container : [
+        [{ 'size': [] }],
+        [ 'bold', 'italic', 'underline' ],
+        [ 'blockquote', 'code-block' ],
+        [{ 'list': 'ordered' }, { 'list': 'bullet'}],
+        [{ 'align': [] }],
+        [ 'link', 'image' ],
+        [ 'clean' ]
+      ],
+      handlers: {
+        image: function(){ $('#LAY-upload-image').click(); }
+      }
+    }
+  }
+});
+
+$('#form').submit(function(){
+  $('#L_content').val(quill.root.innerHTML);
+});
 </script>

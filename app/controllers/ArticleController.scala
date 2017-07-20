@@ -39,7 +39,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
     nav match {
       case "1" =>
         q ++= Json.obj()
-        sort = Json.obj("timeStat.lastReplyTime" -> -1)
+        sort = Json.obj("lastReply.replyTime" -> -1)
       case "2" =>
         q ++= Json.obj()
         sort = Json.obj("timeStat.createTime" -> -1)

@@ -197,7 +197,7 @@ public class VerifyCodeUtils {
         Font font = new Font("Algerian", Font.ITALIC, fontSize);
         try {
             int rand = (int) Math.round(Math.random()*6 + 1);
-            System.out.println("Font: " + rand);
+            //System.out.println("Font: " + rand);
             switch (rand) {
                 case 1:
                     font = new Font("Algerian", Font.ITALIC, fontSize);

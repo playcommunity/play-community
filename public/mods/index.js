@@ -364,9 +364,9 @@ layui.define(['layer', 'laytpl', 'form', 'upload', 'util'], function(exports){
   }
 
   //加载编辑器
-  gather.layEditor({
+  /*gather.layEditor({
     elem: '.fly-editor'
-  });
+  });*/
 
   //右下角固定Bar
   util.fixbar({
@@ -395,7 +395,11 @@ layui.define(['layer', 'laytpl', 'form', 'upload', 'util'], function(exports){
   layui.use('flow', function(flow){
     flow.lazyimg();
   });*/
-  
+
+  $('#L_vercode_img').on('click', function(){
+    $('#L_vercode_img').attr('src', '/verifyCode?_=' + Math.random());
+  });
+
 
   exports('fly', gather);
 

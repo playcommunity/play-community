@@ -1,72 +1,96 @@
 @(articleOpt: Option[Article], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
 @main("欢迎来到社区！") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<style>
+/* Set default font-family */
+#quill-container {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  height: 500px;
+}
+.layui-upload-file, .layui-upload-button { display: none;}
+</style>
 <div class="main layui-clear">
-  <div class="fly-panel" pad20>
-    <h2 class="page-title">发表问题</h2>
-
-    <!-- <div class="fly-none">并无权限</div> -->
-
-    <div class="layui-form layui-form-pane">
-      <form action="/article/add" method="post">
-      @if(articleOpt.nonEmpty){
-      <input type="hidden" name="_id" value="@articleOpt.get._id"/>
-      }
-      <div class="layui-form-item">
-        <label for="L_title" class="layui-form-label">标题</label>
-        <div class="layui-input-block">
-          <input value="@articleOpt.map(_.title).getOrElse("")" type="text" id="L_title" name="title" required lay-verify="required" autocomplete="off" class="layui-input">
-        </div>
-      </div>
-      <div class="layui-form-item layui-form-text">
-        <div class="layui-input-block">
-          <textarea id="L_content" name="content" required lay-verify="required" placeholder="请输入内容" class="layui-textarea fly-editor" style="height: 260px;">@articleOpt.map(_.content).getOrElse("")</textarea>
-        </div>
-        <label for="L_content" class="layui-form-label" style="top: -2px;">描述</label>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-inline">
-          <label class="layui-form-label">所在类别</label>
-          <div class="layui-input-block">
-            <select lay-verify="required" name="categoryPath">
-              <option></option>
-              @for(c <- categoryList){
-              <option value="@c.path" @if(articleOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
+  <div class="fly-panel" pad20 style="padding-top: 5px;">
+    <div class="layui-tab layui-tab-brief" lay-filter="user">
+      <ul class="layui-tab-title">
+        <li class="layui-this">发表新帖</li>
+      </ul>
+      <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
+        <div class="layui-tab-item layui-show">
+          <div class="layui-form layui-form-pane">
+            <div class="layui-form-item">
+              <label for="L_title" class="layui-form-label">标题</label>
+              <div class="layui-input-block">
+                <input id="L_title" type="text" value="@articleOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
+            </div>
+          </div>
+          <div id="quill-container">@Html(articleOpt.map(_.content).getOrElse(""))</div>
+          <div class="layui-form layui-form-pane" style="margin-top: 15px;">
+            <form id="form" action="/article/add" method="post">
+              @if(articleOpt.nonEmpty){
+              <input type="hidden" name="_id" value="@articleOpt.get._id"/>
               }
-            </select>
+              <input id="L_title_hidden" type="hidden" name="title" value="@articleOpt.map(_.title).getOrElse("")"/>
+              <input id="L_content" type="hidden" name="content"/>
+              <div class="layui-form-item">
+                <div class="layui-inline">
+                  <label class="layui-form-label">所在类别</label>
+                  <div class="layui-input-block">
+                    <select lay-verify="required" name="categoryPath">
+                      <option></option>
+                      @for(c <- categoryList){
+                      <option value="@c.path" @if(articleOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="layui-form-item">
+                @CSRF.formField
+                <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">
+                <button class="layui-btn" lay-submit>立即发布</button>
+              </div>
+            </form>
           </div>
         </div>
-        <!--<div class="layui-inline">
-          <label class="layui-form-label">悬赏飞吻</label>
-          <div class="layui-input-block">
-            <select name="experience">
-              <option value="5" selected>5</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </div>
-        </div>-->
       </div>
-      <!--<div class="layui-form-item">
-        <label for="L_vercode" class="layui-form-label">人类验证</label>
-        <div class="layui-input-inline">
-          <input type="text" id="L_vercode" name="vercode" required lay-verify="required" placeholder="请回答后面的问题" autocomplete="off" class="layui-input">
-        </div>
-        <div class="layui-form-mid">
-          <span style="color: #c00;">1+1=?</span>
-        </div>
-      </div>-->
-      <div class="layui-form-item">
-        @CSRF.formField
-        <button class="layui-btn" lay-submit>立即发布</button>
-      </div>
-      </form>
     </div>
   </div>
 </div>
 }
 
+<script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script>
 layui.cache.page = 'jie';
+var token = '@CSRF.getToken.value';
+
+var quill = new Quill('#quill-container', {
+  placeholder: '正文',
+  theme: 'snow',
+  modules: {
+    toolbar: {
+      container : [
+        [{ 'size': [] }],
+        [ 'bold', 'italic', 'underline', 'strike' ],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'super' }, { 'script': 'sub' }],
+        [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
+        [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
+        [ 'direction', { 'align': [] }],
+        [ 'link', 'image' ],
+        [ 'clean' ]
+      ],
+      handlers: {
+        image: function(){ $('#LAY-upload-image').click(); }
+      }
+    }
+  }
+});
+
+$('#form').submit(function(){
+  $('#L_title_hidden').val($('#L_title').val());
+  $('#L_content').val(quill.root.innerHTML);
+});
 </script>

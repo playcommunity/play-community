@@ -46,10 +46,10 @@
                     <!-- 未登入状态 -->
                     <a class="unlogin" href="/login"><i class="iconfont icon-touxiang"></i></a>
                     <span><a href="/login">登入</a><a href="/register">注册</a></span>
-                    <p class="out-login">
+                    <!--<p class="out-login">
                         <a href="" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-qq" title="QQ登入"></a>
                         <a href="" onclick="layer.msg('正在通过微博登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-weibo" title="微博登入"></a>
-                    </p>
+                    </p>-->
                 }
             }
         </div>
@@ -64,6 +64,7 @@
         <a href="javascript:void(0);" target="_blank">微信公众号</a>
     </p>
 </div>
+<script src="/assets/js/jquery.js"></script>
 <script src="/assets/layui/layui.js"></script>
 <script>
 layui.cache.user = {
@@ -81,11 +82,6 @@ layui.config({
 }).use('fly', function(){
   var $ = layui.jquery;
   var fly = layui.fly;
-  //如果你是采用模版自带的编辑器，你需要开启以下语句来解析。
-  $('.detail-body').each(function(){
-    var othis = $(this), html = othis.html();
-    othis.html(fly.content(html));
-  });
 });
 </script>
 </body>
