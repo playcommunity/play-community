@@ -1,4 +1,4 @@
-@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], topReplyUsers: List[User], page: Int, total: Int)(implicit request: RequestHeader)
+@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], topReplyUsers: List[User], page: Int, total: Int)(implicit request: RequestHeader, viewHelper: services.ViewHelper)
 
 @main("欢迎来到社区！") {
 <div class="main layui-clear">
@@ -12,7 +12,6 @@
             <li> <a href="/?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
             <li> <a href="/?nav=3" @if(nav == "3"){class="layui-this"}>尚未回答</a> </li>
             <li> <a href="/?nav=4" @if(nav == "4"){class="layui-this"}>精帖</a> </li>
-            <li> <a href="/?nav=5" @if(nav == "5"){class="layui-this"}>我的帖</a> </li>
           </ul>
         </div>
         <i class="layui-icon fly-search">&#xe615;</i>
@@ -79,10 +78,12 @@
   </div>
 
   <div class="edge">
+    @if(viewHelper.isLogin){
     <div class="jie-add">
-      <a href="/jie/add/" class="layui-btn layui-btn-big">发表新帖</a>
-      <a href="javascript:layer.msg('尚未开放');" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">共享组件</a>
+      <a href="/article/add" class="layui-btn layui-btn-big">发表新帖</a>
+      <a href="/user" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的帖子</a>
     </div>
+    }
     <div class="fly-panel leifeng-rank">
       <h3 class="fly-panel-title">近一月回答榜 - TOP 12</h3>
       <dl>

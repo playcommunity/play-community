@@ -77,7 +77,7 @@
           <li data-aid="@{article._id}" data-rid="@{r._id}" data-uid="@{r.author._id}" data-token="@CSRF.getToken.value">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
-              <a class="jie-user" href="">
+              <a class="jie-user" href="/user/home?uid=@{r.author._id}">
                 <img src="@{r.author.headImg}" alt="">
                 <cite>
                   <i>@{r.author.name}</i>

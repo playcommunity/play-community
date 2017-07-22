@@ -2,7 +2,10 @@ name := """play-community"""
 
 version := "1.0.0"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+//lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val root = (project in file("."))
+  .enablePlugins(PlayScala, PlayNettyServer)
+  .disablePlugins(PlayAkkaHttpServer)
 
 scalaVersion := "2.12.2"
 

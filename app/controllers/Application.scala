@@ -16,7 +16,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, ElasticService}
+import services.{CounterService, ElasticService, ViewHelper}
 import utils.{DateTimeUtil, HashUtil, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,7 +24,7 @@ import scala.util.Random
 
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService)(implicit ec: ExecutionContext, mat: Materializer, viewHelper: ViewHelper) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def oplogColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("oplog.rs"))

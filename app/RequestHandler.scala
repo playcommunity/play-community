@@ -1,6 +1,9 @@
 import java.util.regex.Pattern
 import javax.inject.Inject
+
+import play.api.{Configuration, Environment}
 import play.api.http._
+import play.api.inject.Modules
 import play.api.libs.json.Json
 import play.api.mvc.Results._
 import play.api.mvc._
@@ -9,10 +12,11 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json.collection.JSONCollection
 import utils.DateTimeUtil
+
 import scala.concurrent.ExecutionContext
 import reactivemongo.play.json._
 
-class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
+class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
   val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404")
   val protectPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
@@ -20,7 +24,10 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
 
   override def routeRequest(request: RequestHeader) = {
-    // 忽略页内请求
+    //println(request.path)
+    //println(request.session.get("login"))
+
+    // 忽略非PV请求
     if (publicPathPattern.matcher(request.path).matches()) {
       super.routeRequest(request)
     } else {
@@ -67,6 +74,8 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
 
         // 未登录访客
         case None =>
+          println("is visitor")
+          println(request.session.get("visitor"))
           if (protectPathPattern.matcher(request.path).matches()) {
             if (request.session.get("visitor").nonEmpty) {
               // 统计访客流量
