@@ -62,7 +62,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   }
 
   def message(title: String, message: String) = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.tips(title, message))
+    Ok(views.html.message(title, message))
   }
 
   def search(q: String, plate: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
@@ -97,7 +97,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                   wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
                 } yield {
                   if (wr.ok && wr.n == 1) {
-                    Redirect(routes.UserController.home(uid.toString))
+                    Redirect(routes.UserController.home(Some(uid.toString)))
                       .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                   } else {
                     Redirect(routes.Application.message("注册出错了", "很抱歉，似乎是发生了系统错误！"))
@@ -132,7 +132,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
           } yield {
             userOpt match {
               case Some(u) =>
-                Redirect(routes.UserController.home(u._id))
+                Redirect(routes.UserController.home(Some(u._id)))
                   .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg)
               case None =>
                 Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))

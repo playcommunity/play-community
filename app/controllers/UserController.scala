@@ -15,6 +15,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
+import services.ViewHelper
 
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil}
@@ -22,7 +23,7 @@ import utils.{BitmapUtil, DateTimeUtil, HashUtil}
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer, viewHelper: ViewHelper) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -31,7 +32,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   val userAction = new UserAction(new BodyParsers.Default())
 
   class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
-  class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext)
+  /*class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext)
     extends ActionBuilder[UserRequest, AnyContent] {
     def executionContext = ec
     override def invokeBlock[A](request: Request[A], block: (UserRequest[A]) => Future[Result]): Future[Result] = {
@@ -43,26 +44,20 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
       }*/
       Future.successful("1").flatMap{ s => println(s); Future.successful("2")}.flatMap{ s => println(s);block(new UserRequest(null, request)) }
     }
-  }
-  /*class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
+  }*/
+  class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
     def executionContext = ec
     def refine[A](input: Request[A]) = {
-      /*println("refine " + count.addAndGet(1))
       userColFuture.flatMap(_.find(Json.obj("_id" -> input.session("uid").toInt)).one[User]).map{
         case Some(u) =>
-          println("get user " + count.get())
           Right(new UserRequest(u, input))
         case None    =>
           println("not found")
           Left(Results.NotFound)
-      }.withTimeout(3 seconds).recover{
-        case t: Throwable =>
-          Left(Results.Ok("Error: " + t.getMessage))
-      }*/
-
-      Future.successful(Right(new UserRequest(User(0, Role.COMMON_USER, "", "", UserSetting("", "", "", "", ""), "", UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, ""), input)))
+      }
+      //Future.successful(Right(new UserRequest(User(0, Role.COMMON_USER, "", "", UserSetting("", "", "", "", ""), "", UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, ""), input)))
     }
-  }*/
+  }
 
 
   def index() = Action.async { implicit request: Request[AnyContent] =>
@@ -78,14 +73,19 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def home(uid: String) = Action.async { implicit request: Request[AnyContent] =>
-    for {
-      articleCol <- articleColFuture
-      myArticles <- articleCol.find(Json.obj("author._id" -> uid)).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
-      myReplyArticles <- articleCol.find(Json.obj("replies.author._id" -> uid)).sort(Json.obj("replies.replyTime" -> -1)).cursor[Article]().collect[List](15)
-      u <- getUser(uid)
-    } yield {
-      Ok(views.html.user.home(u, myArticles, myReplyArticles))
+  def home(uidOpt: Option[String]) = Action.async { implicit request: Request[AnyContent] =>
+    (uidOpt orElse viewHelper.getUidOpt) match {
+      case Some(uid) =>
+        for {
+          articleCol <- articleColFuture
+          myArticles <- articleCol.find(Json.obj("author._id" -> uid)).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
+          myReplyArticles <- articleCol.find(Json.obj("replies.author._id" -> uid)).sort(Json.obj("replies.replyTime" -> -1)).cursor[Article]().collect[List](15)
+          userOpt <- userColFuture.flatMap(_.find(Json.obj("_id" -> uid)).one[User])
+        } yield {
+          Ok(views.html.user.home(userOpt, myArticles, myReplyArticles))
+        }
+      case None =>
+        Future.successful(Ok(views.html.message("系统提示", "您查看的用户不存在！")))
     }
   }
 
@@ -251,5 +251,4 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   def getUser(_id: String) : Future[User] = {
     userColFuture.flatMap(_.find(Json.obj("_id" -> _id)).one[User]).map(_.get)
   }
-
 }

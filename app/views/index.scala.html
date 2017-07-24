@@ -34,12 +34,12 @@
             }
           </h2>
           <p>
-            <span><a href="user/home.html">贤心</a></span>
-            <span>刚刚</span>
-            <span>layui框架综合</span>
+            <span><a href="/user/home?uid=@{a.author._id}">@{a.author.name}</a></span>
+            <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
+            <span>@a.categoryName</span>
             <span class="fly-list-hint">
-              <i class="iconfont" title="回答">&#xe60c;</i> 317
-              <i class="iconfont" title="人气">&#xe60b;</i> 6830
+              <i class="iconfont" title="回答">&#xe60c;</i> @a.replies.size
+              <i class="iconfont" title="人气">&#xe60b;</i> @a.viewStat.count
             </span>
           </p>
         </li>

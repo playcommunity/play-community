@@ -1,10 +1,10 @@
-@(u: User, myArticles: List[Article], myReplyArticles: List[Article])(implicit request: RequestHeader)
+@(userOpt: Option[User], articles: List[Article], replyArticles: List[Article])(implicit request: RequestHeader, viewHelper: services.ViewHelper)
 
 @main("欢迎来到社区！") {
 <div class="fly-home" style="background-image: url();">
-  <img src="@u.setting.headImg" alt="{{info.username}}">
+  <img src="@userOpt.map(_.setting.headImg).getOrElse(viewHelper.getHeadImgOpt.getOrElse("/assets/images/head.png"))" alt="{{info.username}}">
   <h1>
-    @{u.setting.name}
+    @{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))}
     <i class="iconfont icon-nan"></i>
     <!-- <i class="iconfont icon-nv"></i> -->
 
@@ -13,19 +13,19 @@
     <span>（该号已被封）</span> -->
   </h1>
   <p class="fly-home-info">
-    <i class="iconfont icon-zuichun" title="飞吻"></i><span style="color: #FF7200;">@{u.score}飞吻</span>
-    <i class="iconfont icon-shijian"></i><span>@{u.userStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))} 加入</span>
+    <i class="iconfont icon-zuichun" title="飞吻"></i><span style="color: #FF7200;">@{userOpt.map(_.score).getOrElse(0)}飞吻</span>
+    <i class="iconfont icon-shijian"></i><span>@{userOpt.map(_.userStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).getOrElse("刚刚")} 加入</span>
     <i class="iconfont icon-chengshi"></i><span>来自中国某城</span>
   </p>
-  <p class="fly-home-sign">@{u.setting.introduction}</p>
+  <p class="fly-home-sign">@{userOpt.map(_.setting.introduction).getOrElse("")}</p>
 </div>
 
 <div class="main fly-home-main">
   <div class="layui-inline fly-home-jie">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@{u.setting.name} 最近的文章</h3>
+      <h3 class="fly-panel-title">@{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))} 最近的文章</h3>
       <ul class="jie-row">
-        @for(a <- myArticles){
+        @for(a <- articles){
         <li>
           <a href="/article/view?_id=@a._id" class="jie-title">@a.title</a>
           <i>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</i>
@@ -39,13 +39,13 @@
 
   <div class="layui-inline fly-home-da">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@{u.setting.name} 最近的回答</h3>
+      <h3 class="fly-panel-title">@{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))} 最近的回答</h3>
       <ul class="home-jieda">
-        @for(a <- myReplyArticles){
+        @for(a <- replyArticles){
         <li>
           <p>
             <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
-            在<a href="/article/view?_id=@a._id" target="_blank">@{a.title}</a>回复了@{a.replies.count(_.author._id == request.session("uid"))}条
+            回复了<a href="/article/view?_id=@a._id" target="_blank">@{a.title}</a>
           </p>
         </li>
         }
