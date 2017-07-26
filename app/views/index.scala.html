@@ -1,4 +1,4 @@
-@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], topReplyUsers: List[User], page: Int, total: Int)(implicit request: RequestHeader, viewHelper: services.ViewHelper)
+@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], topReplyUsers: List[User], page: Int, total: Int)(implicit request: RequestHeader, requestHelper: services.RequestHelper)
 
 @main("欢迎来到社区！") {
 <div class="main layui-clear">
@@ -78,13 +78,13 @@
   </div>
 
   <div class="edge">
-    @if(viewHelper.isLogin){
+    @if(requestHelper.isLogin){
     <div class="jie-add">
       <a href="/article/add" class="layui-btn layui-btn-big">发表新帖</a>
       <a href="/user" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的帖子</a>
     </div>
     }
-    <div class="fly-panel leifeng-rank">
+    <!--<div class="fly-panel leifeng-rank">
       <h3 class="fly-panel-title">近一月回答榜 - TOP 12</h3>
       <dl>
         @for(u <- topReplyUsers){
@@ -97,7 +97,7 @@
         </dd>
         }
       </dl>
-    </div>
+    </div>-->
 
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">最近热帖</dt>
@@ -126,7 +126,7 @@
           <a href="https://www.chatbot.cn/" target="_blank">奇智官网</a>
         </dd>
         <dd>
-          <a href="https://cloud.smartnlp.cn/" target="_blank">奇智云平台</a>
+          <a href="https://cloud.chatbot.cn/" target="_blank">奇智云平台</a>
         </dd>
       </dl>
     </div>

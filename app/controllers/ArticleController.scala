@@ -20,10 +20,10 @@ import reactivemongo.bson.BSONObjectID
 import scala.concurrent.Future
 import java.time._
 
-import services.ViewHelper
+import services.RequestHelper
 
 @Singleton
-class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit viewHelper: ViewHelper) extends Controller {
+class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit requestHelper: RequestHelper) extends Controller {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -90,7 +90,7 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
 
   def doAdd = Action.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
+      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
         val (_idOpt, title, content, categoryPath) = tuple
         for {
@@ -147,10 +147,12 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implic
             ))
         } yield {
           // 消息提醒
-          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, viewHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), false)))
+          val read = if (articleAuthor._id != requestHelper.getUidOpt.get) { false } else { true }
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, requestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
+
           val atIds = at.split(",").filter(_.trim != "")
           atIds.foreach{ uid =>
-            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, viewHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, requestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
           userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
 

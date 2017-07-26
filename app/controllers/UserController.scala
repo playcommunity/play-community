@@ -15,7 +15,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
-import services.ViewHelper
+import services.RequestHelper
 
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil}
@@ -23,7 +23,7 @@ import utils.{BitmapUtil, DateTimeUtil, HashUtil}
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer, viewHelper: ViewHelper) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer, requestHelper: RequestHelper) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -74,7 +74,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   }
 
   def home(uidOpt: Option[String]) = Action.async { implicit request: Request[AnyContent] =>
-    (uidOpt orElse viewHelper.getUidOpt) match {
+    (uidOpt orElse requestHelper.getUidOpt) match {
       case Some(uid) =>
         for {
           articleCol <- articleColFuture
@@ -82,7 +82,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
           myReplyArticles <- articleCol.find(Json.obj("replies.author._id" -> uid)).sort(Json.obj("replies.replyTime" -> -1)).cursor[Article]().collect[List](15)
           userOpt <- userColFuture.flatMap(_.find(Json.obj("_id" -> uid)).one[User])
         } yield {
-          Ok(views.html.user.home(userOpt, myArticles, myReplyArticles))
+          Ok(views.html.user.home(uidOpt, userOpt, myArticles, myReplyArticles))
         }
       case None =>
         Future.successful(Ok(views.html.message("系统提示", "您查看的用户不存在！")))

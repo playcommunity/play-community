@@ -15,7 +15,7 @@
   <div class="fly-panel" pad20 style="padding-top: 5px;">
     <div class="layui-tab layui-tab-brief" lay-filter="user">
       <ul class="layui-tab-title">
-        <li class="layui-this">发表新帖</li>
+        <li class="layui-this">@articleOpt.map(_ => "编辑帖子").getOrElse("发表新帖")</li>
       </ul>
       <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
         <div class="layui-tab-item layui-show">

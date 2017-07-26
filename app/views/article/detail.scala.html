@@ -1,4 +1,4 @@
-@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader, viewHelper: services.ViewHelper)
+@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader, requestHelper: services.RequestHelper)
 @import helper._
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main("欢迎来到社区！") {
@@ -47,10 +47,10 @@
             <img src="@article.author.headImg" alt="">
             <cite>
               @article.author.name
-              <em>1分钟前发布</em>
+              <em>@utils.DateTimeUtil.toPrettyString(article.timeStat.createTime)发布</em>
             </cite>
           </a>
-          @if(viewHelper.isLogin){
+          @if(requestHelper.isLogin){
           <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
@@ -84,13 +84,13 @@
                 </cite>
               </a>
               <div class="detail-hits">
-                <span>刚刚</span>
+                <span>@utils.DateTimeUtil.toPrettyString(r.replyTime)</span>
               </div>
             </div>
             <div class="detail-body jieda-body">
               @Html(r.content)
             </div>
-            @if(viewHelper.isLogin){
+            @if(requestHelper.isLogin){
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
@@ -108,7 +108,7 @@
           <li class="fly-none">没有任何回答</li>
           }
         </ul>
-        @if(viewHelper.isLogin){
+        @if(requestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/article/reply" method="post">
@@ -154,6 +154,7 @@
 <script>
 layui.cache.page = 'jie';
 
+@if(requestHelper.isLogin){
 var quill = new Quill('#quill-container', {
   placeholder: '正文',
   theme: 'snow',
@@ -178,4 +179,5 @@ var quill = new Quill('#quill-container', {
 $('#form').submit(function(){
   $('#L_content').val(quill.root.innerHTML);
 });
+}
 </script>

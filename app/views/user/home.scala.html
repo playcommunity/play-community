@@ -1,10 +1,26 @@
-@(userOpt: Option[User], articles: List[Article], replyArticles: List[Article])(implicit request: RequestHeader, viewHelper: services.ViewHelper)
+@(uidOpt: Option[String], userOpt: Option[User], articles: List[Article], replyArticles: List[Article])(implicit request: RequestHeader, requestHelper: services.RequestHelper)
+
+@headImg = @{
+  userOpt.map(_.setting.headImg).getOrElse{
+    uidOpt.map(_ => "/assets/images/head.png").getOrElse{
+      requestHelper.getHeadImgOpt.getOrElse("/assets/images/head.png")
+    }
+  }
+}
+
+@name = @{
+  userOpt.map(_.setting.name).getOrElse{
+    uidOpt.map(_ => "他").getOrElse{
+      requestHelper.getNameOpt.getOrElse("他")
+    }
+  }
+}
 
 @main("欢迎来到社区！") {
 <div class="fly-home" style="background-image: url();">
-  <img src="@userOpt.map(_.setting.headImg).getOrElse(viewHelper.getHeadImgOpt.getOrElse("/assets/images/head.png"))" alt="{{info.username}}">
+  <img src="@headImg">
   <h1>
-    @{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))}
+    @name
     <i class="iconfont icon-nan"></i>
     <!-- <i class="iconfont icon-nv"></i> -->
 
@@ -23,7 +39,7 @@
 <div class="main fly-home-main">
   <div class="layui-inline fly-home-jie">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))} 最近的文章</h3>
+      <h3 class="fly-panel-title">@name 最近的文章</h3>
       <ul class="jie-row">
         @for(a <- articles){
         <li>
@@ -33,13 +49,15 @@
         </li>
         }
       </ul>
-      <!-- <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><i style="font-size:14px;">没有发表任何求解</i></div> -->
+      @if(articles.nonEmpty){
+      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><i style="font-size:14px;">没有发表任何求解</i></div>
+      }
     </div>
   </div>
 
   <div class="layui-inline fly-home-da">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@{userOpt.map(_.setting.name).getOrElse(viewHelper.getNameOpt.getOrElse(""))} 最近的回答</h3>
+      <h3 class="fly-panel-title">@name 最近的回答</h3>
       <ul class="home-jieda">
         @for(a <- replyArticles){
         <li>
@@ -50,7 +68,9 @@
         </li>
         }
       </ul>
-      <!-- <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有回答任何问题</span></div> -->
+      @if(replyArticles.nonEmpty){
+      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有回答任何问题</span></div>
+      }
     </div>
   </div>
 

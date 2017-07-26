@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 /**
   * Created by joymufeng on 2017/7/17.
   */
-class ViewHelper @Inject()()(implicit ec: ExecutionContext) {
+class RequestHelper @Inject()()(implicit ec: ExecutionContext) {
 
   def isLogin(implicit request: RequestHeader) : Boolean = {
     request.session.get("login").nonEmpty
