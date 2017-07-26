@@ -1,5 +1,7 @@
-@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader, requestHelper: services.RequestHelper)
+@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
 @import helper._
+@import utils.RequestHelper
+
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main("欢迎来到社区！") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
@@ -50,7 +52,7 @@
               <em>@utils.DateTimeUtil.toPrettyString(article.timeStat.createTime)发布</em>
             </cite>
           </a>
-          @if(requestHelper.isLogin){
+          @if(RequestHelper.isLogin){
           <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
@@ -90,7 +92,7 @@
             <div class="detail-body jieda-body">
               @Html(r.content)
             </div>
-            @if(requestHelper.isLogin){
+            @if(RequestHelper.isLogin){
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
@@ -108,7 +110,7 @@
           <li class="fly-none">没有任何回答</li>
           }
         </ul>
-        @if(requestHelper.isLogin){
+        @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/article/reply" method="post">
@@ -154,7 +156,7 @@
 <script>
 layui.cache.page = 'jie';
 
-@if(requestHelper.isLogin){
+@if(RequestHelper.isLogin){
 var quill = new Quill('#quill-container', {
   placeholder: '正文',
   theme: 'snow',

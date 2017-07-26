@@ -15,15 +15,14 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
-import services.RequestHelper
 
 import scala.concurrent.{ExecutionContext, Future}
-import utils.{BitmapUtil, DateTimeUtil, HashUtil}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer, requestHelper: RequestHelper) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -74,7 +73,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   }
 
   def home(uidOpt: Option[String]) = Action.async { implicit request: Request[AnyContent] =>
-    (uidOpt orElse requestHelper.getUidOpt) match {
+    (uidOpt orElse RequestHelper.getUidOpt) match {
       case Some(uid) =>
         for {
           articleCol <- articleColFuture

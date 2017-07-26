@@ -1,18 +1,12 @@
-package services
-
-import javax.inject.Inject
+package utils
 
 import models.Author
 import play.api.mvc.RequestHeader
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json.collection.JSONCollection
-
-import scala.concurrent.ExecutionContext
 
 /**
   * Created by joymufeng on 2017/7/17.
   */
-class RequestHelper @Inject()()(implicit ec: ExecutionContext) {
+object RequestHelper {
 
   def isLogin(implicit request: RequestHeader) : Boolean = {
     request.session.get("login").nonEmpty
@@ -30,13 +24,21 @@ class RequestHelper @Inject()()(implicit ec: ExecutionContext) {
     request.session.get("name")
   }
 
-  def getHeadImgOpt(implicit request: RequestHeader) : Option[String] = {
-    request.session.get("headImg")
+  def getName(implicit request: RequestHeader) : String = {
+    request.session.get("name").getOrElse("游客")
+  }
+
+  def getRole(implicit request: RequestHeader) : String = {
+    request.session.get("role").getOrElse("")
+  }
+
+  def getHeadImg(implicit request: RequestHeader) : String = {
+    request.session.get("headImg").getOrElse("/assets/images/head.png")
   }
 
   def getAuthorOpt(implicit request: RequestHeader) : Option[Author] = {
     request.session.get("uid").map{ uid =>
-      Author(uid, getLoginOpt.get, getNameOpt.get, getHeadImgOpt.get)
+      Author(uid, getLoginOpt.get, getNameOpt.get, getHeadImg)
     }
   }
 }
