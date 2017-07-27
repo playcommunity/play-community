@@ -57,7 +57,7 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
         upsert = true
       ))
 
-      request.session.get("login") match {
+      request.session.get("uid") match {
         // 已登录用户
         case Some(uid) =>
           // 统计用户流量
@@ -72,29 +72,37 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
           ))
           super.routeRequest(request)
 
-        // 未登录访客
+        // 未登录
         case None =>
-          println("is visitor")
-          println(request.session.get("visitor"))
-          if (protectPathPattern.matcher(request.path).matches()) {
-            if (request.session.get("visitor").nonEmpty) {
-              // 统计访客流量
-              statVisitorColFuture.map(_.update(
-                Json.obj("uid" -> request.session.get("visitor").get, "hourStr" -> hourStr),
-                Json.obj(
-                  "$inc" -> Json.obj("count" -> 1),
-                  "$set" -> Json.obj("isVisitor" -> true, "updateTime" -> DateTimeUtil.now()),
-                  "$setOnInsert" -> Json.obj("_id" -> BSONObjectID.generate().stringify, "createTime" -> DateTimeUtil.now())
-                ),
-                upsert = true
-              ))
-              super.routeRequest(request)
-            } else {
-              val visitorId = BSONObjectID.generate().stringify
-              Some(Action(Redirect(request.path, request.queryString, 302).withSession("visitor" -> visitorId)))
-            }
-          } else {
-            Some(Action(Forbidden))
+          request.session.get("login") match {
+            // 已在其他地方登录
+            case Some(login) =>
+              if (request.path == "/autoRegister") {
+                super.routeRequest(request)
+              } else {
+                Some(Action(Redirect("/autoRegister")))
+              }
+            case None =>
+              if (protectPathPattern.matcher(request.path).matches()) {
+                if (request.session.get("visitor").nonEmpty) {
+                  // 统计访客流量
+                  statVisitorColFuture.map(_.update(
+                    Json.obj("uid" -> request.session.get("visitor").get, "hourStr" -> hourStr),
+                    Json.obj(
+                      "$inc" -> Json.obj("count" -> 1),
+                      "$set" -> Json.obj("isVisitor" -> true, "updateTime" -> DateTimeUtil.now()),
+                      "$setOnInsert" -> Json.obj("_id" -> BSONObjectID.generate().stringify, "createTime" -> DateTimeUtil.now())
+                    ),
+                    upsert = true
+                  ))
+                  super.routeRequest(request)
+                } else {
+                  val visitorId = BSONObjectID.generate().stringify
+                  Some(Action(Redirect(request.path, request.queryString, 302).withSession("visitor" -> visitorId)))
+                }
+              } else {
+                Some(Action(Forbidden))
+              }
           }
       }
     }

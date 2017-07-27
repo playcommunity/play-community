@@ -17,7 +17,7 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService}
-import utils.{DateTimeUtil, HashUtil, VerifyCodeUtils}
+import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
@@ -91,10 +91,10 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
               Future.successful(Redirect(routes.Application.message("注册出错了", "您已经注册过了！")))
             case None =>
               if (password == repassword) {
-                val verifyCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
+                val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                 for{
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, verifyCode))
+                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", Some(activeCode)))
                 } yield {
                   if (wr.ok && wr.n == 1) {
                     Redirect(routes.UserController.home(Some(uid.toString)))
@@ -112,6 +112,28 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     )
   }
 
+  /**
+    * 自动注册单点登录用户
+    */
+  def autoRegister = Action.async { implicit request: Request[AnyContent] =>
+    userColFuture.flatMap(_.find(Json.obj("login" -> RequestHelper.getLogin)).one[User]).flatMap {
+      case Some(u) =>
+        Future.successful {
+          Redirect(routes.Application.index())
+            .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
+        }
+      case None =>
+        for{
+          userCol <- userColFuture
+          uid <- counterService.getNextSequence("user-sequence")
+          _ <- userCol.insert(User(uid.toString, Role.COMMON_USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), None))
+        } yield {
+          Redirect(routes.Application.index())
+            .addingToSession("uid" -> uid.toString, "role" -> Role.COMMON_USER)
+        }
+    }
+  }
+
   def login(login: Option[String]) = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.login())
   }
@@ -122,7 +144,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
   def doLogin = Action.async { implicit request: Request[AnyContent] =>
     Form(tuple("login" -> nonEmptyText, "password" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
+      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "用户名或密码错误！"))),
       tuple => {
         val (login, password, verifyCode) = tuple
         if (verifyCode.toLowerCase == request.session.get("verifyCode").getOrElse("").toLowerCase) {
@@ -133,7 +155,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
             userOpt match {
               case Some(u) =>
                 Redirect(routes.UserController.home(Some(u._id)))
-                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg)
+                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
               case None =>
                 Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
             }

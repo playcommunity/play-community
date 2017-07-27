@@ -12,7 +12,8 @@ case class User(
   userStat: UserStat,
   score: Int,
   enabled: Boolean,
-  verifyCode: String
+  from: String,
+  activeCode: Option[String]
 )
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
 

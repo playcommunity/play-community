@@ -16,8 +16,16 @@ object RequestHelper {
     request.session.get("uid")
   }
 
+  def getUid(implicit request: RequestHeader) : String = {
+    request.session("uid")
+  }
+
   def getLoginOpt(implicit request: RequestHeader) : Option[String] = {
     request.session.get("login")
+  }
+
+  def getLogin(implicit request: RequestHeader) : String = {
+    request.session("login")
   }
 
   def getNameOpt(implicit request: RequestHeader) : Option[String] = {

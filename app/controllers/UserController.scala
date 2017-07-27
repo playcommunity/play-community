@@ -51,10 +51,8 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
         case Some(u) =>
           Right(new UserRequest(u, input))
         case None    =>
-          println("not found")
           Left(Results.NotFound)
       }
-      //Future.successful(Right(new UserRequest(User(0, Role.COMMON_USER, "", "", UserSetting("", "", "", "", ""), "", UserTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, ""), input)))
     }
   }
 

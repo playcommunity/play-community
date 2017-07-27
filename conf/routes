@@ -13,6 +13,7 @@ POST    /login                                    controllers.Application.doLogi
 GET     /404                                      controllers.Application.notFound
 GET     /message                                  controllers.Application.message(title: String, message: String)
 GET     /verifyCode                               controllers.Application.verifyCode
+GET     /autoRegister                             controllers.Application.autoRegister
 
 # User
 GET     /user                                     controllers.UserController.index
