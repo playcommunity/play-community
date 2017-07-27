@@ -8,11 +8,12 @@ case class User(
   login: String,
   password: String,
   setting: UserSetting,
-  ip: String,
   userStat: UserStat,
   score: Int,
   enabled: Boolean,
   from: String,
+  ip: String,
+  ipLocation: Option[IPLocation],
   activeCode: Option[String]
 )
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
@@ -79,6 +80,7 @@ case class Article(
   */
 case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)
 
+case class IPLocation(country: String, province: String, city: String)
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitmap: String)

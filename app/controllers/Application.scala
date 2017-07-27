@@ -79,7 +79,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
   def doRegister = Action.async { implicit request: Request[AnyContent] =>
     Form(tuple("login" -> nonEmptyText, "name" -> nonEmptyText, "password" -> nonEmptyText, "repassword" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
+      errForm => Future.successful(Redirect(routes.Application.message("注册出错了", "您的填写有误！"))),
       tuple => {
         val (login, name, password, repassword) = tuple
         (for{
@@ -94,7 +94,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                 val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                 for{
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", Some(activeCode)))
+                  wr <-  userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", request.remoteAddress, None, Some(activeCode)))
                 } yield {
                   if (wr.ok && wr.n == 1) {
                     Redirect(routes.UserController.home(Some(uid.toString)))
@@ -126,7 +126,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
         for{
           userCol <- userColFuture
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userCol.insert(User(uid.toString, Role.COMMON_USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), request.remoteAddress, UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), None))
+          _ <- userCol.insert(User(uid.toString, Role.COMMON_USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
         } yield {
           Redirect(routes.Application.index())
             .addingToSession("uid" -> uid.toString, "role" -> Role.COMMON_USER)

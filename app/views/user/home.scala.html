@@ -32,7 +32,7 @@
   <p class="fly-home-info">
     <i class="iconfont icon-zuichun" title="飞吻"></i><span style="color: #FF7200;">@{userOpt.map(_.score).getOrElse(0)}飞吻</span>
     <i class="iconfont icon-shijian"></i><span>@{userOpt.map(_.userStat.createTime.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).getOrElse("刚刚")} 加入</span>
-    <i class="iconfont icon-chengshi"></i><span>来自中国某城</span>
+    <i class="iconfont icon-chengshi"></i><span>来自@{userOpt.map(_.ipLocation.map(_.city).getOrElse("中国")).getOrElse("中国")}</span>
   </p>
   <p class="fly-home-sign">@{userOpt.map(_.setting.introduction).getOrElse("")}</p>
 </div>

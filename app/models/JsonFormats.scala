@@ -23,6 +23,7 @@ object JsonFormats {
   implicit val documentFormat = Json.format[Document]
   implicit val articleFormat = Json.format[Article]
   implicit val questionFormat = Json.format[Question]
+  implicit val ipLocationFormat = Json.format[IPLocation]
   implicit val userFormat = Json.format[User]
   implicit val messageFormat = Json.format[Message]
 

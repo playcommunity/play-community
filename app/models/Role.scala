@@ -5,4 +5,5 @@ package models
   */
 object Role {
   val COMMON_USER = "common_user"
+  val ADMIN_USER = "admin_user"
 }
