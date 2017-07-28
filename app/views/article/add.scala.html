@@ -92,4 +92,25 @@ $('#form').submit(function(){
   $('#L_title_hidden').val($('#L_title').val());
   $('#L_content').val(quill.root.innerHTML);
 });
+
+layui.use('upload', function(upload){
+  var token = $('#LAY-upload-image').data('token');
+  layui.upload({
+    elem: '#LAY-upload-image'
+    ,method: 'post'
+    ,url: '/resource/owner/editor?csrfToken=' + token
+    ,success: function(res){
+      var range = quill.getSelection(true);
+      var Delta = Quill.import('delta');
+      quill.updateContents(
+        new Delta().retain(range.index)
+           .delete(range.length)
+           .insert({ image: res.url })
+        , 'user');
+    }
+    ,error: function(){
+      layer.msg('error');
+    }
+  });
+});
 </script>

@@ -107,6 +107,7 @@ layui.define(['laypage', 'fly'], function(exports){
     gather.jieAdmin[type].call(this, othis.parent());
   });
 
+  /*
   layui.use('upload', function(upload){
     var token = $('#LAY-upload-image').data('token');
     layui.upload({
@@ -127,6 +128,7 @@ layui.define(['laypage', 'fly'], function(exports){
       }
     });
   });
+  */
 
   //异步渲染
   var asyncRender = function(){

@@ -1,5 +1,5 @@
 import com.google.inject.AbstractModule
-import java.time.Clock
+import java.time.{Clock, ZoneOffset}
 
 import services.InitializeService
 
@@ -16,6 +16,7 @@ import services.InitializeService
 class Module extends AbstractModule {
 
   override def configure() = {
+    bind(classOf[Clock]).toInstance(Clock.system(ZoneOffset.ofHours(8)))
     bind(classOf[InitializeService]).asEagerSingleton
   }
 

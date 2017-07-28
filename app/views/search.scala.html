@@ -5,22 +5,15 @@
   <div class="wrap">
     <div class="content" style="margin-right:0">
       <div class="fly-tab">
-        <span>
-          <a href="/articles?nav=0" @if(plate == "0"){class="tab-this"}>全部</a>
-          <a href="/articles?nav=1" @if(plate == "1"){class="tab-this"}>交流</a>
-          <a href="/articles?nav=2" @if(plate == "2"){class="tab-this"}>最新提问</a>
-          <!--<a href="/articles?nav=3" @if(plate == "3"){class="tab-this"}>尚未回答</a>-->
-          <a href="/articles?nav=4" @if(plate == "4"){class="tab-this"}>精帖</a>
-          <!--<a href="/articles?nav=5" @if(plate == "5"){class="tab-this"}>我的帖</a>-->
-        </span>
-        <form action="/search" class="fly-search">
-          <i class="iconfont icon-sousuo"></i>
-          <input class="layui-input" autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q" value="@query">
-        </form>
-        <a href="/article/add" class="layui-btn jie-add">发布问题</a>
+        <div class="layui-tab layui-tab-brief">
+          <ul class="layui-tab-title">
+            <li> <a href="javascript:void(0);" class="layui-this">搜索结果</a> </li>
+          </ul>
+        </div>
+        <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
-      <ul class="fly-list">
+      <ul class="fly-panel fly-list">
         @for(a <- list){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{a.authorId}" class="fly-list-avatar">
