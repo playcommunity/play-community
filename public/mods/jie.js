@@ -53,13 +53,14 @@ layui.define(['laypage', 'fly'], function(exports){
   gather.jieAdmin = {
     //删求解
     del: function(div){
-      layer.confirm('确认删除该求解么？', function(index){
+      layer.confirm('确认删除该帖子么？', function(index){
         layer.close(index);
-        fly.json('/api/jie-delete/', {
-          id: div.data('id')
+        fly.json('/article/remove', {
+          _id: div.data('id'),
+          csrfToken: token
         }, function(res){
           if(res.status === 0){
-            location.href = '/jie/';
+            location.href = '/articles';
           } else {
             layer.msg(res.msg);
           }
@@ -70,10 +71,11 @@ layui.define(['laypage', 'fly'], function(exports){
     //设置置顶、状态
     ,set: function(div){
       var othis = $(this);
-      fly.json('/api/jie-set/', {
-        id: div.data('id')
-        ,rank: othis.attr('rank')
+      fly.json('/article/top', {
+        _id: div.data('id')
+        ,status: othis.attr('rank') == '1'
         ,field: othis.attr('field')
+        ,csrfToken: token
       }, function(res){
         if(res.status === 0){
           location.reload();
@@ -89,9 +91,9 @@ layui.define(['laypage', 'fly'], function(exports){
     ,collect: function(div){
       var othis = $(this), type = othis.data('type'), token = othis.data('token');
       fly.json('/user/collect', {
-        resType: 'article',
-        resId: div.data('id'),
-        csrfToken: token
+        resType: 'article'
+        ,resId: div.data('id')
+        ,csrfToken: token
       }, function(res){
         if(type === 'add'){
           othis.data('type', 'remove').html('取消收藏').addClass('layui-btn-danger');

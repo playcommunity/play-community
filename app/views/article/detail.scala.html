@@ -19,7 +19,7 @@
     <div class="content detail">
       <div class="fly-panel detail-box">
         <h1>@article.title</h1>
-        <div class="fly-tip fly-detail-hint" data-id="{{rows.id}}">
+        <div class="fly-tip fly-detail-hint" data-id="@article._id">
           @if(article.top){
           <span class="fly-tip-stick">置顶帖</span>
           }
@@ -33,11 +33,17 @@
           }
           <!-- <span class="fly-tip-jie">已采纳</span> -->
 
-          <!-- <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
+          <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
+          @if(!article.top){
           <span class="jie-admin" type="set" field="stick" rank="1">置顶</span>
+          }else{
           <span class="jie-admin" type="set" field="stick" rank="0" style="background-color:#ccc;">取消置顶</span>
+          }
+          @if(!article.recommended){
           <span class="jie-admin" type="set" field="status" rank="1">加精</span>
-          <span class="jie-admin" type="set" field="status" rank="0" style="background-color:#ccc;">取消加精</span> -->
+          }else{
+          <span class="jie-admin" type="set" field="status" rank="0" style="background-color:#ccc;">取消加精</span>
+          }
 
           <div class="fly-list-hint">
             <i class="iconfont" title="回答">&#xe60c;</i> @article.replies.size
@@ -96,11 +102,11 @@
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
-              <!--<div class="jieda-admin">
-                <span type="edit">编辑</span>
+              <div class="jieda-admin">
+                <!--<span type="edit">编辑</span>-->
                 <span type="del">删除</span>
-                <span class="jieda-accept" type="accept">采纳</span>
-              </div>-->
+                <!--<span class="jieda-accept" type="accept">采纳</span>-->
+              </div>
             </div>
             }
           </li>
@@ -155,6 +161,7 @@
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script>
 layui.cache.page = 'jie';
+var token = '@CSRF.getToken.value';
 
 @if(RequestHelper.isLogin){
 var quill = new Quill('#quill-container', {

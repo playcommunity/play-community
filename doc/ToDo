@@ -1,6 +1,6 @@
 检查索引是否创建
 删帖，删回复
-设置后自动更新
+设置后自动更新 & 可以为空
 管理后台
 Comment功能
 https://github.com/allegro/embedded-elasticsearch

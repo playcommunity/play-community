@@ -12,7 +12,7 @@ import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms.{tuple, _}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONObjectID
@@ -21,7 +21,7 @@ import scala.concurrent.Future
 import java.time._
 
 @Singleton
-class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extends Controller {
+class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi) extends AbstractController(cc) {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -111,6 +111,39 @@ class ArticleController @Inject()(val reactiveMongoApi: ReactiveMongoApi) extend
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
+        }
+      }
+    )
+  }
+
+  def doRemove = Action.async { implicit request: Request[AnyContent] =>
+    Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
+      _id => {
+        for{
+          articleCol <- articleColFuture
+          wr <- articleCol.remove(Json.obj("_id" -> _id))
+        } yield {
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  def doSetTop = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("_id" -> nonEmptyText, "field" -> nonEmptyText, "status" -> boolean)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
+      tuple => {
+        val (_id, field, status) = tuple
+        val modifier = field match {
+          case "stick" => Json.obj("$set" -> Json.obj("top" -> status))
+          case _ => Json.obj("$set" -> Json.obj("recommended" -> status))
+        }
+        for{
+          articleCol <- articleColFuture
+          wr <- articleCol.update(Json.obj("_id" -> _id), modifier)
+        } yield {
+          Ok(Json.obj("status" -> 0))
         }
       }
     )

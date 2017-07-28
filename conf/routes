@@ -37,6 +37,8 @@ POST    /article/add                              controllers.ArticleController.
 GET     /article/edit                             controllers.ArticleController.edit(_id: String)
 POST    /article/reply                            controllers.ArticleController.doReply
 GET     /article/view                             controllers.ArticleController.view(_id: String)
+POST    /article/remove                           controllers.ArticleController.doRemove
+POST    /article/top                              controllers.ArticleController.doSetTop
 GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
 POST    /article/reply/vote                       controllers.ArticleController.doVoteReply
 GET     /article/reply/edit                       controllers.ArticleController.editReply(aid: String, rid: String)

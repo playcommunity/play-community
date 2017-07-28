@@ -13,7 +13,7 @@ import reactivemongo.bson.{BSONDocument, BSONTimestamp}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.stream.scaladsl.Source
 import pl.allegro.tech.embeddedelasticsearch.{EmbeddedElastic, IndexSettings, PopularProperties}
 import reactivemongo.akkastream.{State, cursorProducer}
@@ -30,7 +30,6 @@ import play.api.{Environment, Logger}
 import models.JsonFormats.articleFormat
 import models.JsonFormats.ipLocationFormat
 import play.api.inject.ApplicationLifecycle
-
 import scala.concurrent.duration._
 
 @Singleton
@@ -39,20 +38,24 @@ class InitializeService @Inject()(clock: Clock, actorSystem: ActorSystem, env: E
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
 
-  println("Starting ElasticSearch ...")
-  val elasticSearch = EmbeddedElastic.builder()
+  Logger.info("Starting ElasticSearch ...")
+  val indexExists = Await.result(settingColFuture.flatMap(_.find(Json.obj("_id" -> "esIndex")).one[JsObject]).map(_.nonEmpty), 10 seconds)
+  val esBuilder = EmbeddedElastic.builder()
     .withDownloadUrl(new URL(s"file:///${env.rootPath}${File.separator}embed${File.separator}elasticsearch-5.5.0.zip"))
     //.withElasticVersion("5.5.0")
     .withSetting(PopularProperties.TRANSPORT_TCP_PORT, 9350)
     .withSetting(PopularProperties.CLUSTER_NAME, "cluster-0")
-    //.withIndex("community", IndexSettings.builder().withType("document", new FileInputStream(s"${env.rootPath}${File.separator}conf${File.separator}document-mapping.json")).build())
     .withInstallationDirectory(new File(s"${env.rootPath}${File.separator}embed"))
     .withCleanInstallationDirectoryOnStop(false)
     .withStartTimeout(5, TimeUnit.MINUTES)
-    .build()
-    .start()
+  if (!indexExists) {
+    esBuilder.withIndex("community", IndexSettings.builder().withType("document", new FileInputStream(s"${env.rootPath}${File.separator}conf${File.separator}document-mapping.json")).build())
+    settingColFuture.flatMap(_.update(Json.obj("_id" -> "esIndex"), Json.obj("$set" -> Json.obj("value" -> "community"))))
+    Logger.info("ElasticSearch runs for the first time, index created!")
+  }
 
-    println("ElasticSearch start on " + elasticSearch.getHttpPort)
+  esBuilder.build().start()
+  Logger.info("ElasticSearch started!")
 
   /**
     * Tail oplog.
@@ -65,10 +68,10 @@ class InitializeService @Inject()(clock: Clock, actorSystem: ActorSystem, env: E
   } {
     val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-article")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj()).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
-    println("tailing ...")
+    Logger.info("tailing oplog")
     source.runForeach{ doc =>
       tailCount.addAndGet(1L)
-      println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
+      //println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
       val jsObj = doc.as[JsObject]
       jsObj("ns").as[String] match {
         case ns if ns.endsWith(".common-article") =>
@@ -91,6 +94,7 @@ class InitializeService @Inject()(clock: Clock, actorSystem: ActorSystem, env: E
       }
       if (tailCount.get() % 100 == 0) {
         settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> System.currentTimeMillis()))))
+        Logger.info("record heart beat time for tailing oplog.")
       }
     }
   }

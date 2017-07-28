@@ -16,8 +16,7 @@ import services.InitializeService
 class Module extends AbstractModule {
 
   override def configure() = {
-    bind(classOf[Clock]).toInstance(Clock.system(ZoneOffset.ofHours(8)))
-    bind(classOf[InitializeService]).asEagerSingleton
+    //bind(classOf[InitializeService]).asEagerSingleton
   }
 
 }

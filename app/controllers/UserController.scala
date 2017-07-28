@@ -150,7 +150,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   }
 
   def doSetting() = Action.async { implicit request: Request[AnyContent] =>
-    Form(tuple("name" -> nonEmptyText, "gender" -> nonEmptyText, "city" -> nonEmptyText, "introduction" -> nonEmptyText)).bindFromRequest().fold(
+    Form(tuple("name" -> nonEmptyText, "gender" -> text, "city" -> text, "introduction" -> text)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       tuple => {
         val (name, gender, city, introduction) = tuple
@@ -160,6 +160,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
             "$set" -> Json.obj("setting.name" -> name, "setting.gender" -> gender, "setting.city" -> city, "setting.introduction" -> introduction)
           ))).map{ wr =>
           Redirect(routes.UserController.setting())
+            .addingToSession("name" -> name)
         }
       }
     )
