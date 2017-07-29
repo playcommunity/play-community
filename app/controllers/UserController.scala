@@ -17,45 +17,17 @@ import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.{ExecutionContext, Future}
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil, UserHelper}
 
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def collectColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-collect"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
-  val userAction = new UserAction(new BodyParsers.Default())
-
-  class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
-  /*class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext)
-    extends ActionBuilder[UserRequest, AnyContent] {
-    def executionContext = ec
-    override def invokeBlock[A](request: Request[A], block: (UserRequest[A]) => Future[Result]): Future[Result] = {
-      /*userColFuture.flatMap(_.find(Json.obj("_id" -> request.session("uid").toInt)).one[User]).flatMap{
-        case Some(u) =>
-          block(new UserRequest(u, request))
-        case None    =>
-          Future.successful(Results.Ok("Error"))
-      }*/
-      Future.successful("1").flatMap{ s => println(s); Future.successful("2")}.flatMap{ s => println(s);block(new UserRequest(null, request)) }
-    }
-  }*/
-  class UserAction @Inject()(val parser: BodyParsers.Default)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
-    def executionContext = ec
-    def refine[A](input: Request[A]) = {
-      userColFuture.flatMap(_.find(Json.obj("_id" -> input.session("uid").toInt)).one[User]).map{
-        case Some(u) =>
-          Right(new UserRequest(u, input))
-        case None    =>
-          Left(Results.NotFound)
-      }
-    }
-  }
-
 
   def index() = Action.async { implicit request: Request[AnyContent] =>
     for {
@@ -71,7 +43,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
   }
 
   def home(uidOpt: Option[String]) = Action.async { implicit request: Request[AnyContent] =>
-    (uidOpt orElse RequestHelper.getUidOpt) match {
+    (uidOpt orElse UserHelper.getUidOpt) match {
       case Some(uid) =>
         for {
           articleCol <- articleColFuture
@@ -86,7 +58,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def message() = Action.async { implicit request: Request[AnyContent] =>
+  def message() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       msgCol <- msgColFuture
       messages <- msgCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("createTime" -> -1)).cursor[Message]().collect[List](15)
@@ -96,7 +68,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def messageCount() = Action.async { implicit request: Request[AnyContent] =>
+  def messageCount() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       msgCol <- msgColFuture
       count <- msgCol.count(Some(Json.obj("uid" -> request.session("uid"), "read" -> false)))
@@ -105,7 +77,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def readMessage() = Action.async { implicit request: Request[AnyContent] =>
+  def readMessage() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       msgCol <- msgColFuture
       wr <- msgCol.update(Json.obj("uid" -> request.session("uid"), "read" -> false), Json.obj("$set" -> Json.obj("read" -> true)), multi = true)
@@ -114,7 +86,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def removeMessage = Action.async { implicit request: Request[AnyContent] =>
+  def removeMessage = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       _id => {
@@ -128,7 +100,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     )
   }
 
-  def clearMessage() = Action.async { implicit request: Request[AnyContent] =>
+  def clearMessage() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       msgCol <- msgColFuture
       wr <- msgCol.remove(Json.obj("uid" -> request.session("uid")))
@@ -137,19 +109,15 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }
 
-  def activate() = Action.async { implicit request: Request[AnyContent] =>
-    getUser(request.session("uid")).map{ u =>
-      Ok(views.html.user.activate(u))
-    }
+  def activate() = userAction { implicit request =>
+    Ok(views.html.user.activate(request.user))
   }
 
-  def setting() = Action.async { implicit request: Request[AnyContent] =>
-    getUser(request.session("uid")).map{ u =>
-      Ok(views.html.user.setting(u))
-    }
+  def setting() = (checkLogin andThen userAction) { implicit request =>
+    Ok(views.html.user.setting(request.user))
   }
 
-  def doSetting() = Action.async { implicit request: Request[AnyContent] =>
+  def doSetting() = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("name" -> nonEmptyText, "gender" -> text, "city" -> text, "introduction" -> text)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       tuple => {
@@ -174,7 +142,7 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     }
   }*/
 
-  def doSetHeadImg = Action.async { implicit request: Request[AnyContent] =>
+  def doSetHeadImg = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(single("url" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       url => {
@@ -189,28 +157,26 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     )
   }
 
-  def doSetPassword() = Action.async { implicit request: Request[AnyContent] =>
+  def doSetPassword() = (checkLogin andThen userAction) { implicit request =>
     Form(tuple("password" -> nonEmptyText, "password1" -> nonEmptyText, "password2" -> nonEmptyText).verifying("两次输入不一致！", t => t._2 == t._3)).bindFromRequest().fold(
-      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors.map(_.message).mkString("|")))),
+      errForm => Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors.map(_.message).mkString("|"))),
       tuple => {
         val (password, password1, _) = tuple
-        getUser(request.session("uid")).map{ u =>
-          if (HashUtil.sha256(password) == u.password) {
-            userColFuture.flatMap(_.update(
-              Json.obj("_id" -> request.session("uid")),
-              Json.obj(
-                "$set" -> Json.obj("password" -> HashUtil.sha256(password1))
-              )))
-            Redirect(routes.Application.message("系统提示", "密码修改成功！"))
-          } else {
-            Redirect(routes.Application.message("系统提示", "您的输入有误！"))
-          }
+        if (HashUtil.sha256(password) == request.user.password) {
+          userColFuture.flatMap(_.update(
+            Json.obj("_id" -> request.session("uid")),
+            Json.obj(
+              "$set" -> Json.obj("password" -> HashUtil.sha256(password1))
+            )))
+          Redirect(routes.Application.message("系统提示", "密码修改成功！"))
+        } else {
+          Redirect(routes.Application.message("系统提示", "您的输入有误！"))
         }
       }
     )
   }
 
-  def doCollect() = Action.async { implicit request: Request[AnyContent] =>
+  def doCollect() = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
       tuple => {
@@ -246,7 +212,4 @@ class UserController @Inject()(cc: ControllerComponents, val reactiveMongoApi: R
     )
   }
 
-  def getUser(_id: String) : Future[User] = {
-    userColFuture.flatMap(_.find(Json.obj("_id" -> _id)).one[User]).map(_.get)
-  }
 }

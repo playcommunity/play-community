@@ -52,14 +52,12 @@ class ElasticService @Inject()(val reactiveMongoApi: ReactiveMongoApi, ws: WSCli
 
   def insert(host: String, port: Int, doc: IndexedDocument): Future[Boolean] = {
     ws.url(s"http://${host}:${port}/community/document/${doc.id}").post(Json.toJson(doc)).map{ resp =>
-      println("insert resp:" + resp.json)
       resp.json("created").asOpt[Boolean].nonEmpty
     }
   }
 
   def update(host: String, port: Int, _id: String, fragment: JsObject): Future[Boolean] = {
     ws.url(s"http://${host}:${port}/community/document/${_id}/_update").post(Json.obj("doc" -> fragment)).map{ resp =>
-      println("update resp: " + resp.json)
       resp.json("created").asOpt[Boolean].nonEmpty
     }
   }

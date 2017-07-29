@@ -1,6 +1,6 @@
 @(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
 @import helper._
-@import utils.RequestHelper
+@import utils.UserHelper
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main("欢迎来到社区！") {
@@ -32,8 +32,10 @@
           <span>已回复</span>
           }
           <!-- <span class="fly-tip-jie">已采纳</span> -->
-
+          @if(UserHelper.isAdmin || UserHelper.isOwnerOf(article._id)){
           <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
+          }
+          @if(UserHelper.isAdmin){
           @if(!article.top){
           <span class="jie-admin" type="set" field="stick" rank="1">置顶</span>
           }else{
@@ -43,6 +45,7 @@
           <span class="jie-admin" type="set" field="status" rank="1">加精</span>
           }else{
           <span class="jie-admin" type="set" field="status" rank="0" style="background-color:#ccc;">取消加精</span>
+          }
           }
 
           <div class="fly-list-hint">
@@ -58,7 +61,7 @@
               <em>@utils.DateTimeUtil.toPrettyString(article.timeStat.createTime)发布</em>
             </cite>
           </a>
-          @if(RequestHelper.isLogin){
+          @if(UserHelper.isLogin){
           <div class="detail-hits" data-id="@article._id">
             @if(article.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
@@ -98,13 +101,15 @@
             <div class="detail-body jieda-body">
               @Html(r.content)
             </div>
-            @if(RequestHelper.isLogin){
+            @if(UserHelper.isLogin){
             <div class="jieda-reply">
               <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <!--<span type="edit">编辑</span>-->
+                @if(UserHelper.isOwnerOf(r._id)){
                 <span type="del">删除</span>
+                }
                 <!--<span class="jieda-accept" type="accept">采纳</span>-->
               </div>
             </div>
@@ -116,7 +121,7 @@
           <li class="fly-none">没有任何回答</li>
           }
         </ul>
-        @if(RequestHelper.isLogin){
+        @if(UserHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/article/reply" method="post">
@@ -163,7 +168,7 @@
 layui.cache.page = 'jie';
 var token = '@CSRF.getToken.value';
 
-@if(RequestHelper.isLogin){
+@if(UserHelper.isLogin){
 var quill = new Quill('#quill-container', {
   placeholder: '正文',
   theme: 'snow',

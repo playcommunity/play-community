@@ -8,20 +8,19 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.play.json.collection.JSONCollection
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil, UserHelper}
 import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONObjectID
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import java.time._
 
 @Singleton
-class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi) extends AbstractController(cc) {
+class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -63,7 +62,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def add = Action.async { implicit request: Request[AnyContent] =>
+  def add = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       categoryCol <- categoryColFuture
       categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
@@ -72,7 +71,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def edit(_id: String) = Action.async { implicit request: Request[AnyContent] =>
+  def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
     for {
       articleCol <- articleColFuture
       article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
@@ -86,7 +85,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def doAdd = Action.async { implicit request: Request[AnyContent] =>
+  def doAdd = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
@@ -107,7 +106,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    articleCol.insert(Article(BSONObjectID.generate().stringify, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                    articleCol.insert(Article(UserHelper.generateId, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
@@ -116,7 +115,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def doRemove = Action.async { implicit request: Request[AnyContent] =>
+  def doRemove = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       _id => {
@@ -130,7 +129,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def doSetTop = Action.async { implicit request: Request[AnyContent] =>
+  def doSetTop = checkAdmin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "field" -> nonEmptyText, "status" -> boolean)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
@@ -149,12 +148,12 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def doReply = Action.async { implicit request: Request[AnyContent] =>
+  def doReply = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "content" -> nonEmptyText, "at" -> text)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (_id, content, at) = tuple
-        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val reply = Reply(UserHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
         val uid = request.session("uid").toInt
         for{
           articleCol <- articleColFuture
@@ -178,12 +177,12 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
             ))
         } yield {
           // 消息提醒
-          val read = if (articleAuthor._id != RequestHelper.getUidOpt.get) { false } else { true }
-          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
+          val read = if (articleAuthor._id != UserHelper.getUidOpt.get) { false } else { true }
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, UserHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
 
           val atIds = at.split(",").filter(_.trim != "")
           atIds.foreach{ uid =>
-            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, UserHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
           userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
 
@@ -193,7 +192,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def editReply(aid: String, rid: String) = Action.async { implicit request: Request[AnyContent] =>
+  def editReply(aid: String, rid: String) = checkOwner("rid").async { implicit request: Request[AnyContent] =>
     for {
       articleCol <- articleColFuture
       reply <- articleCol.find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).one[JsObject].map(objOpt => (objOpt.get)("replies")(0).as[Reply])
@@ -202,7 +201,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def doEditReply = Action.async { implicit request: Request[AnyContent] =>
+  def doEditReply = checkOwner("rid").async { implicit request: Request[AnyContent] =>
     Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText, "content" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
@@ -219,7 +218,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def doRemoveReply = Action.async { implicit request: Request[AnyContent] =>
+  def doRemoveReply = checkAdminOrOwner("rid").async { implicit request: Request[AnyContent] =>
     Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
@@ -245,7 +244,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     } yield {
       article match {
         case Some(a) =>
-          request.session.get("uid") match{
+          request.session.get("uid") match {
             case Some(uid) =>
               val uid = request.session("uid").toInt
               val viewBitmap = BitmapUtil.fromBase64String(a.viewStat.bitmap)
@@ -264,7 +263,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def doVoteReply = Action.async { implicit request: Request[AnyContent] =>
+  def doVoteReply = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("aid" -> nonEmptyText,"rid" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
       tuple => {

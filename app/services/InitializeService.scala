@@ -20,7 +20,7 @@ import reactivemongo.akkastream.{State, cursorProducer}
 import java.lang.ClassLoader._
 import java.net.URL
 import java.nio.file.{Files, Paths}
-import java.time.Clock
+import java.time.{Clock, LocalDateTime}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
@@ -30,10 +30,11 @@ import play.api.{Environment, Logger}
 import models.JsonFormats.articleFormat
 import models.JsonFormats.ipLocationFormat
 import play.api.inject.ApplicationLifecycle
+
 import scala.concurrent.duration._
 
 @Singleton
-class InitializeService @Inject()(clock: Clock, actorSystem: ActorSystem, env: Environment, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
@@ -119,7 +120,7 @@ class InitializeService @Inject()(clock: Clock, actorSystem: ActorSystem, env: E
 
 
   appLifecycle.addStopHook { () =>
-    Logger.info(s"Stopping application at ${clock.instant}")
+    Logger.info(s"Stopping application at ${LocalDateTime.now()}")
     Future.successful(())
   }
 

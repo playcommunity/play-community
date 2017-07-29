@@ -24,9 +24,6 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
 
   override def routeRequest(request: RequestHeader) = {
-    //println(request.path)
-    //println(request.session.get("login"))
-
     // 忽略非PV请求
     if (publicPathPattern.matcher(request.path).matches()) {
       super.routeRequest(request)
