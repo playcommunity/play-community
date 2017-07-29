@@ -13,6 +13,10 @@ object UserHelper {
     request.session.get("login").nonEmpty
   }
 
+  def isActive(implicit request: RequestHeader): Boolean = {
+    isLogin && request.session.get("active").getOrElse("0") == "1"
+  }
+
   def getUidOpt(implicit request: RequestHeader): Option[String] = {
     request.session.get("uid")
   }

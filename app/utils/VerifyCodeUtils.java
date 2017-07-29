@@ -213,9 +213,6 @@ public class VerifyCodeUtils {
                     break;
                 case 5:
                     break;
-                case 6:
-                    font = new Font("Niagara Solid", Font.ITALIC, fontSize);
-                    break;
                 default:
                     font = new Font("Algerian", Font.ITALIC, fontSize);
                     break;

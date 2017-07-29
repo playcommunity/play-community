@@ -62,7 +62,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def add = checkLogin.async { implicit request: Request[AnyContent] =>
+  def add = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     for {
       categoryCol <- categoryColFuture
       categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
@@ -85,7 +85,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def doAdd = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
+  def doAdd = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
@@ -148,7 +148,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     )
   }
 
-  def doReply = checkLogin.async { implicit request: Request[AnyContent] =>
+  def doReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "content" -> nonEmptyText, "at" -> text)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
@@ -263,7 +263,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     }
   }
 
-  def doVoteReply = checkLogin.async { implicit request: Request[AnyContent] =>
+  def doVoteReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(tuple("aid" -> nonEmptyText,"rid" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
       tuple => {

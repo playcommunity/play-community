@@ -118,14 +118,14 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   }
 
   def doSetting() = checkLogin.async { implicit request: Request[AnyContent] =>
-    Form(tuple("name" -> nonEmptyText, "gender" -> text, "city" -> text, "introduction" -> text)).bindFromRequest().fold(
+    Form(tuple("name" -> nonEmptyText, "gender" -> optional(text), "city" -> text, "introduction" -> text)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       tuple => {
         val (name, gender, city, introduction) = tuple
         userColFuture.flatMap(_.update(
           Json.obj("_id" -> request.session("uid")),
           Json.obj(
-            "$set" -> Json.obj("setting.name" -> name, "setting.gender" -> gender, "setting.city" -> city, "setting.introduction" -> introduction)
+            "$set" -> Json.obj("setting.name" -> name, "setting.gender" -> gender.getOrElse[String](""), "setting.city" -> city, "setting.introduction" -> introduction)
           ))).map{ wr =>
           Redirect(routes.UserController.setting())
             .addingToSession("name" -> name)

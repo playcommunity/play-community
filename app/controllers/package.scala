@@ -36,6 +36,21 @@ package object controllers {
     }
   }
 
+  def checkActive[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) with Rendering with AcceptExtractors {
+    override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
+      if (UserHelper.isActive(request)) {
+        block(request)
+      } else {
+        Future.successful {
+          render {
+            case Accepts.Html() => Results.Redirect(routes.UserController.activate())
+            case Accepts.Json() => Results.Ok(Json.obj("status" -> 1, "msg" -> "您的账户尚未激活！"))
+          }(request)
+        }
+      }
+    }
+  }
+
   def checkOwner[A](_idField: String) (implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
