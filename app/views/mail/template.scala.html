@@ -1,0 +1,26 @@
+@(title: String)(implicit request: RequestHeader)
+
+<table style="width: 99.8%;height:99.8% ">
+    <tbody>
+    <tr>
+        <td style="background:#FAFAFA url(//labpic.qiniudn.com/a873524e5ac9465dc4d6fd6d133bc58d.png)">
+            <div style="background-color:white;border-top:2px solid #12ADDB;box-shadow:0 1px 3px #AAAAAA;line-height:180%;padding:0 15px 12px;width:500px;margin:50px auto;color:#555555;font-family:'Century Gothic','Trebuchet MS','Hiragino Sans GB',微软雅黑,'Microsoft Yahei',Tahoma,Helvetica,Arial,'SimSun',sans-serif;font-size:12px;">
+                <h2 style="border-bottom:1px solid #DDD;font-size:14px;font-weight:normal;padding:13px 0 10px 8px;">
+                    <span style="color: #12ADDB;font-weight: bold;">&gt;</span>您在
+                    <a style="text-decoration:none;color: #12ADDB;" href="//lab.benwong.cn">{site}</a>博客上的留言有回复啦！
+                </h2>
+                <div style="padding:0 12px 0 12px;margin-top:18px">
+                    <p>{author_p} 同学，您曾在文章《{title}》上发表评论:</p>
+                    <p style="background-color: #f5f5f5;border: 0px solid #DDD;padding: 10px 15px;margin:18px 0">{text_p}</p>
+                    <p>{author} 给您的回复如下:</p>
+                    <p style="background-color: #f5f5f5;border: 0px solid #DDD;padding: 10px 15px;margin:18px 0">{text}</p>
+                    <p>您可以点击
+                        <a style="text-decoration:none; color:#12addb" href="{permalink}">查看回复的完整內容</a>，欢迎再次光临
+                        <a style="text-decoration:none; color:#12addb" href="//lab.benwong.cn">{site}</a>。
+                    </p>
+                </div>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>

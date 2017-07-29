@@ -9,14 +9,14 @@ import models._
 import models.JsonFormats._
 import reactivemongo.play.json._
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, ElasticService}
+import services.{CounterService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, UserHelper, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,7 +24,7 @@ import scala.util.Random
 
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService)(implicit ec: ExecutionContext, mat: Materializer) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def oplogColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("oplog.rs"))
@@ -99,6 +99,8 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                     wr <- userCol.insert(User(uid.toString, Role.COMMON_USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", request.remoteAddress, None, Some(activeCode)))
                   } yield {
                     if (wr.ok && wr.n == 1) {
+                      // 发送激活码
+                      mailer.sendEmail(name, login, views.html.mail.activeMail(activeCode).body)
                       Redirect(routes.UserController.activate())
                         .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                     } else {
@@ -112,6 +114,27 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
           }).flatMap(f1 => f1)
         } else {
           Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
+        }
+      }
+    )
+  }
+
+  def doSendActiveMail = (checkLogin andThen userAction) { implicit request =>
+    // 发送激活码
+    mailer.sendEmail(UserHelper.getName, UserHelper.getLogin, views.html.mail.activeMail(request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
+    Ok(Json.obj("status" -> 0))
+  }
+
+  def doActive = (checkLogin andThen userAction) { implicit request =>
+    Form(single("activeCode" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Redirect(routes.Application.message("系统提示", "您的填写有误！")),
+      activeCode => {
+        if (activeCode.trim == request.user.activeCode.getOrElse("")) {
+          userColFuture.map(_.update(Json.obj("_id" -> request.user._id), Json.obj("$unset" -> Json.obj("activeCode" -> 1))))
+          Redirect(routes.UserController.activate())
+            .addingToSession("active" -> "1")
+        } else {
+          Redirect(routes.Application.message("系统提示", "您输入的激活码不正确！"))
         }
       }
     )

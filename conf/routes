@@ -14,6 +14,8 @@ GET     /404                                      controllers.Application.notFou
 GET     /message                                  controllers.Application.message(title: String, message: String)
 GET     /verifyCode                               controllers.Application.verifyCode
 GET     /autoRegister                             controllers.Application.autoRegister
+POST    /activate                                 controllers.Application.doActive
+POST    /activate/email                           controllers.Application.doSendActiveMail
 
 # User
 GET     /user                                     controllers.UserController.index

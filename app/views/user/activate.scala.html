@@ -1,5 +1,6 @@
 @(u: User)(implicit request: RequestHeader)
 
+@import helper._
 @main("激活账户") {
 <div class="main fly-user-main layui-clear">
   <ul class="layui-nav layui-nav-tree layui-inline" lay-filter="user">
@@ -43,16 +44,18 @@
       </ul>
       <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
         <ul class="layui-form">
+          @if(u.activeCode.nonEmpty){
           <li class="layui-form-li">
             <div class="layui-form layui-form-pane">
-              <form method="post" action="/login">
+              <form method="post" action="/activate">
                 <div class="layui-form-item">
                   <div class="layui-inline">
                     <label class="layui-form-label">激活码</label>
                     <div class="layui-input-inline" style="width: 200px;">
-                      <input type="text" name="code" autocomplete="off" class="layui-input">
+                      <input type="text" name="activeCode" autocomplete="off" class="layui-input">
                     </div>
                     <div class="layui-input-inline">
+                      @CSRF.formField
                       <button class="layui-btn" lay-submit>立即激活</button>
                     </div>
                   </div>
@@ -60,24 +63,27 @@
               </form>
             </div>
           </li>
+          }
           <li class="layui-form-li">
             <label>您的邮箱：</label>
             <span class="layui-form-text">xx@@xx.com
-              <!-- <em style="color:#999;">（已成功激活）</em> -->
+              @if(u.activeCode.nonEmpty){
               <em style="color:#c00;">（尚未激活）</em>
+              } else {
+              <em style="color:#999;">（已成功激活）</em>
+              }
             </span>
           </li>
           <li class="layui-form-li" style="margin-top: 20px; line-height: 26px;">
             <div>
               1. 如果您未收到邮件，或激活链接失效，您可以
-              <a class="layui-form-a" style="color:#4f99cf;" id="LAY-activate" href="javascript:;" email="{{user.email}}">重新发送邮件</a>，或者
-              <a class="layui-form-a" style="color:#4f99cf;" href="set.html">更换邮箱</a>；
+              <a class="layui-form-a" style="color:#4f99cf;" id="LAY-activate" href="javascript:;" email="@{u.login}">重新发送邮件</a>；
             </div>
             <div>
-              2. 如果您始终没有收到 Fly 发送的邮件，请注意查看您邮箱中的垃圾邮件；
+              2. 如果您始终没有收到 PlayScala中国社区 发送的邮件，请注意查看您邮箱中的垃圾邮件；
             </div>
             <div>
-              3. 如果你实在无法激活邮件，您还可以联系：admin@@xx.com
+              3. 如果你实在无法激活邮件，您还可以联系：playscala@@163.com
             </div>
           </li>
         </ul>

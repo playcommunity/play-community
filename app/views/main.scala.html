@@ -1,5 +1,6 @@
 @(title: String)(content: Html)(implicit request: RequestHeader)
 
+@import helper._
 <!DOCTYPE html>
 <html>
 <head>
@@ -39,7 +40,7 @@
                     <div class="nav">
                         <a href="/user/setting"><i class="iconfont icon-shezhi"></i>设置</a>
                         <!--<a href="/user/message"><i class="iconfont icon-xiaoxi"></i>消息</a>-->
-                        <!--<a href="/logout"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>-->
+                        <a href="/logout"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>
                     </div>
                 }
                 case None => {
@@ -68,6 +69,8 @@
 <script src="/assets/js/jquery.js"></script>
 <script src="/assets/layui/layui.js"></script>
 <script>
+var token = '@CSRF.getToken.value';
+
 layui.cache.user = {
   username: '@request.session.get("name").getOrElse("游客")'
   ,uid: @request.session.get("uid").getOrElse("-1").toInt

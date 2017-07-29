@@ -18,5 +18,7 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "reactivemongo-akkastream" % "0.12.5",
   "com.hankcs" % "hanlp" % "portable-1.3.4",
   "org.roaringbitmap" % "RoaringBitmap" % "0.6.44",
-  "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0"
+  "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0",
+  "com.typesafe.play" %% "play-mailer" % "6.0.0",
+  "com.typesafe.play" %% "play-mailer-guice" % "6.0.0"
 )
