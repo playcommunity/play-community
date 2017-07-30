@@ -1,0 +1,108 @@
+@(siteSetting: SiteSetting)(implicit request: RequestHeader)
+
+@import helper._
+@import utils.UserHelper
+@views.html.admin.main("系统设置 - 基础设置", "setting", "setting-base") {
+<link href="/assets/admin/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.min.css" rel="stylesheet" type="text/css" />
+
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>系统设置
+            <small>基础设置</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 基础设置</span>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-circle btn-icon-only blue" href="javascript:;">
+                        <i class="icon-cloud-upload"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only green" href="javascript:;">
+                        <i class="icon-wrench"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only red" href="javascript:;">
+                        <i class="icon-trash"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div class="portlet-body form">
+                <form action="/admin/setting/base" role="form" class="form-horizontal" method="post">
+                    <div class="form-body">
+                        <div class="form-group form-md-line-input">
+                            <label class="col-md-2 control-label" for="form_control_1">网站名称</label>
+                            <div class="col-md-10">
+                                <input name="name" type="text" value="@siteSetting.name" class="form-control" id="form_control_1" placeholder="输入网站名称">
+                                <div class="form-control-focus"> </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-md-line-input">
+                            <label class="col-md-2 control-label" for="form_control_1">网站首页</label>
+                            <div class="col-md-10">
+                                <input name="url" type="text" value="@siteSetting.url" class="form-control" id="form_control_1" placeholder="输入网站首页">
+                                <div class="form-control-focus"> </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-md-line-input">
+                            <label class="col-md-2 control-label" for="form_control_1">网站LOGO</label>
+                            <div class="col-md-10">
+                                <input id="logo" type="hidden" name="logo" value="@siteSetting.logo">
+                                <input id="file" type="file" name="file" data-url="/resource/owner/logo?csrfToken=@CSRF.getToken.value">
+                                <div class="form-control-focus"><img src="@models.App.logo"></div>
+                                <span class="help-block"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <div class="row">
+                            <div class="col-md-offset-2 col-md-10">
+                                @CSRF.formField
+                                <button type="submit" class="btn blue">保存设置</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+
+}
+
+<script src="/assets/admin/assets/global/plugins/moment.min.js" type="text/javascript"></script>
+<script src="/assets/admin/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.min.js" type="text/javascript"></script>
+<script src="/assets/admin/assets/global/plugins/jquery-file-upload/js/vendor/jquery.ui.widget.js" type="text/javascript"></script>
+<script src="/assets/admin/assets/global/plugins/jquery-file-upload/js/jquery.iframe-transport.js" type="text/javascript"></script>
+<script src="/assets/admin/assets/global/plugins/jquery-file-upload/js/jquery.fileupload.js" type="text/javascript"></script>
+<script>
+var token = '@CSRF.getToken.value';
+
+$(function () {
+    $('#file').fileupload({
+        dataType: 'json',
+        done: function (e, data) {
+            $('#logo').val(data.result.url);
+        }
+    });
+});
+</script>

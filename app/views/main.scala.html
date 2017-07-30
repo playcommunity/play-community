@@ -17,7 +17,7 @@
 
 <div class="header">
     <div class="main">
-        <a class="logo" href="/" title="Fly" style="width:180px;height:40px;">奇智机器人社区</a>
+        <a class="logo" href="/" title="Fly" style="width:180px;height:40px;background: url(@models.App.logo) no-repeat;">@models.App.name</a>
         <div class="nav">
             <a class="nav-this" href="/articles">
                 <i class="iconfont icon-wenda"></i>交流
@@ -59,12 +59,12 @@
 </div>
 @content
 <div class="footer">
-    <p><a href="https://www.chatbot.cn/">奇智机器人社区</a> 2017 &copy; <a href="https://www.chatbot.cn/">chatbot.cn</a></p>
-    <p>
+    <p><a href="https://www.chatbot.cn/">@models.App.name</a> 2017 &copy; <a href="@models.App.url">@models.App.url</a></p>
+    <!--<p>
         <a href="https://www.chatbot.cn/demo.html" target="_blank">产品演示</a>
         <a href="https://cloud.smartnlp.cn/cloud/register" target="_blank">产品体验</a>
         <a href="javascript:void(0);" target="_blank">微信公众号</a>
-    </p>
+    </p>-->
 </div>
 <script src="/assets/js/jquery.js"></script>
 <script src="/assets/layui/layui.js"></script>

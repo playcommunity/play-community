@@ -25,10 +25,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
-import models.{Article, IndexedDocument}
+import controllers.admin.routes
+import models.{App, Article, IndexedDocument, SiteSetting}
 import play.api.{Environment, Logger}
 import models.JsonFormats.articleFormat
 import models.JsonFormats.ipLocationFormat
+import models.JsonFormats.siteSettingFormat
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.duration._
@@ -38,6 +40,18 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, va
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
+
+  // 载入网站设置
+  for {
+    settingCol <- settingColFuture
+    opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
+  } yield {
+    opt.foreach{ siteSetting =>
+      App.name = siteSetting.name
+      App.logo = siteSetting.logo
+      App.url = siteSetting.url
+    }
+  }
 
   Logger.info("Starting ElasticSearch ...")
   val indexExists = Await.result(settingColFuture.flatMap(_.find(Json.obj("_id" -> "esIndex")).one[JsObject]).map(_.nonEmpty), 10 seconds)

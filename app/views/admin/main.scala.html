@@ -1,4 +1,4 @@
-@(title: String)(content: Html)(implicit request: RequestHeader)
+@(title: String, menu1: String, menu2: String = "")(content: Html)(implicit request: RequestHeader)
 
 @import helper._
 
@@ -13,7 +13,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>Metronic Admin Theme #4 | Admin Dashboard 2</title>
+    <title>@title</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <meta content="Preview page of Metronic Admin Theme #4 for statistics, charts, recent events and reports" name="description" />
@@ -79,7 +79,7 @@
                     <li class="dropdown dropdown-extended dropdown-notification dropdown-dark" id="header_notification_bar">
                         <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
                             <i class="icon-bell"></i>
-                            <span class="badge badge-success"> 7 </span>
+                            <span class="badge badge-success"> 0 </span>
                         </a>
                     </li>
                     <!-- END NOTIFICATION DROPDOWN -->
@@ -89,7 +89,7 @@
                     <li class="dropdown dropdown-extended dropdown-inbox dropdown-dark" id="header_inbox_bar">
                         <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
                             <i class="icon-envelope-open"></i>
-                            <span class="badge badge-danger"> 4 </span>
+                            <span class="badge badge-danger"> 0 </span>
                         </a>
                     </li>
                     <!-- END INBOX DROPDOWN -->
@@ -98,9 +98,9 @@
                     <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
                     <li class="dropdown dropdown-user dropdown-dark">
                         <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
-                            <span class="username username-hide-on-mobile"> Nick </span>
+                            <span class="username username-hide-on-mobile"> @request.session("name") </span>
                             <!-- DOC: Do not remove below empty space(&nbsp;) as its purposely used -->
-                            <img alt="" class="img-circle" src="/assets/admin/assets/layouts/layout4/img/avatar9.jpg" /> </a>
+                            <img alt="" class="img-circle" src="@request.session("headImg")" /> </a>
                         <ul class="dropdown-menu dropdown-menu-default">
                             <li>
                                 <a href="page_user_profile_1.html">
@@ -153,7 +153,7 @@
         <!-- BEGIN SIDEBAR -->
         <!-- DOC: Set data-auto-scroll="false" to disable the sidebar from auto scrolling/focusing -->
         <!-- DOC: Change data-auto-speed="200" to adjust the sub menu slide up/down speed -->
-        @sidebarMenu("", "")
+        @sidebarMenu(menu1, menu2)
         <!-- END SIDEBAR -->
     </div>
     <!-- END SIDEBAR -->
@@ -170,10 +170,7 @@
 <!-- END CONTAINER -->
 <!-- BEGIN FOOTER -->
 <div class="page-footer">
-    <div class="page-footer-inner"> 2016 &copy; Metronic Theme By
-        <a target="_blank" href="http://keenthemes.com">Keenthemes</a> &nbsp;|&nbsp;
-        <a href="http://themeforest.net/item/metronic-responsive-admin-dashboard-template/4021469?ref=keenthemes" title="Purchase Metronic just for 27$ and get lifetime updates for free" target="_blank">Purchase Metronic!</a>
-    </div>
+    <div class="page-footer-inner"> 2017 &copy; PlayScala社区</div>
     <div class="scroll-to-top">
         <i class="icon-arrow-up"></i>
     </div>

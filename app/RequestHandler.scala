@@ -17,8 +17,8 @@ import scala.concurrent.ExecutionContext
 import reactivemongo.play.json._
 
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
-  val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404")
-  val protectPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*")
+  val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo")
+  val protectPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*|/admin.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))

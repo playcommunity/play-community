@@ -35,6 +35,7 @@ object JsonFormats {
 
   // Search
   implicit val indexedDocumentFormat = Json.format[IndexedDocument]
+  implicit val siteSettingFormat = Json.format[SiteSetting]
 
 
 

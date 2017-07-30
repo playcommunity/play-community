@@ -3,10 +3,13 @@
 # ~~~~
 
 # Admin
-GET     /                                         controllers.admin.AdminController.index
+GET     /admin                                    controllers.admin.AdminController.index
+GET     /admin/setting/base                       controllers.admin.AdminController.base
+POST    /admin/setting/base                       controllers.admin.AdminController.doBaseSetting
+GET     /todo                                     controllers.Default.todo
 
 # Application
-GET     /xx                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
+GET     /                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
