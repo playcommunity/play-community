@@ -2,8 +2,11 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+# Admin
+GET     /                                         controllers.admin.AdminController.index
+
 # Application
-GET     /                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
+GET     /xx                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
