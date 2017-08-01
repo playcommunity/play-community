@@ -7,6 +7,8 @@ object App {
   var name = "PlayScala社区"
   var logo = "/assets/images/logo.png"
   var url = "http://www.playscala.cn"
+  var links = List.empty[Link]
+  var favicon = "/assets/favicon.ico"
 }
 
 object Role {

@@ -10,7 +10,7 @@ import models.JsonFormats._
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, JsSuccess, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
@@ -39,26 +39,27 @@ class AdminController @Inject()(cc: ControllerComponents, val reactiveMongoApi: 
       settingCol <- settingColFuture
       opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
     } yield {
-      Ok(views.html.admin.setting.base(opt.getOrElse(SiteSetting(App.name, App.url, App.logo))))
+      Ok(views.html.admin.setting.base(opt.getOrElse(SiteSetting(App.name, App.url, App.logo, Nil, "/assets/favicon.ico"))))
     }
   }
 
   def doBaseSetting = Action.async { implicit request: Request[AnyContent] =>
-    Form(tuple("name" -> nonEmptyText, "url" -> nonEmptyText, "logo" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
-      tuple => {
-        val (name, url, logo) = tuple
-        for {
-          settingCol <- settingColFuture
-          wr <- settingCol.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> Json.obj("name" -> name, "url" -> url, "logo" -> logo)), upsert = true)
-        } yield {
-          App.name = name
-          App.logo = logo
-          App.url = url
-          Redirect(routes.AdminController.base())
+    request.body.asJson match {
+      case Some(obj) =>
+        obj.validate[SiteSetting] match {
+          case JsSuccess(s, _) =>
+            App.name = s.name
+            App.logo = s.logo
+            App.url = s.url
+            App.links = s.links
+            settingColFuture.flatMap(_.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj))).map{ _ =>
+              Ok(Json.obj("status" -> 0))
+            }
+          case JsError(_) =>
+            Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "请求格式有误！")))
         }
-      }
-    )
+      case None => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "请求格式有误！")))
+    }
   }
 
 }

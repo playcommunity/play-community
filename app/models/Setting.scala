@@ -1,3 +1,4 @@
 package models
 
-case class SiteSetting(name: String, url: String, logo: String)
+case class Link(title: String, url: String, target: String)
+case class SiteSetting(name: String, url: String, logo: String, links: List[Link], favicon: String)

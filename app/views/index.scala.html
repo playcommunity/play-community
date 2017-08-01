@@ -123,12 +123,11 @@
     <div class="fly-panel fly-link">
       <h3 class="fly-panel-title">友情链接</h3>
       <dl>
+        @for(l <- App.links){
         <dd>
-          <a href="https://www.chatbot.cn/" target="_blank">奇智官网</a>
+          <a href="@l.url" target="@l.target">@l.title</a>
         </dd>
-        <dd>
-          <a href="https://cloud.chatbot.cn/" target="_blank">奇智云平台</a>
-        </dd>
+        }
       </dl>
     </div>
   </div>

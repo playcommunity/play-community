@@ -50,6 +50,7 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, va
       App.name = siteSetting.name
       App.logo = siteSetting.logo
       App.url = siteSetting.url
+      App.links = siteSetting.links
     }
   }
 

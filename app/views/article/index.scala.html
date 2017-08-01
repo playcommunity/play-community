@@ -7,7 +7,8 @@
       <div class="fly-tab">
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
-            <li> <a href="/?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
+            <li> <a href="/?nav=0">首页</a> </li>
+            <li> <a href="/articles?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
             <li> <a href="/articles?nav=1" @if(nav == "1"){class="layui-this"}>最新回答</a> </li>
             <li> <a href="/articles?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
             <li> <a href="/articles?nav=3" @if(nav == "3"){class="layui-this"}>尚未回答</a> </li>
