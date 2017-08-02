@@ -37,6 +37,14 @@ POST    /user/setting                             controllers.UserController.doS
 POST    /user/password                            controllers.UserController.doSetPassword
 POST    /user/head                                controllers.UserController.doSetHeadImg()
 POST    /user/collect                             controllers.UserController.doCollect()
+POST    /res/reply                                controllers.UserController.doReply
+
+# Doc
+GET     /docs                                     controllers.DocController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /doc/add                                  controllers.DocController.add
+POST    /doc/add                                  controllers.DocController.doAdd
+GET     /doc/edit                                 controllers.DocController.edit(_id: String)
+GET     /doc/view                                 controllers.DocController.view(_id: String)
 
 # Article
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", page: Int ?= 1)

@@ -17,7 +17,7 @@ import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.{ExecutionContext, Future}
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, UserHelper}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 
 import scala.concurrent.duration._
 
@@ -26,8 +26,10 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
+  def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
   def collectColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-collect"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
+  def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
   def index() = Action.async { implicit request: Request[AnyContent] =>
     for {
@@ -43,7 +45,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   }
 
   def home(uidOpt: Option[String]) = Action.async { implicit request: Request[AnyContent] =>
-    (uidOpt orElse UserHelper.getUidOpt) match {
+    (uidOpt orElse RequestHelper.getUidOpt) match {
       case Some(uid) =>
         for {
           articleCol <- articleColFuture
@@ -182,10 +184,9 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
       tuple => {
         val (resType, resId) = tuple
         val uid = request.session("uid").toInt
-        val resColFuture = if (resType == "article") { articleColFuture } else { articleColFuture }
         for {
           collectCol <- collectColFuture
-          resCol <- resColFuture
+          resCol <- getColFuture("common-" + resType)
           Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1, "timeStat" -> 1, "collectStat" -> 1)).one[JsObject]
         } yield {
           val collectStat = resObj("collectStat").as[CollectStat]
@@ -207,6 +208,51 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
             collectCol.remove(Json.obj("uid" -> request.session("uid"), "resId" -> resId, "resType" -> resType))
             Ok(Json.obj("status" -> 0))
           }
+        }
+      }
+    )
+  }
+
+
+  def doReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "content" -> nonEmptyText, "at" -> text)).bindFromRequest().fold(
+      errForm => Future.successful(Ok("err")),
+      tuple => {
+        val (resId, resType, content, at) = tuple
+        val reply = Reply(RequestHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val uid = request.session("uid").toInt
+        for{
+          resCol <- getColFuture("common-" + resType)
+          Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("replyStat" -> 1, "author" -> 1, "title" -> 1)).one[JsObject]
+          resAuthor = (resObj \ "author").as[Author]
+          resTitle = (resObj \ "title").as[String]
+          replyStat = (resObj \ "replyStat").as[ReplyStat]
+          replyBitmap = BitmapUtil.fromBase64String(replyStat.bitmap)
+          newReplyStat =
+          if (replyBitmap.contains(uid)) {
+            replyStat.copy(count = replyStat.count + 1)
+          } else {
+            replyBitmap.add(uid)
+            replyStat.copy(count = replyStat.count + 1, userCount = replyStat.userCount + 1, bitmap = BitmapUtil.toBase64String(replyBitmap))
+          }
+          wr <- resCol.update(
+            Json.obj("_id" -> resId),
+            Json.obj(
+              "$push" -> Json.obj("replies" -> reply),
+              "$set" -> Json.obj("lastReply" -> reply, "replyStat" -> newReplyStat)
+            ))
+        } yield {
+          // 消息提醒
+          val read = if (resAuthor._id != RequestHelper.getUidOpt.get) { false } else { true }
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, resAuthor._id, "article", resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
+
+          val atIds = at.split(",").filter(_.trim != "")
+          atIds.foreach{ uid =>
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
+          }
+          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
+
+          Redirect(s"/${resType}/view?_id=${resId}")
         }
       }
     )

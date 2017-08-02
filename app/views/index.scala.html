@@ -1,5 +1,5 @@
 @(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], topReplyUsers: List[User], page: Int, total: Int)(implicit request: RequestHeader)
-@import utils.UserHelper
+@import utils.RequestHelper
 
 @main("欢迎来到社区！") {
 <div class="main layui-clear">
@@ -79,7 +79,7 @@
   </div>
 
   <div class="edge">
-    @if(UserHelper.isLogin){
+    @if(RequestHelper.isLogin){
     <div class="jie-add">
       <a href="/article/add" class="layui-btn layui-btn-big">发表新帖</a>
       <a href="/user" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的帖子</a>

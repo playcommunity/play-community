@@ -18,7 +18,7 @@ import models.JsonFormats.siteSettingFormat
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService, MailerService}
-import utils.{DateTimeUtil, HashUtil, UserHelper, VerifyCodeUtils}
+import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random

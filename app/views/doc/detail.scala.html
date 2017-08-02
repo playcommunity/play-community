@@ -1,4 +1,4 @@
-@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
+@(doc: Doc, topViewDocs: List[Doc], topReplyDocs: List[Doc])(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
@@ -18,74 +18,56 @@
   <div class="wrap">
     <div class="content detail">
       <div class="fly-panel detail-box">
-        <h1>@article.title</h1>
-        <div class="fly-tip fly-detail-hint" data-id="@article._id">
-          @if(article.top){
-          <span class="fly-tip-stick">置顶帖</span>
-          }
-          @if(article.recommended){
-          <span class="fly-tip-jing">精帖</span>
-          }
-          @if(article.replies.isEmpty){
+        <h1>@doc.title</h1>
+        <div class="fly-tip fly-detail-hint" data-id="@doc._id">
+          @if(doc.replies.isEmpty){
           <span>无回复</span>
           }else{
           <span>已回复</span>
           }
           <!-- <span class="fly-tip-jie">已采纳</span> -->
-          @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(article._id)){
+          @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(doc._id)){
           <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
-          }
-          @if(RequestHelper.isAdmin){
-          @if(!article.top){
-          <span class="jie-admin" type="set" field="stick" rank="1">置顶</span>
-          }else{
-          <span class="jie-admin" type="set" field="stick" rank="0" style="background-color:#ccc;">取消置顶</span>
-          }
-          @if(!article.recommended){
-          <span class="jie-admin" type="set" field="status" rank="1">加精</span>
-          }else{
-          <span class="jie-admin" type="set" field="status" rank="0" style="background-color:#ccc;">取消加精</span>
-          }
           }
 
           <div class="fly-list-hint">
-            <i class="iconfont" title="回答">&#xe60c;</i> @article.replies.size
-            <i class="iconfont" title="人气">&#xe60b;</i> @article.viewStat.count
+            <i class="iconfont" title="回答">&#xe60c;</i> @doc.replies.size
+            <i class="iconfont" title="人气">&#xe60b;</i> @doc.viewStat.count
           </div>
         </div>
         <div class="detail-about">
-          <a class="jie-user" href="/user/home?uid=@{article.author._id}">
-            <img src="@article.author.headImg" alt="">
+          <a class="jie-user" href="/user/home?uid=@{doc.author._id}">
+            <img src="@doc.author.headImg" alt="">
             <cite>
-              @article.author.name
-              <em>@utils.DateTimeUtil.toPrettyString(article.timeStat.createTime)发布</em>
+              @doc.author.name
+              <em>@utils.DateTimeUtil.toPrettyString(doc.timeStat.createTime)发布</em>
             </cite>
           </a>
           @if(RequestHelper.isLogin){
-          <div class="detail-hits" data-id="@article._id">
-            @if(article.author._id == request.session.get("uid").getOrElse("")){
-            <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/article/edit?_id=@{article._id}">编辑此贴</a></span>
+          <div class="detail-hits" data-id="@doc._id">
+            @if(doc.author._id == request.session.get("uid").getOrElse("")){
+            <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/doc/edit?_id=@{doc._id}">编辑此贴</a></span>
             }
-            @if(utils.BitmapUtil.fromBase64String(article.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
-            <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="remove" data-resource="article">取消收藏</span>
+            @if(utils.BitmapUtil.fromBase64String(doc.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
+            <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="remove" data-resource="doc">取消收藏</span>
             }else{
-            <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-resource="article">收藏</span>
+            <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-resource="doc">收藏</span>
             }
           </div>
           }
         </div>
 
         <div class="detail-body photos" style="margin-bottom: 20px;">
-          @Html(article.content)
+          @Html(doc.content)
         </div>
       </div>
 
       <div class="fly-panel detail-box" style="padding-top: 0;">
         <a name="comment"></a>
         <ul class="jieda photos" id="jieda">
-          @for(r <- article.replies){
+          @for(r <- doc.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-aid="@{article._id}" data-rid="@{r._id}" data-uid="@{r.author._id}" data-token="@CSRF.getToken.value">
+          <li data-aid="@{doc._id}" data-rid="@{r._id}" data-uid="@{r.author._id}" data-token="@CSRF.getToken.value">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="/user/home?uid=@{r.author._id}">
@@ -117,17 +99,18 @@
           </li>
           }
           }
-          @if(article.replies.isEmpty){
+          @if(doc.replies.isEmpty){
           <li class="fly-none">没有任何回答</li>
           }
         </ul>
         @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
-          <form id="form" action="/article/reply" method="post">
+          <form id="form" action="/res/reply" method="post">
             <div class="layui-form-item">
               @CSRF.formField
-              <input type="hidden" name="_id" value="@article._id">
+              <input type="hidden" name="resId" value="@doc._id">
+              <input type="hidden" name="resType" value="doc">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
               <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">
@@ -143,9 +126,9 @@
   <div class="edge">
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">最近热帖</dt>
-      @for(a <- topViewArticles){
+      @for(a <- topViewDocs){
       <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <a href="/doc/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
       </dd>
       }
@@ -153,9 +136,9 @@
 
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">近期热议</dt>
-      @for(a <- topReplyArticles){
+      @for(a <- topReplyDocs){
       <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <a href="/doc/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
       </dd>
       }

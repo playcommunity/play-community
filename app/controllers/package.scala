@@ -5,7 +5,7 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
-import utils.UserHelper
+import utils.RequestHelper
 import scala.concurrent.{ExecutionContext, Future}
 import reactivemongo.play.json._
 import models.JsonFormats.userFormat
@@ -28,7 +28,7 @@ package object controllers {
 
   def checkLogin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (UserHelper.isLogin(request)) {
+      if (RequestHelper.isLogin(request)) {
         block(request)
       } else {
         Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -38,7 +38,7 @@ package object controllers {
 
   def checkActive[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) with Rendering with AcceptExtractors {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (UserHelper.isActive(request)) {
+      if (RequestHelper.isActive(request)) {
         block(request)
       } else {
         Future.successful {
@@ -55,7 +55,7 @@ package object controllers {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
         case Some(_id) =>
-          if (_id.startsWith(UserHelper.getUid(request) + "-")) {
+          if (_id.startsWith(RequestHelper.getUid(request) + "-")) {
             block(request)
           } else {
             Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -68,7 +68,7 @@ package object controllers {
 
   def checkAdmin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (UserHelper.isAdmin(request)) {
+      if (RequestHelper.isAdmin(request)) {
         block(request)
       } else {
         Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -80,7 +80,7 @@ package object controllers {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
         case Some(_id) =>
-          if (UserHelper.isAdmin(request) || _id.startsWith(UserHelper.getUid(request) + "-")) {
+          if (RequestHelper.isAdmin(request) || _id.startsWith(RequestHelper.getUid(request) + "-")) {
             block(request)
           } else {
             Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))

@@ -17,7 +17,7 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService, MailerService}
-import utils.{DateTimeUtil, HashUtil, UserHelper, VerifyCodeUtils}
+import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
@@ -121,7 +121,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
   def doSendActiveMail = (checkLogin andThen userAction) { implicit request =>
     // 发送激活码
-    mailer.sendEmail(UserHelper.getName, UserHelper.getLogin, views.html.mail.activeMail(request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
+    mailer.sendEmail(RequestHelper.getName, RequestHelper.getLogin, views.html.mail.activeMail(request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
     Ok(Json.obj("status" -> 0))
   }
 
@@ -144,7 +144,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     * 自动注册单点登录用户
     */
   def autoRegister = Action.async { implicit request: Request[AnyContent] =>
-    userColFuture.flatMap(_.find(Json.obj("login" -> UserHelper.getLogin)).one[User]).flatMap {
+    userColFuture.flatMap(_.find(Json.obj("login" -> RequestHelper.getLogin)).one[User]).flatMap {
       case Some(u) =>
         Future.successful {
           Redirect(routes.Application.index())
@@ -154,7 +154,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
         for{
           userCol <- userColFuture
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userCol.insert(User(uid.toString, Role.COMMON_USER, UserHelper.getLogin, "", UserSetting(UserHelper.getName, "", "", UserHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
+          _ <- userCol.insert(User(uid.toString, Role.COMMON_USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
         } yield {
           Redirect(routes.Application.index())
             .addingToSession("uid" -> uid.toString, "role" -> Role.COMMON_USER)

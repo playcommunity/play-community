@@ -38,7 +38,7 @@
           <ul class="mine-view jie-row">
             @for(c <- collectRes){
             <li>
-              <a class="jie-title" href="/article/view?_id=@c.resId" target="_blank">@c.resTitle</a>
+              <a class="jie-title" href="/@{c.resType}/view?_id=@c.resId" target="_blank">@c.resTitle</a>
               <i>收藏于@utils.DateTimeUtil.toPrettyString(c.collectTime)</i>
             </li>
             }

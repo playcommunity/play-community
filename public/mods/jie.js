@@ -89,9 +89,9 @@ layui.define(['laypage', 'fly'], function(exports){
 
     //收藏
     ,collect: function(div){
-      var othis = $(this), type = othis.data('type'), token = othis.data('token');
+      var othis = $(this), type = othis.data('type'), resType = othis.data('resource');
       fly.json('/user/collect', {
-        resType: 'article'
+        resType: resType
         ,resId: div.data('id')
         ,csrfToken: token
       }, function(res){

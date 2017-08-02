@@ -1,10 +1,10 @@
 @(uidOpt: Option[String], userOpt: Option[User], articles: List[Article], replyArticles: List[Article])(implicit request: RequestHeader)
-@import utils.UserHelper
+@import utils.RequestHelper
 
 @headImg = @{
   userOpt.map(_.setting.headImg).getOrElse{
     uidOpt.map(_ => "/assets/images/head.png").getOrElse{
-      UserHelper.getHeadImg
+      RequestHelper.getHeadImg
     }
   }
 }
@@ -12,7 +12,7 @@
 @name = @{
   userOpt.map(_.setting.name).getOrElse{
     uidOpt.map(_ => "他").getOrElse{
-      UserHelper.getNameOpt.getOrElse("他")
+      RequestHelper.getNameOpt.getOrElse("他")
     }
   }
 }

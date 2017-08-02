@@ -7,7 +7,7 @@ import reactivemongo.bson.BSONObjectID
 /**
   * Created by joymufeng on 2017/7/17.
   */
-object UserHelper {
+object RequestHelper {
 
   def isLogin(implicit request: RequestHeader): Boolean = {
     request.session.get("login").nonEmpty
@@ -55,6 +55,10 @@ object UserHelper {
 
   def getHeadImg(implicit request: RequestHeader) : String = {
     request.session.get("headImg").getOrElse("/assets/images/head.png")
+  }
+
+  def getAuthor(implicit request: RequestHeader): Author = {
+    Author(getUid, getLoginOpt.get, getNameOpt.get, getHeadImg)
   }
 
   def getAuthorOpt(implicit request: RequestHeader): Option[Author] = {

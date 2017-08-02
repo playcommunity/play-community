@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.play.json.collection.JSONCollection
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, UserHelper}
+import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
@@ -27,9 +27,6 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
 
   def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
-
-    //println(Json.obj("time" -> OffsetDateTime.now(ZoneOffset.ofHours(8))))
-
     val cPage = if(page < 1){1}else{page}
     var q = Json.obj()
     var sort = Json.obj("timeStat.createTime" -> -1)
@@ -106,7 +103,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    articleCol.insert(Article(UserHelper.generateId, title, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                    articleCol.insert(Article(RequestHelper.generateId, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))
@@ -153,7 +150,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (_id, content, at) = tuple
-        val reply = Reply(UserHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val reply = Reply(RequestHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
         val uid = request.session("uid").toInt
         for{
           articleCol <- articleColFuture
@@ -177,12 +174,12 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
             ))
         } yield {
           // 消息提醒
-          val read = if (articleAuthor._id != UserHelper.getUidOpt.get) { false } else { true }
-          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, UserHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
+          val read = if (articleAuthor._id != RequestHelper.getUidOpt.get) { false } else { true }
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, articleAuthor._id, "article", _id, articleTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
 
           val atIds = at.split(",").filter(_.trim != "")
           atIds.foreach{ uid =>
-            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, UserHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", _id, articleTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
           userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
 
