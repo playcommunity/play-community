@@ -3,7 +3,7 @@
 @import utils.RequestHelper
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main("欢迎来到社区！") {
+@main("欢迎来到社区！", "article") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */
@@ -19,7 +19,7 @@
     <div class="content detail">
       <div class="fly-panel detail-box">
         <h1>@article.title</h1>
-        <div class="fly-tip fly-detail-hint" data-id="@article._id">
+        <div class="fly-tip fly-detail-hint" data-id="@article._id" data-type="article">
           @if(article.top){
           <span class="fly-tip-stick">置顶帖</span>
           }
@@ -85,7 +85,7 @@
         <ul class="jieda photos" id="jieda">
           @for(r <- article.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-aid="@{article._id}" data-rid="@{r._id}" data-uid="@{r.author._id}" data-token="@CSRF.getToken.value">
+          <li data-type="article" data-id="@{article._id}" data-rid="@{r._id}" data-uid="@{r.author._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="/user/home?uid=@{r.author._id}">
@@ -103,7 +103,7 @@
             </div>
             @if(RequestHelper.isLogin){
             <div class="jieda-reply">
-              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan" data-token="@CSRF.getToken.value"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
+              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <!--<span type="edit">编辑</span>-->
@@ -124,10 +124,11 @@
         @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
-          <form id="form" action="/article/reply" method="post">
+          <form id="form" action="/res/reply" method="post">
             <div class="layui-form-item">
               @CSRF.formField
-              <input type="hidden" name="_id" value="@article._id">
+              <input type="hidden" name="resId" value="@article._id">
+              <input type="hidden" name="resType" value="article">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
               <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">

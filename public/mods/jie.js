@@ -53,14 +53,16 @@ layui.define(['laypage', 'fly'], function(exports){
   gather.jieAdmin = {
     //删求解
     del: function(div){
+      var resId = div.data('id'), resType = div.data('type');
       layer.confirm('确认删除该帖子么？', function(index){
         layer.close(index);
-        fly.json('/article/remove', {
-          _id: div.data('id'),
+        fly.json('/res/remove', {
+          resId: resId,
+          resType: resType,
           csrfToken: token
         }, function(res){
           if(res.status === 0){
-            location.href = '/articles';
+            location.href = '/' + resType + 's';
           } else {
             layer.msg(res.msg);
           }
@@ -148,10 +150,10 @@ layui.define(['laypage', 'fly'], function(exports){
   //解答操作
   gather.jiedaActive = {
     zan: function(li){ //赞
-      var othis = $(this), ok = othis.hasClass('zanok'), token = othis.data('token');
-      fly.json('/article/reply/vote', {
-        up: !ok
-        ,aid: li.data('aid')
+      var othis = $(this), ok = othis.hasClass('zanok');
+      fly.json('/res/reply/vote', {
+        resId: li.data('id')
+        ,resType: li.data('type')
         ,rid: li.data('rid')
         ,csrfToken: token
       }, function(res){
@@ -184,8 +186,10 @@ layui.define(['laypage', 'fly'], function(exports){
       var othis = $(this);
       layer.confirm('是否采纳该回答为最佳答案？', function(index){
         layer.close(index);
-        fly.json('/api/jieda-accept/', {
-          id: li.data('id')
+        fly.json('/qa/reply/accept', {
+          _id: li.data('id'),
+          rid: li.data('rid'),
+          csrfToken: token
         }, function(res){
           if(res.status === 0){
             $('.jieda-accept').remove();
@@ -223,10 +227,11 @@ layui.define(['laypage', 'fly'], function(exports){
     ,del: function(li){ //删除
       layer.confirm('确认删除该回答么？', function(index){
         layer.close(index);
-        fly.json('/article/reply/remove', {
-          aid: li.data('aid')
+        fly.json('/res/reply/remove', {
+          resId: li.data('id')
+          ,resType: li.data('type')
           ,rid: li.data('rid')
-          ,csrfToken: li.data('token')
+          ,csrfToken: token
         }, function(res){
           if(res.status === 0){
             var count = dom.jiedaCount.text()|0;

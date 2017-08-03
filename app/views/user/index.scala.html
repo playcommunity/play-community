@@ -1,4 +1,4 @@
-@(articles: List[Article], articlesCount: Int, collectRes: List[StatCollect], collectResCount: Int)(implicit request: RequestHeader)
+@(articles: List[Article], articlesCount: Int, qas: List[QA], qaCount: Int, collectRes: List[StatCollect], collectResCount: Int)(implicit request: RequestHeader)
 
 @main("欢迎来到社区！") {
 <div class="main fly-user-main layui-clear">
@@ -17,7 +17,8 @@
     -->
     <div class="layui-tab layui-tab-brief" lay-filter="user">
       <ul class="layui-tab-title" id="LAY_mine">
-        <li data-type="mine-jie" lay-id="index" class="layui-this">我发的帖（<span>@articlesCount</span>）</li>
+        <li data-type="mine-jie" lay-id="article" class="layui-this">我的分享（<span>@articlesCount</span>）</li>
+        <li data-type="mine-jie" lay-id="qa">我的提问（<span>@qaCount</span>）</li>
         <li data-type="collection" data-url="/collection/find/" lay-id="collection">我收藏的帖（<span>@collectResCount</span>）</li>
       </ul>
       <div class="layui-tab-content" style="padding: 20px 0;">
@@ -32,7 +33,18 @@
             </li>
             }
           </ul>
-          <div id="LAY_page"></div>
+        </div>
+        <div class="layui-tab-item layui-show">
+          <ul class="mine-view jie-row">
+            @for(a <- qas){
+            <li>
+              <a class="jie-title" href="/qa/view?_id=@a._id" target="_blank">@a.title</a>
+              <i>@utils.DateTimeUtil.toString(a.timeStat.createTime, "yyyy/MM/dd HH:mm")</i>
+              <a class="mine-edit" href="/article/edit?_id=@a._id">编辑</a>
+              <em>@{a.viewStat.count}阅/@{a.replyStat.count}答</em>
+            </li>
+            }
+          </ul>
         </div>
         <div class="layui-tab-item">
           <ul class="mine-view jie-row">
@@ -43,7 +55,6 @@
             </li>
             }
           </ul>
-          <div id="LAY_page1"></div>
         </div>
       </div>
     </div>

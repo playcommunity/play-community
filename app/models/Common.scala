@@ -59,20 +59,24 @@ case class Article(
 )
 
 // 问答
-case class Question(
+case class QA(
   _id: String,
   title: String,
   content: String,
   editorType: String,
   author: Author,
   categoryPath: String,
+  categoryName: String,
+  score: Int,
   tags: List[String],
-  timeStat: QuestionTimeStat,
   replies: List[Reply],
   lastReply: Option[Reply],
   answer: Option[Reply],
   viewStat: ViewStat,
-  voteStat: VoteStat
+  voteStat: VoteStat,
+  replyStat: ReplyStat,
+  collectStat: CollectStat,
+  timeStat: QATimeStat
 )
 
 /**
@@ -90,9 +94,9 @@ case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
 case class UserStat(articleCount: Int, questionCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
-case class QuestionTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class DocTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime)
+case class QATimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
 case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: OffsetDateTime)
 

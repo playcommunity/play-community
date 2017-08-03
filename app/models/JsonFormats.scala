@@ -9,7 +9,7 @@ object JsonFormats {
 
   // Common
   implicit val linkFormat = Json.format[Link]
-  implicit val questionTimeStatFormat = Json.format[QuestionTimeStat]
+  implicit val qaTimeStatFormat = Json.format[QATimeStat]
   implicit val articleTimeStatFormat = Json.format[ArticleTimeStat]
   implicit val docTimeStatFormat = Json.format[DocTimeStat]
   implicit val userStatFormat = Json.format[UserStat]
@@ -24,7 +24,7 @@ object JsonFormats {
   implicit val replyFormat = Json.format[Reply]
   implicit val docFormat = Json.format[Doc]
   implicit val articleFormat = Json.format[Article]
-  implicit val questionFormat = Json.format[Question]
+  implicit val qaFormat = Json.format[QA]
   implicit val ipLocationFormat = Json.format[IPLocation]
   implicit val userFormat = Json.format[User]
   implicit val messageFormat = Json.format[Message]

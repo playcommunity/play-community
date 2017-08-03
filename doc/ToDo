@@ -1,7 +1,4 @@
-检查索引是否创建
-删帖，删回复
-设置后自动更新 & 可以为空
-管理后台
+oplog的pull操作
 Comment功能
 https://github.com/allegro/embedded-elasticsearch
 在线用户

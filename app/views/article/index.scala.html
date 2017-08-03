@@ -1,13 +1,13 @@
-@(nav: String, topArticles: List[Article], articles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
+@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 
-@main("欢迎来到社区！") {
+@import utils.RequestHelper
+@main("欢迎来到社区！", "article") {
 <div class="main layui-clear">
   <div class="wrap">
-    <div class="content" style="margin-right:0">
+    <div class="content">
       <div class="fly-tab">
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
-            <li> <a href="/?nav=0">首页</a> </li>
             <li> <a href="/articles?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
             <li> <a href="/articles?nav=1" @if(nav == "1"){class="layui-this"}>最新回答</a> </li>
             <li> <a href="/articles?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
@@ -75,6 +75,45 @@
           <a href="/articles?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(articles.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/articles?page=@{page+1}" class="laypage-next">下一页</a></div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="edge">
+    @if(RequestHelper.isLogin){
+    <div class="jie-add">
+      <a href="/article/add" class="layui-btn layui-btn-big">分享文章</a>
+      <a href="/user#article" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的分享</a>
+    </div>
+    }
+    <dl class="fly-panel fly-list-one">
+      <dt class="fly-panel-title">近期热文</dt>
+      @for(a <- topViewArticles){
+      <dd>
+        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
+      </dd>
+      }
+    </dl>
+
+    <dl class="fly-panel fly-list-one">
+      <dt class="fly-panel-title">近期热议</dt>
+      @for(a <- topReplyArticles){
+      <dd>
+        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
+      </dd>
+      }
+    </dl>
+
+    <div class="fly-panel fly-link">
+      <h3 class="fly-panel-title">友情链接</h3>
+      <dl>
+        @for(l <- App.links){
+        <dd>
+          <a href="@l.url" target="@l.target">@l.title</a>
+        </dd>
+        }
+      </dl>
     </div>
   </div>
 </div>

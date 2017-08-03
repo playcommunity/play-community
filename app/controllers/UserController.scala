@@ -27,6 +27,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
+  def qaColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-qa"))
   def collectColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-collect"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
@@ -35,12 +36,15 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
     for {
       articleCol <- articleColFuture
       collectCol <- collectColFuture
+      qaCol <- qaColFuture
       articles <- articleCol.find(Json.obj("author._id" -> request.session("uid"))).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
       articlesCount <- articleCol.count(Some(Json.obj("author._id" -> request.session("uid"))))
+      qas <- qaCol.find(Json.obj("author._id" -> request.session("uid"))).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[QA]().collect[List](15)
+      qaCount <- qaCol.count(Some(Json.obj("author._id" -> request.session("uid"))))
       collectRes <- collectCol.find(Json.obj("uid" -> request.session("uid"))).sort(Json.obj("collectTime" -> -1)).cursor[StatCollect]().collect[List](15)
       collectResCount <- collectCol.count(Some(Json.obj("uid" -> request.session("uid"))))
     } yield {
-      Ok(views.html.user.index(articles, articlesCount, collectRes, collectResCount))
+      Ok(views.html.user.index(articles, articlesCount, qas, qaCount, collectRes, collectResCount))
     }
   }
 
@@ -257,5 +261,122 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
       }
     )
   }
+
+
+  def editReply(aid: String, rid: String) = checkOwner("rid").async { implicit request: Request[AnyContent] =>
+    for {
+      articleCol <- articleColFuture
+      reply <- articleCol.find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).one[JsObject].map(objOpt => (objOpt.get)("replies")(0).as[Reply])
+    } yield {
+      Ok(Json.obj("status" -> 0, "rows" -> Json.obj("content" -> reply.content)))
+    }
+  }
+
+  def doEditReply = checkOwner("rid").async { implicit request: Request[AnyContent] =>
+    Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText, "content" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok("err")),
+      tuple => {
+        val (aid, rid, content) = tuple
+        val reply = Reply(BSONObjectID.generate().stringify, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val uid = request.session("uid").toInt
+        for{
+          articleCol <- articleColFuture
+          wr <- articleCol.update(Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
+        } yield {
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  def doRemoveReply = checkAdminOrOwner("rid").async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText, "resId" -> nonEmptyText, "rid" ->nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok("err")),
+      tuple => {
+        val (resType, resId, rid) = tuple
+        val uid = request.session("uid").toInt
+        for{
+          resCol <- getColFuture(s"common-${resType}")
+          wr <- resCol.update(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.count" -> -1)))
+        } yield {
+          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> -1))))
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  def doVoteReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText, "resId" -> nonEmptyText, "rid" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
+      tuple => {
+        val (resType, resId, rid) = tuple
+        for{
+          resCol <- getColFuture(s"common-${resType}")
+          reply <- resCol.find(Json.obj("_id" -> resId), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).one[JsObject].map(objOpt => (objOpt.get \ "replies")(0).as[Reply])
+        } yield {
+          val uid = RequestHelper.getUid.toInt
+          val bitmap = BitmapUtil.fromBase64String(reply.voteStat.bitmap)
+          // 投票
+          if (!bitmap.contains(uid)) {
+            bitmap.add(uid)
+            resCol.update(Json.obj("_id" -> resId, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          }
+          // 取消投票
+          else {
+            bitmap.remove(uid)
+            resCol.update(Json.obj("_id" -> resId, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          }
+        }
+      }
+    )
+  }
+
+
+  def doVote = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "invalid args."))),
+      tuple => {
+        val (resType, resId) = tuple
+        for{
+          resCol <- getColFuture(s"common-${resType}")
+          voteStat <- resCol.find(Json.obj("_id" -> resId), Json.obj("voteStat" -> 1)).one[JsObject].map(_.get.as[VoteStat])
+        } yield {
+          val uid = RequestHelper.getUid.toInt
+          val bitmap = BitmapUtil.fromBase64String(voteStat.bitmap)
+          // 投票
+          if (!bitmap.contains(uid)) {
+            bitmap.add(uid)
+            resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          }
+          // 取消投票
+          else {
+            bitmap.remove(uid)
+            resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            Ok(Json.obj("status" -> 0))
+          }
+        }
+      }
+    )
+  }
+
+  def doRemove = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
+      tuple => {
+        val (resType, resId) = tuple
+        for{
+          resCol <- getColFuture(s"common-${resType}")
+          wr <- resCol.remove(Json.obj("_id" -> resId))
+        } yield {
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
 
 }

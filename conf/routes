@@ -9,7 +9,8 @@ POST    /admin/setting/base                       controllers.admin.AdminControl
 GET     /todo                                     controllers.Default.todo
 
 # Application
-GET     /                                         controllers.Application.index(nav: String ?= "0", page: Int ?= 1)
+GET     /                                         controllers.DocController.index(path: String ?= "", page: Int ?= 1)
+GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
@@ -38,9 +39,16 @@ POST    /user/password                            controllers.UserController.doS
 POST    /user/head                                controllers.UserController.doSetHeadImg()
 POST    /user/collect                             controllers.UserController.doCollect()
 POST    /res/reply                                controllers.UserController.doReply
+POST    /res/vote                                 controllers.UserController.doVote
+POST    /res/reply/vote                           controllers.UserController.doVoteReply
+GET     /res/reply/edit                           controllers.UserController.editReply(aid: String, rid: String)
+POST    /res/reply/edit                           controllers.UserController.doEditReply
+POST    /res/reply/remove                         controllers.UserController.doRemoveReply
+POST    /res/remove                               controllers.UserController.doRemove
+
 
 # Doc
-GET     /docs                                     controllers.DocController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /docs                                     controllers.DocController.index(path: String ?= "", page: Int ?= 1)
 GET     /doc/add                                  controllers.DocController.add
 POST    /doc/add                                  controllers.DocController.doAdd
 GET     /doc/edit                                 controllers.DocController.edit(_id: String)
@@ -51,15 +59,17 @@ GET     /articles                                 controllers.ArticleController.
 GET     /article/add                              controllers.ArticleController.add
 POST    /article/add                              controllers.ArticleController.doAdd
 GET     /article/edit                             controllers.ArticleController.edit(_id: String)
-POST    /article/reply                            controllers.ArticleController.doReply
 GET     /article/view                             controllers.ArticleController.view(_id: String)
-POST    /article/remove                           controllers.ArticleController.doRemove
 POST    /article/top                              controllers.ArticleController.doSetTop
-GET     /article/vote                             controllers.ArticleController.vote(articleId: String, up: Boolean)
-POST    /article/reply/vote                       controllers.ArticleController.doVoteReply
-GET     /article/reply/edit                       controllers.ArticleController.editReply(aid: String, rid: String)
-POST    /article/reply/edit                       controllers.ArticleController.doEditReply
-POST    /article/reply/remove                     controllers.ArticleController.doRemoveReply
+
+# QA
+GET     /qas                                     controllers.QAController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /qa/add                                  controllers.QAController.add
+POST    /qa/add                                  controllers.QAController.doAdd
+GET     /qa/edit                                 controllers.QAController.edit(_id: String)
+GET     /qa/view                                 controllers.QAController.view(_id: String)
+POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
+
 
 # Resource
 POST   /resource/owner/:ownerId                   controllers.ResourceController.saveResource(ownerId: String)

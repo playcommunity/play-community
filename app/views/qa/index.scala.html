@@ -1,31 +1,30 @@
-@(path: String, docs: List[Doc], topReplyUsers: List[User], topViewDocs: List[Doc], topReplyDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(nav: String, qas: List[QA], topViewQAs: List[QA], topReplyQAs: List[QA], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main("欢迎来到社区！", "doc") {
+@main("欢迎来到社区！", "qa") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">
       <div class="fly-tab">
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
-            <li> <a href="/docs" @if(path == ""){class="layui-this"}>全部</a> </li>
-            <li> <a href="/docs?path=/scala" @if(path == "/scala"){class="layui-this"}>Scala</a> </li>
-            <li> <a href="/docs?path=/playscala" @if(path == "/playscala"){class="layui-this"}>PlayScala</a> </li>
-            <li> <a href="/docs?path=/akka" @if(path == "/akka"){class="layui-this"}>Akka</a> </li>
-            <li> <a href="/docs?path=/reactivemongo" @if(path == "/reactivemongo"){class="layui-this"}>ReactiveMongo</a> </li>
+            <li> <a href="/qas?nav=0" @if(nav == "0"){class="layui-this"}>全部</a> </li>
+            <li> <a href="/qas?nav=1" @if(nav == "1"){class="layui-this"}>最新回答</a> </li>
+            <li> <a href="/qas?nav=2" @if(nav == "2"){class="layui-this"}>最新提问</a> </li>
+            <li> <a href="/qas?nav=3" @if(nav == "3"){class="layui-this"}>尚未回答</a> </li>
           </ul>
         </div>
         <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
       <ul class="fly-panel fly-list">
-        @for(a <- docs){
+        @for(a <- qas){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
             <img src="@a.author.headImg" alt="">
           </a>
           <h2 class="fly-tip">
-            <a href="/doc/view?_id=@a._id">@a.title</a>
+            <a href="/qa/view?_id=@a._id">@a.title</a>
           </h2>
           <p>
             <span><a href="/user/home?uid=@{a.author._id}">@a.author.name</a></span>
@@ -42,37 +41,22 @@
 
       <div style="text-align: center">
         <div class="laypage-main">
-          <a href="/docs?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(docs.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/docs?page=@{page+1}" class="laypage-next">下一页</a></div>
+          <a href="/qas?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(qas.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/qas?page=@{page+1}" class="laypage-next">下一页</a></div>
       </div>
 
     </div>
   </div>
 
   <div class="edge">
-    @if(RequestHelper.isAdmin){
+    @if(RequestHelper.isLogin){
     <div class="jie-add">
-      <a href="/doc/add" class="layui-btn layui-btn-big">创建文档</a>
-      <a href="/user" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的文档</a>
+      <a href="/qa/add" class="layui-btn layui-btn-big">我要提问</a>
+      <a href="/user#qa" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的提问</a>
     </div>
     }
-    <div class="fly-panel leifeng-rank">
-      <h3 class="fly-panel-title">回答月榜</h3>
-      <dl>
-        @for(u <- topReplyUsers){
-        <dd>
-          <a href="/user/home?uid=@u._id">
-            <img src="@{u.setting.headImg}">
-            <cite>@{u.setting.name}</cite>
-            <i>@{u.userStat.replyCount}次回答</i>
-          </a>
-        </dd>
-        }
-      </dl>
-    </div>
-
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">近期热文</dt>
-      @for(a <- topViewDocs){
+      @for(a <- topViewQAs){
       <dd>
         <a href="/article/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
@@ -82,7 +66,7 @@
 
     <dl class="fly-panel fly-list-one">
       <dt class="fly-panel-title">近期热议</dt>
-      @for(a <- topReplyDocs){
+      @for(a <- topReplyQAs){
       <dd>
         <a href="/article/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>

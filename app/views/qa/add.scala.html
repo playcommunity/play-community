@@ -1,6 +1,6 @@
-@(docOpt: Option[Doc], categoryList: List[Category])(implicit request: RequestHeader)
+@(qaOpt: Option[QA], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
-@main("欢迎来到社区！", "doc") {
+@main("欢迎来到社区！", "qa") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */
@@ -15,7 +15,7 @@
   <div class="fly-panel" pad20 style="padding-top: 5px;">
     <div class="layui-tab layui-tab-brief" lay-filter="user">
       <ul class="layui-tab-title">
-        <li class="layui-this">@docOpt.map(_ => "编辑帖子").getOrElse("发表新帖")</li>
+        <li class="layui-this">@qaOpt.map(_ => "编辑帖子").getOrElse("发表新帖")</li>
       </ul>
       <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
         <div class="layui-tab-item layui-show">
@@ -23,16 +23,16 @@
             <div class="layui-form-item">
               <label for="L_title" class="layui-form-label">标题</label>
               <div class="layui-input-block">
-                <input id="L_title" type="text" value="@docOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
+                <input id="L_title" type="text" value="@qaOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
             </div>
           </div>
-          <div id="quill-container">@Html(docOpt.map(_.content).getOrElse(""))</div>
+          <div id="quill-container">@Html(qaOpt.map(_.content).getOrElse(""))</div>
           <div class="layui-form layui-form-pane" style="margin-top: 15px;">
-            <form id="form" action="/doc/add" method="post">
-              @if(docOpt.nonEmpty){
-              <input type="hidden" name="_id" value="@docOpt.get._id"/>
+            <form id="form" action="/qa/add" method="post">
+              @if(qaOpt.nonEmpty){
+              <input type="hidden" name="_id" value="@qaOpt.get._id"/>
               }
-              <input id="L_title_hidden" type="hidden" name="title" value="@docOpt.map(_.title).getOrElse("")"/>
+              <input id="L_title_hidden" type="hidden" name="title" value="@qaOpt.map(_.title).getOrElse("")"/>
               <input id="L_content" type="hidden" name="content"/>
               <div class="layui-form-item">
                 <div class="layui-inline">
@@ -40,8 +40,19 @@
                   <div class="layui-input-block">
                     <select lay-verify="required" name="categoryPath">
                       @for(c <- categoryList){
-                      <option value="@c.path" @if(docOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
+                      <option value="@c.path" @if(qaOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
                       }
+                    </select>
+                  </div>
+                </div>
+                <div class="layui-inline">
+                  <label class="layui-form-label">悬赏飞吻</label>
+                  <div class="layui-input-block">
+                    <select name="score">
+                      <option value="5" @if(qaOpt.isEmpty){selected}>5</option>
+                      <option value="20" @if(qaOpt.map(_.score).getOrElse(0) == 20){selected}>20</option>
+                      <option value="50" @if(qaOpt.map(_.score).getOrElse(0) == 50){selected}>50</option>
+                      <option value="100" @if(qaOpt.map(_.score).getOrElse(0) == 100){selected}>100</option>
                     </select>
                   </div>
                 </div>

@@ -26,34 +26,21 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
-  def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = Json.obj()
-    var sort = Json.obj("timeStat.createTime" -> -1)
-    nav match {
-      case "1" =>
-        q ++= Json.obj()
-        sort = Json.obj("lastReply.replyTime" -> -1)
-      case "2" =>
-        q ++= Json.obj()
-        sort = Json.obj("timeStat.createTime" -> -1)
-      case "3" =>
-        q ++= Json.obj("replies.0" -> Json.obj("$exists" -> false))
-        sort = Json.obj("timeStat.createTime" -> -1)
-      case "4" =>
-        q ++= Json.obj("recommended" -> true)
-        sort = Json.obj("timeStat.lastReplyTime" -> -1)
-      case _ =>
-    }
     for {
+      userCol <- userColFuture
       docCol <- docColFuture
-      docs <- docCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Doc]().collect[List](15)
+      docs <- docCol.find(Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))).sort(Json.obj("index" -> 1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Doc]().collect[List](15)
+      topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
+      topReplyDocs <- docCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Doc]().collect[List](10)
+      topReplyUsers <- userCol.find(Json.obj()).sort(Json.obj("userStat.replyCount" -> -1)).cursor[User]().collect[List](12)
       total <- docCol.count(None)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
-        Redirect(routes.DocController.index(nav, math.ceil(total/15.0).toInt))
+        Redirect(routes.DocController.index(path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.doc.index(nav, docs, cPage, total))
+        Ok(views.html.doc.index(path, docs, topReplyUsers, topViewDocs, topReplyDocs, cPage, total))
       }
     }
   }
@@ -106,7 +93,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                     docCol.insert(Doc(RequestHelper.generateId, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
                 }
         } yield {
-          Redirect(routes.DocController.index("0", 1))
+          Redirect(routes.DocController.index(categoryPath, 1))
         }
       }
     )
