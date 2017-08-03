@@ -24,7 +24,9 @@
     @name
     <i class="iconfont icon-nan"></i>
     <!-- <i class="iconfont icon-nv"></i> -->
-
+    @if(userOpt.map(_.role).getOrElse("") == "admin"){
+    <span style="color:#5FB878">(管理员)</span>
+    }
     <!-- <span style="color:#c00;">（超级码农）</span>
     <span style="color:#5FB878;">（活雷锋）</span>
     <span>（该号已被封）</span> -->

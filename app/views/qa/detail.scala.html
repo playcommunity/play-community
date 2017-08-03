@@ -25,7 +25,9 @@
           }else{
           <span>已回复</span>
           }
-          <!-- <span class="fly-tip-jie">已采纳</span> -->
+          @if(qa.answer.nonEmpty){
+          <span class="fly-tip-jie">已采纳</span>
+          }
           @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(qa._id)){
           <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
           }
