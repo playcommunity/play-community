@@ -49,6 +49,8 @@
           }
 
           <div class="fly-list-hint">
+            <i class="layui-icon" title="收藏">&#xe600;</i> @article.collectStat.count
+            <i class="iconfont icon-zan" title="点赞"></i> @article.voteStat.count
             <i class="iconfont" title="回答">&#xe60c;</i> @article.replies.size
             <i class="iconfont" title="人气">&#xe60b;</i> @article.viewStat.count
           </div>
@@ -70,6 +72,11 @@
             <span class="layui-btn layui-btn-mini jie-admin  layui-btn-danger" type="collect" data-type="remove" data-resource="article">取消收藏</span>
             }else{
             <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-resource="article">收藏</span>
+            }
+            @if(utils.BitmapUtil.fromBase64String(article.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
+            <span class="layui-btn layui-btn-mini zan-resource layui-btn-danger" data-zan="1" data-id="@article._id"  data-type="article">取消点赞</span>
+            }else{
+            <span class="layui-btn layui-btn-mini zan-resource" data-zan="0" data-id="@article._id"  data-type="article">点赞</span>
             }
           </div>
           }

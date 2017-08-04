@@ -253,5 +253,21 @@ layui.define(['laypage', 'fly'], function(exports){
     gather.jiedaActive[type].call(this, othis.parents('li'));
   });
 
+  $('span.zan-resource').on('click', function(){
+    var othis = $(this), zan = othis.data('zan');
+    fly.json('/res/vote', {
+      resId: othis.data('id')
+      ,resType: othis.data('type')
+      ,csrfToken: token
+    }, function(res){
+      console.log(zan);
+      if(zan == '0'){
+        othis.data('zan', '1').html('取消点赞').addClass('layui-btn-danger');
+      } else{
+        othis.data('zan', '0').html('点赞').removeClass('layui-btn-danger');
+      }
+    });
+  });
+
   exports('jie', null);
 });

@@ -48,7 +48,7 @@
         <li>
           <a href="/@{e.resType}/view?_id=@e.resId" class="jie-title">@e.resTitle</a>
           <i>@utils.DateTimeUtil.toPrettyString(e.createTime)</i>
-          <em>@utils.ResourceUtil.toPrettyString(e.resType)</em>
+          <em>@utils.AppUtil.prettyResource(e.resType)</em>
         </li>
         }
       </ul>
@@ -66,7 +66,7 @@
         <li>
           <p>
             <span>@utils.DateTimeUtil.toPrettyString(e.createTime)</span>
-            @e.action <a href="/@{e.resType}/view?_id=@e.resId" target="_blank">@{e.resTitle}</a>
+            @utils.AppUtil.prettyAction(e.action)@utils.AppUtil.prettyResource(e.resType) <a href="/@{e.resType}/view?_id=@e.resId" target="_blank">@{e.resTitle}</a>
           </p>
         </li>
         }

@@ -21,13 +21,13 @@
           <li data-id="@m._id" data-token="@CSRF.getToken.value">
             <blockquote class="layui-elem-quote">
               @if(m.action == "reply"){
-              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>回复了您的@utils.ResourceUtil.toPrettyString(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>
+              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>回复了您的@utils.AppUtil.prettyResource(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>
               }
               @if(m.action == "at"){
-              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>在@utils.ResourceUtil.toPrettyString(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>的回复中提到了您。
+              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>在@utils.AppUtil.prettyResource(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>的回复中提到了您。
               }
               @if(m.action == "accept"){
-              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>在@utils.ResourceUtil.toPrettyString(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>采纳了您的回复。
+              <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>在@utils.AppUtil.prettyResource(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>采纳了您的回复。
               }
             </blockquote>
             <p><span>@utils.DateTimeUtil.toPrettyString(m.createTime)</span><a href="javascript:;" class="layui-btn layui-btn-small layui-btn-danger fly-delete">删除</a></p>
