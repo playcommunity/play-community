@@ -39,7 +39,7 @@ class AdminController @Inject()(cc: ControllerComponents, val reactiveMongoApi: 
       settingCol <- settingColFuture
       opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
     } yield {
-      Ok(views.html.admin.setting.base(opt.getOrElse(SiteSetting(App.name, App.url, App.logo, Nil, "/assets/favicon.ico"))))
+      Ok(views.html.admin.setting.base(opt.getOrElse(App.siteSetting)))
     }
   }
 
@@ -48,10 +48,7 @@ class AdminController @Inject()(cc: ControllerComponents, val reactiveMongoApi: 
       case Some(obj) =>
         obj.validate[SiteSetting] match {
           case JsSuccess(s, _) =>
-            App.name = s.name
-            App.logo = s.logo
-            App.url = s.url
-            App.links = s.links
+            App.siteSetting = s
             settingColFuture.flatMap(_.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj))).map{ _ =>
               Ok(Json.obj("status" -> 0))
             }

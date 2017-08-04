@@ -123,7 +123,7 @@
     <div class="fly-panel fly-link">
       <h3 class="fly-panel-title">友情链接</h3>
       <dl>
-        @for(l <- App.links){
+        @for(l <- App.siteSetting.links){
         <dd>
           <a href="@l.url" target="@l.target">@l.title</a>
         </dd>

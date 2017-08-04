@@ -4,11 +4,7 @@ package models
   * Created by xiaomi on 2017/7/30.
   */
 object App {
-  var name = "PlayScala社区"
-  var logo = "/assets/images/logo.png"
-  var url = "http://www.playscala.cn"
-  var links = List.empty[Link]
-  var favicon = "/assets/favicon.ico"
+  var siteSetting = SiteSetting("PlayScala社区", "http://www.playscala.cn", "/assets/images/logo.png", List.empty[Link], "/assets/favicon.ico", "", "")
 }
 
 object Role {

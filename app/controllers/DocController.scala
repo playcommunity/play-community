@@ -35,12 +35,14 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
       topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
       topReplyDocs <- docCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Doc]().collect[List](10)
       topReplyUsers <- userCol.find(Json.obj()).sort(Json.obj("userStat.replyCount" -> -1)).cursor[User]().collect[List](12)
+      categoryCol <- categoryColFuture
+      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/", "disabled" -> false)).sort(Json.obj("index" -> 1)).cursor[Category]().collect[List]()
       total <- docCol.count(None)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(routes.DocController.index(path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.doc.index(path, docs, topReplyUsers, topViewDocs, topReplyDocs, cPage, total))
+        Ok(views.html.doc.index(categoryList, path, docs, topReplyUsers, topViewDocs, topReplyDocs, cPage, total))
       }
     }
   }

@@ -64,7 +64,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
   def add = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     for {
       categoryCol <- categoryColFuture
-      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
+      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/", "disabled" -> false)).cursor[Category]().collect[List]()
     } yield {
       Ok(views.html.article.add(None, categoryList))
     }

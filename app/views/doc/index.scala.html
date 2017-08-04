@@ -1,7 +1,7 @@
-@(path: String, docs: List[Doc], topReplyUsers: List[User], topViewDocs: List[Doc], topReplyDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(categoryList: List[Category], path: String, docs: List[Doc], topReplyUsers: List[User], topViewDocs: List[Doc], topReplyDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main(s"欢迎来到${App.name}！", "doc") {
+@main(s"欢迎来到${App.siteSetting.name}！", "doc") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">
@@ -9,10 +9,9 @@
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
             <li> <a href="/docs" @if(path == ""){class="layui-this"}>全部</a> </li>
-            <li> <a href="/docs?path=/scala" @if(path == "/scala"){class="layui-this"}>Scala</a> </li>
-            <li> <a href="/docs?path=/playscala" @if(path == "/playscala"){class="layui-this"}>PlayScala</a> </li>
-            <li> <a href="/docs?path=/akka" @if(path == "/akka"){class="layui-this"}>Akka</a> </li>
-            <li> <a href="/docs?path=/reactivemongo" @if(path == "/reactivemongo"){class="layui-this"}>ReactiveMongo</a> </li>
+            @for(c <- categoryList){
+            <li> <a href="/docs?path=@c.path" @if(path == c.path){class="layui-this"}>@c.name</a> </li>
+            }
           </ul>
         </div>
         <i class="layui-icon fly-search">&#xe615;</i>
@@ -93,7 +92,7 @@
     <div class="fly-panel fly-link">
       <h3 class="fly-panel-title">友情链接</h3>
       <dl>
-        @for(l <- App.links){
+        @for(l <- App.siteSetting.links){
         <dd>
           <a href="@l.url" target="@l.target">@l.title</a>
         </dd>

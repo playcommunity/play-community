@@ -68,24 +68,36 @@
                         <div class="form-group form-md-line-input">
                             <label class="col-md-2 control-label" for="file1">网站LOGO</label>
                             <div class="col-md-10">
-                                <input id="logo" type="hidden"  v-model="logo">
                                 <input id="file1" type="file" name="file" data-url="/resource/owner/logo?csrfToken=@CSRF.getToken.value" style="display:none;">
                                 <button type="button" class="btn btn-default" onclick="$('#file1').click();"><i class="fa fa-cloud-upload"></i> 选择图片</button>
-                                <div class="form-control-focus"><img src="@models.App.logo"></div>
+                                <div class="form-control-focus"><img id="img1" :src="logo"></div>
                                 <span class="help-block"></span>
                             </div>
                         </div>
                         <div class="form-group form-md-line-input" style="margin-top: 80px;">
                             <label class="col-md-2 control-label" for="file2">网站图标(32*32 ico)</label>
                             <div class="col-md-10">
-                                <input id="favicon" type="hidden"  v-model="favicon">
                                 <input id="file2" type="file" name="file" data-url="/resource/owner/favicon?csrfToken=@CSRF.getToken.value" style="display:none;">
                                 <button type="button" class="btn btn-default" onclick="$('#file2').click();"><i class="fa fa-cloud-upload"></i> 选择图片</button>
-                                <div class="form-control-focus"><img src="@models.App.favicon"></div>
+                                <div class="form-control-focus"><img id="img2" :src="favicon"></div>
                                 <span class="help-block"></span>
                             </div>
                         </div>
                         <div class="form-group form-md-line-input" style="margin-top: 80px;">
+                            <label class="col-md-2 control-label">SEO关键词</label>
+                            <div class="col-md-10">
+                                <input v-model="seoKeyword" class="form-control"  placeholder="输入SEO关键词，关键词间用英文逗号分隔">
+                                <div class="form-control-focus"> </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-md-line-input">
+                            <label class="col-md-2 control-label">SEO描述</label>
+                            <div class="col-md-10">
+                                <input v-model="seoDescription" class="form-control"  placeholder="输入SEO描述内容">
+                                <div class="form-control-focus"> </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-md-line-input">
                             <label class="col-md-2 control-label" for="form_control_1">友情链接</label>
                         </div>
 
@@ -160,13 +172,15 @@ $(function () {
   $('#file1').fileupload({
       dataType: 'json',
       done: function (e, data) {
-          $('#logo').val(data.result.url);
+          //$('#logo').val(data.result.url);
+          //$('#img1').attr('src', data.result.url);
+          app.logo = data.result.url;
       }
   });
   $('#file2').fileupload({
       dataType: 'json',
       done: function (e, data) {
-          $('#favicon').val(data.result.url);
+          app.favicon = data.result.url;
       }
   });
 });

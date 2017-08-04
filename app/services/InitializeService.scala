@@ -47,10 +47,7 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, va
     opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
   } yield {
     opt.foreach{ siteSetting =>
-      App.name = siteSetting.name
-      App.logo = siteSetting.logo
-      App.url = siteSetting.url
-      App.links = siteSetting.links
+      App.siteSetting = siteSetting
     }
   }
 
