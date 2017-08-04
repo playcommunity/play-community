@@ -16,16 +16,19 @@ import utils.DateTimeUtil
 import scala.concurrent.ExecutionContext
 import reactivemongo.play.json._
 
+/**
+  * RequestHandler的主要功能是流量统计，为后台统计报表以及恶意攻击提供分析数据。
+  */
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
-  val publicPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo")
-  val protectPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/article.*|/user.*|/admin.*")
+  val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo")
+  val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
 
   override def routeRequest(request: RequestHeader) = {
     // 忽略非PV请求
-    if (publicPathPattern.matcher(request.path).matches()) {
+    if (assetsPathPattern.matcher(request.path).matches()) {
       super.routeRequest(request)
     } else {
       val ip = request.remoteAddress
@@ -80,7 +83,7 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
                 Some(Action(Redirect("/autoRegister")))
               }
             case None =>
-              if (protectPathPattern.matcher(request.path).matches()) {
+              if (trafficPathPattern.matcher(request.path).matches()) {
                 if (request.session.get("visitor").nonEmpty) {
                   // 统计访客流量
                   statVisitorColFuture.map(_.update(

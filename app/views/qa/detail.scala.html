@@ -47,6 +47,7 @@
           </a>
           @if(RequestHelper.isLogin){
           <div class="detail-hits" data-id="@qa._id">
+            <span style="color:#FF7200">悬赏：@{qa.score}飞吻</span>
             @if(qa.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/qa/edit?_id=@{qa._id}">编辑此贴</a></span>
             }
@@ -69,7 +70,7 @@
         <ul class="jieda photos" id="jieda">
           @for(r <- (qa.answer.map(r => List(r)).getOrElse(Nil) ::: qa.replies.filter(_._id != qa.answer.map(_._id).getOrElse("")))){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-type="qa" data-id="@{qa._id}" data-rid="@{r._id}">
+          <li data-type="qa" data-id="@{qa._id}" data-rid="@{r._id}" data-uid="@{r.author._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="/user/home?uid=@{r.author._id}">
@@ -94,10 +95,10 @@
               <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <!--<span type="edit">编辑</span>-->
-                @if(RequestHelper.isOwnerOf(r._id)){
+                @if(RequestHelper.isOwnerOf(r._id) && qa.answer.map(_._id).getOrElse("") != r._id){
                 <span type="del">删除</span>
                 }
-                @if(qa.answer.isEmpty){
+                @if(RequestHelper.isOwnerOf(qa._id) && qa.answer.isEmpty){
                 <span class="jieda-accept" type="accept">采纳</span>
                 }
               </div>

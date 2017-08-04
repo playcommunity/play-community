@@ -47,7 +47,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
     }
   }
 
-  def add = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+  def add = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
       categoryCol <- categoryColFuture
       categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
@@ -56,7 +56,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
     }
   }
 
-  def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
+  def edit(_id: String) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
       docCol <- docColFuture
       doc <- docCol.find(Json.obj("_id" -> _id)).one[Doc]
@@ -70,7 +70,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
     }
   }
 
-  def doAdd = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
+  def doAdd = checkAdmin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {

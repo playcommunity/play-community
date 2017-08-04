@@ -2,7 +2,6 @@ package controllers
 
 import java.io.ByteArrayOutputStream
 import javax.inject._
-
 import akka.stream.Materializer
 import akka.util.ByteString
 import models._
@@ -14,11 +13,9 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
-import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
@@ -66,6 +63,44 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     }
   }
 
+  def login(login: Option[String]) = Action { implicit request: Request[AnyContent] =>
+    Ok(views.html.login())
+  }
+
+  def logout = checkLogin(parser, ec) { implicit request: Request[AnyContent] =>
+    Redirect(routes.Application.login(request.session.get("login"))).withNewSession
+  }
+
+  def doLogin = Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("login" -> nonEmptyText, "password" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "用户名或密码错误！"))),
+      tuple => {
+        val (login, password, verifyCode) = tuple
+        if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
+          for{
+            userCol <- userColFuture
+            userOpt <- userCol.find(Json.obj("login" -> login, "password" -> HashUtil.sha256(password))).one[User]
+          } yield {
+            userOpt match {
+              case Some(u) =>
+                if (u.activeCode.nonEmpty) {
+                  Redirect(routes.UserController.activate())
+                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0")
+                } else {
+                  Redirect(routes.UserController.home(Some(u._id)))
+                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+                }
+              case None =>
+                Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
+            }
+          }
+        } else {
+          Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
+        }
+      }
+    )
+  }
+
   def message(title: String, message: String) = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.message(title, message))
   }
@@ -104,7 +139,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                   } yield {
                     if (wr.ok && wr.n == 1) {
                       // 发送激活码
-                      mailer.sendEmail(name, login, views.html.mail.activeMail(activeCode).body)
+                      mailer.sendEmail(name, login, views.html.mail.activeMail(name, activeCode).body)
                       Redirect(routes.UserController.activate())
                         .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                     } else {
@@ -125,7 +160,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
   def doSendActiveMail = (checkLogin andThen userAction) { implicit request =>
     // 发送激活码
-    mailer.sendEmail(RequestHelper.getName, RequestHelper.getLogin, views.html.mail.activeMail(request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
+    mailer.sendEmail(RequestHelper.getName, RequestHelper.getLogin, views.html.mail.activeMail(RequestHelper.getName, request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
     Ok(Json.obj("status" -> 0))
   }
 
@@ -164,44 +199,6 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
             .addingToSession("uid" -> uid.toString, "role" -> Role.COMMON_USER)
         }
     }
-  }
-
-  def login(login: Option[String]) = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.login())
-  }
-
-  def logout = Action { implicit request: Request[AnyContent] =>
-    Redirect(routes.Application.login(request.session.get("login"))).withNewSession
-  }
-
-  def doLogin = Action.async { implicit request: Request[AnyContent] =>
-    Form(tuple("login" -> nonEmptyText, "password" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "用户名或密码错误！"))),
-      tuple => {
-        val (login, password, verifyCode) = tuple
-        if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
-          for{
-            userCol <- userColFuture
-            userOpt <- userCol.find(Json.obj("login" -> login, "password" -> HashUtil.sha256(password))).one[User]
-          } yield {
-            userOpt match {
-              case Some(u) =>
-                if (u.activeCode.nonEmpty) {
-                  Redirect(routes.UserController.activate())
-                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0")
-                } else {
-                  Redirect(routes.UserController.home(Some(u._id)))
-                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
-                }
-              case None =>
-                Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
-            }
-          }
-        } else {
-          Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
-        }
-      }
-    )
   }
 
   def notFound = Action { implicit request: Request[AnyContent] =>

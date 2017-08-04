@@ -2,7 +2,6 @@ package controllers
 
 import java.time.OffsetDateTime
 import javax.inject._
-
 import akka.stream.Materializer
 import models._
 import models.JsonFormats._
@@ -15,10 +14,8 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
-
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
-
 import scala.concurrent.duration._
 
 @Singleton
@@ -32,7 +29,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
-  def index() = Action.async { implicit request: Request[AnyContent] =>
+  def index() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       articleCol <- articleColFuture
       collectCol <- collectColFuture
@@ -115,7 +112,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
     }
   }
 
-  def activate() = userAction { implicit request =>
+  def activate() = (checkLogin andThen userAction) { implicit request =>
     Ok(views.html.user.activate(request.user))
   }
 
@@ -248,11 +245,11 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         } yield {
           // 消息提醒
           val read = if (resAuthor._id != RequestHelper.getUidOpt.get) { false } else { true }
-          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, resAuthor._id, "article", resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
+          msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, resAuthor._id, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
 
           val atIds = at.split(",").filter(_.trim != "")
           atIds.foreach{ uid =>
-            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, "article", resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
+            msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
           userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
 
@@ -297,10 +294,16 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         val uid = request.session("uid").toInt
         for{
           resCol <- getColFuture(s"common-${resType}")
-          wr <- resCol.update(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.count" -> -1)))
+          answerObjOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("answer" -> 1)).one[JsObject]
         } yield {
-          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> -1))))
-          Ok(Json.obj("status" -> 0))
+          val answerId = answerObjOpt.flatMap(obj => (obj \ "answer" \ "_id").asOpt[String]).getOrElse("")
+          if (answerId != rid) {
+            resCol.update(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.count" -> -1)))
+            userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> -1))))
+            Ok(Json.obj("status" -> 0))
+          } else {
+            Ok(Json.obj("status" -> 1, "msg" -> "已采纳回复不允许删除！"))
+          }
         }
       }
     )
@@ -334,8 +337,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
     )
   }
 
-
-  def doVote = Action.async { implicit request: Request[AnyContent] =>
+  def doVote = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "invalid args."))),
       tuple => {

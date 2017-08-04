@@ -55,20 +55,20 @@
     </div>
     }
     <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">近期热文</dt>
+      <dt class="fly-panel-title">热点问题</dt>
       @for(a <- topViewQAs){
       <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <a href="/qa/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
       </dd>
       }
     </dl>
 
     <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">近期热议</dt>
+      <dt class="fly-panel-title">热议问题</dt>
       @for(a <- topReplyQAs){
       <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <a href="/qa/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
       </dd>
       }

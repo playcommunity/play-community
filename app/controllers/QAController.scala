@@ -10,6 +10,7 @@ import play.api.libs.json.Json
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
+import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 import services.CounterService
@@ -115,7 +116,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
 
   def doAcceptReply = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "rid" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "弄啥嘞？"))),
       tuple => {
         val (_id, rid) = tuple
         for {
@@ -128,6 +129,10 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
                 qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
                 userColFuture.map(_.update(Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> qa.score))))
                 userColFuture.map(_.update(Json.obj("_id" -> qa.author._id), Json.obj("$inc" -> Json.obj("score" -> -qa.score))))
+
+                // 消息提醒
+                msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, reply.author._id, "qa", qa._id, qa.title, RequestHelper.getAuthorOpt.get, "accept", "恭喜您，您的回复已被采纳！", DateTimeUtil.now(), false)))
+
                 Ok(Json.obj("status" -> 0))
               case None =>
                 Ok(Json.obj("status" -> 1, "msg" -> "弄啥嘞？"))

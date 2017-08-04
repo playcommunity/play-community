@@ -67,7 +67,7 @@
         <ul class="jieda photos" id="jieda">
           @for(r <- doc.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-type="doc" data-id="@{doc._id}" data-rid="@{r._id}">
+          <li data-type="doc" data-id="@{doc._id}" data-rid="@{r._id}" data-uid="@{r.author._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="jie-user" href="/user/home?uid=@{r.author._id}">

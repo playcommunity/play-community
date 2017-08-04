@@ -19,7 +19,7 @@ import reactivemongo.play.json.collection.JSONCollection
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext, mat: Materializer) extends MongoController with ReactiveMongoComponents {
+class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends MongoController with ReactiveMongoComponents {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   val gridFS = reactiveMongoApi.gridFS
@@ -30,7 +30,7 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
     )*/
 
 
-  def saveResource(ownerId: String) = Action.async(gridFSBodyParser(gridFS)) { request =>
+  def saveResource(ownerId: String) = checkLogin.async(gridFSBodyParser(gridFS)) { request =>
     // here is the future file!
     val futureFile = request.body.files.head.ref
 
@@ -55,7 +55,7 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
     }
   }
 
-  def removeResource(rid: String) = Action.async {
+  def removeResource(rid: String) = checkAdmin.async {
     gridFS.remove(JsString(rid)).map{ wr =>
       if (wr.ok && wr.n == 1) {
         Ok(Json.obj("success" -> true))
@@ -65,7 +65,4 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
     }
   }
 
-  def getUser(_id: String) : Future[User] = {
-    userColFuture.flatMap(_.find(Json.obj("_id" -> _id)).one[User]).map(_.get)
-  }
 }

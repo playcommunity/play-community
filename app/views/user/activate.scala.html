@@ -66,7 +66,7 @@
           }
           <li class="layui-form-li">
             <label>您的邮箱：</label>
-            <span class="layui-form-text">xx@@xx.com
+            <span class="layui-form-text">@u.login
               @if(u.activeCode.nonEmpty){
               <em style="color:#c00;">（尚未激活）</em>
               } else {
@@ -74,6 +74,7 @@
               }
             </span>
           </li>
+          @if(u.activeCode.nonEmpty){
           <li class="layui-form-li" style="margin-top: 20px; line-height: 26px;">
             <div>
               1. 如果您未收到邮件，或激活链接失效，您可以
@@ -86,6 +87,7 @@
               3. 如果你实在无法激活邮件，您还可以联系：playscala@@163.com
             </div>
           </li>
+          }
         </ul>
       </div>
     </div>
