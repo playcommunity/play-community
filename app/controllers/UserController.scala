@@ -2,6 +2,7 @@ package controllers
 
 import java.time.OffsetDateTime
 import javax.inject._
+
 import akka.stream.Materializer
 import models._
 import models.JsonFormats._
@@ -14,12 +15,15 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
+import services.EventService
+
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
+
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction, eventService: EventService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -27,6 +31,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   def qaColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-qa"))
   def collectColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-collect"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
+  def eventColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-event"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
   def index() = checkLogin.async { implicit request: Request[AnyContent] =>
@@ -49,12 +54,12 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
     (uidOpt orElse RequestHelper.getUidOpt) match {
       case Some(uid) =>
         for {
-          articleCol <- articleColFuture
-          myArticles <- articleCol.find(Json.obj("author._id" -> uid)).sort(Json.obj("timeStat.updateTime" -> -1)).cursor[Article]().collect[List](15)
-          myReplyArticles <- articleCol.find(Json.obj("replies.author._id" -> uid)).sort(Json.obj("replies.replyTime" -> -1)).cursor[Article]().collect[List](15)
+          eventCol <- eventColFuture
+          createEvents <- eventCol.find(Json.obj("actor._id" -> uid, "action" -> "create")).sort(Json.obj("createTime" -> -1)).cursor[Event]().collect[List](30)
+          events <- eventCol.find(Json.obj("actor._id" -> uid)).sort(Json.obj("createTime" -> -1)).cursor[Event]().collect[List](30)
           userOpt <- userColFuture.flatMap(_.find(Json.obj("_id" -> uid)).one[User])
         } yield {
-          Ok(views.html.user.home(uidOpt, userOpt, myArticles, myReplyArticles))
+          Ok(views.html.user.home(uidOpt, userOpt, createEvents, events))
         }
       case None =>
         Future.successful(Ok(views.html.message("系统提示", "您查看的用户不存在！")))
@@ -197,6 +202,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
           val bitmap = BitmapUtil.fromBase64String(collectStat.bitmap)
           // 收藏
           if (!bitmap.contains(uid)) {
+            eventService.collectResource(RequestHelper.getAuthor, resId, resType, resTitle)
             bitmap.add(uid)
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("collectStat" -> CollectStat(collectStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
             collectCol.insert(StatCollect(BSONObjectID.generate().stringify, request.session("uid"), resType, resId, resOwner, resTitle, resCreateTime, DateTimeUtil.now()))
@@ -243,6 +249,9 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
               "$set" -> Json.obj("lastReply" -> reply, "replyStat" -> newReplyStat)
             ))
         } yield {
+          // 记录回复事件
+          eventService.replyResource(RequestHelper.getAuthor, resId, resType, resTitle)
+
           // 消息提醒
           val read = if (resAuthor._id != RequestHelper.getUidOpt.get) { false } else { true }
           msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, resAuthor._id, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), read)))
@@ -344,12 +353,16 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         val (resType, resId) = tuple
         for{
           resCol <- getColFuture(s"common-${resType}")
-          voteStat <- resCol.find(Json.obj("_id" -> resId), Json.obj("voteStat" -> 1)).one[JsObject].map(_.get.as[VoteStat])
+          objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("voteStat" -> 1, "title" -> 1)).one[JsObject]
         } yield {
+          val voteStat = (objOpt.get \ "voteStat").as[VoteStat]
+          val resTitle = (objOpt.get \ "title").as[String]
+
           val uid = RequestHelper.getUid.toInt
           val bitmap = BitmapUtil.fromBase64String(voteStat.bitmap)
           // 投票
           if (!bitmap.contains(uid)) {
+            eventService.voteResource(RequestHelper.getAuthor, resId, resType, resTitle)
             bitmap.add(uid)
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
             Ok(Json.obj("status" -> 0))
@@ -372,8 +385,11 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         val (resType, resId) = tuple
         for{
           resCol <- getColFuture(s"common-${resType}")
+          objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1)).one[JsObject]
           wr <- resCol.remove(Json.obj("_id" -> resId))
         } yield {
+          val resTitle = (objOpt.get \ "title").as[String]
+          eventService.removeResource(RequestHelper.getAuthor, resId, resType, resTitle)
           Ok(Json.obj("status" -> 0))
         }
       }

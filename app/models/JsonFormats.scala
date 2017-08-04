@@ -30,6 +30,7 @@ object JsonFormats {
   implicit val messageFormat = Json.format[Message]
 
   // Stat
+  implicit val eventFormat = Json.format[Event]
   implicit val statCollectFormat = Json.format[StatCollect]
   implicit val statTrafficFormat = Json.format[StatTraffic]
   implicit val statIPFormat = Json.format[StatIP]

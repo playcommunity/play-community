@@ -13,13 +13,13 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-import services.CounterService
+import services.{CounterService, EventService}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -82,6 +82,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
           index <- counter.getNextSequence("doc-index")
           _ <-  _idOpt match {
                   case Some(_id) =>
+                    eventService.updateResource(RequestHelper.getAuthor, _id, "doc", title)
                     docCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
@@ -92,7 +93,9 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    docCol.insert(Doc(RequestHelper.generateId, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
+                    val _id = RequestHelper.generateId
+                    eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
+                    docCol.insert(Doc(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
                 }
         } yield {
           Redirect(routes.DocController.index(categoryPath, 1))

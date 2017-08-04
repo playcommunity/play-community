@@ -19,8 +19,10 @@ import reactivemongo.bson.BSONObjectID
 import scala.concurrent.{ExecutionContext, Future}
 import java.time._
 
+import services.EventService
+
 @Singleton
-class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -95,6 +97,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
           wr <-  _idOpt match {
                   case Some(_id) =>
+                    eventService.updateResource(RequestHelper.getAuthor, _id, "article", title)
                     articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
@@ -105,7 +108,9 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    articleCol.insert(Article(RequestHelper.generateId, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                    val _id = RequestHelper.generateId
+                    eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
+                    articleCol.insert(Article(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", 1))

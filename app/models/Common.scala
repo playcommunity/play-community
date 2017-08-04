@@ -79,9 +79,19 @@ case class QA(
   timeStat: QATimeStat
 )
 
+case class Event(
+  _id: String,
+  actor: Author,
+  action: String,
+  resId: String,
+  resType: String,
+  resTitle: String,
+  createTime: OffsetDateTime
+)
+
 /**
   * 消息提醒
-  * @param source system/article/question
+  * @param source system/article/qa
   * @param action view/vote/reply/comment
   */
 case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)

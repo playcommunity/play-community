@@ -1,4 +1,4 @@
-@(uidOpt: Option[String], userOpt: Option[User], articles: List[Article], replyArticles: List[Article])(implicit request: RequestHeader)
+@(uidOpt: Option[String], userOpt: Option[User], createEvents: List[Event], events: List[Event])(implicit request: RequestHeader)
 @import utils.RequestHelper
 
 @headImg = @{
@@ -42,37 +42,37 @@
 <div class="main fly-home-main">
   <div class="layui-inline fly-home-jie">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@name 最近的文章</h3>
+      <h3 class="fly-panel-title">@name 最近的贡献</h3>
       <ul class="jie-row">
-        @for(a <- articles){
+        @for(e <- createEvents){
         <li>
-          <a href="/article/view?_id=@a._id" class="jie-title">@a.title</a>
-          <i>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</i>
-          <em>@{a.viewStat.count}阅/@{a.replyStat.count}答</em>
+          <a href="/@{e.resType}/view?_id=@e.resId" class="jie-title">@e.resTitle</a>
+          <i>@utils.DateTimeUtil.toPrettyString(e.createTime)</i>
+          <em>@utils.ResourceUtil.toPrettyString(e.resType)</em>
         </li>
         }
       </ul>
-      @if(articles.nonEmpty){
-      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><i style="font-size:14px;">没有发表任何求解</i></div>
+      @if(createEvents.isEmpty){
+      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><i style="font-size:14px;">没有做出任何贡献</i></div>
       }
     </div>
   </div>
 
   <div class="layui-inline fly-home-da">
     <div class="fly-panel">
-      <h3 class="fly-panel-title">@name 最近的回答</h3>
+      <h3 class="fly-panel-title">@name 最近的动态</h3>
       <ul class="home-jieda">
-        @for(a <- replyArticles){
+        @for(e <- events){
         <li>
           <p>
-            <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
-            回复了<a href="/article/view?_id=@a._id" target="_blank">@{a.title}</a>
+            <span>@utils.DateTimeUtil.toPrettyString(e.createTime)</span>
+            @e.action <a href="/@{e.resType}/view?_id=@e.resId" target="_blank">@{e.resTitle}</a>
           </p>
         </li>
         }
       </ul>
-      @if(replyArticles.nonEmpty){
-      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有回答任何问题</span></div>
+      @if(events.isEmpty){
+      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有任何动态</span></div>
       }
     </div>
   </div>

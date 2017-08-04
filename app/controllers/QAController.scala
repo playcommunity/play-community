@@ -13,13 +13,13 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-import services.CounterService
+import services.{CounterService, EventService}
 import utils.{BitmapUtil, DateTimeUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def qaColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-qa"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
@@ -94,6 +94,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
           _ <-  _idOpt match {
                   case Some(_id) =>
+                    eventService.updateResource(RequestHelper.getAuthor, _id, "qa", title)
                     qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
@@ -105,7 +106,9 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
                       "timeStat.updateTime" -> DateTimeUtil.now()
                     )))
                   case None =>
-                    qaCol.insert(QA(RequestHelper.generateId, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
+                    val _id = RequestHelper.generateId
+                    eventService.createResource(RequestHelper.getAuthor, _id, "qa", title)
+                    qaCol.insert(QA(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
                 }
         } yield {
           Redirect(routes.QAController.index("0", 1))
@@ -124,6 +127,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
           Some(qa) <- qaCol.find(Json.obj("_id" -> _id)).one[QA]
         } yield {
           if (qa.answer.isEmpty) {
+            eventService.acceptReply(RequestHelper.getAuthor, _id, "qa", qa.title)
             qa.replies.find(_._id == rid) match {
               case Some(reply) =>
                 qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
