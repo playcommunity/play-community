@@ -26,9 +26,9 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
-  def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(nav: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = Json.obj()
+    var q = Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))
     var sort = Json.obj("timeStat.createTime" -> -1)
     nav match {
       case "1" =>
@@ -53,9 +53,9 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
       total <- qaCol.count(None)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
-        Redirect(routes.QAController.index(nav, math.ceil(total/15.0).toInt))
+        Redirect(routes.QAController.index(nav, path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.qa.index(nav, qas, topViewQAs, topReplyQAs, cPage, total))
+        Ok(views.html.qa.index(nav, path, qas, topViewQAs, topReplyQAs, cPage, total))
       }
     }
   }
@@ -111,7 +111,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
                     qaCol.insert(QA(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
                 }
         } yield {
-          Redirect(routes.QAController.index("0", 1))
+          Redirect(routes.QAController.index("0", categoryPath, 1))
         }
       }
     )
@@ -166,12 +166,12 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
               if (!viewBitmap.contains(uid)) {
                 viewBitmap.add(uid)
                 qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
-                Ok(views.html.qa.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1)), topViewQAs, topReplyQAs))
+                Ok(views.html.qa.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
               } else {
-                Ok(views.html.qa.detail(a, topViewQAs, topReplyQAs))
+                Ok(views.html.qa.detail(a))
               }
             case None =>
-              Ok(views.html.qa.detail(a, topViewQAs, topReplyQAs))
+              Ok(views.html.qa.detail(a))
           }
         case None => Redirect(routes.Application.notFound)
       }

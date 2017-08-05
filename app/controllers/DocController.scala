@@ -108,8 +108,6 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
     for {
       docCol <- docColFuture
       doc <- docCol.find(Json.obj("_id" -> _id)).one[Doc]
-      topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
-      topReplyDocs <- docCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Doc]().collect[List](10)
     } yield {
       doc match {
         case Some(a) =>
@@ -120,12 +118,12 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
               if (!viewBitmap.contains(uid)) {
                 viewBitmap.add(uid)
                 docCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
-                Ok(views.html.doc.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1)), topViewDocs, topReplyDocs))
+                Ok(views.html.doc.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
               } else {
-                Ok(views.html.doc.detail(a, topViewDocs, topReplyDocs))
+                Ok(views.html.doc.detail(a))
               }
             case None =>
-              Ok(views.html.doc.detail(a, topViewDocs, topReplyDocs))
+              Ok(views.html.doc.detail(a))
           }
         case None => Redirect(routes.Application.notFound)
       }

@@ -1,4 +1,4 @@
-@(nav: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
+@(nav: String, path: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main("欢迎来到社区！", "article") {
@@ -60,8 +60,10 @@
           <p>
             <span><a href="/user/home?uid=@{a.author._id}">@a.author.name</a></span>
             <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
-            <span>@a.categoryName</span>
+            <span><a href="/articles?path=@{a.categoryPath}&page=@page">@a.categoryName</a></span>
             <span class="fly-list-hint">
+              <i class="layui-icon" title="收藏">&#xe600;</i> @a.collectStat.count
+              <i class="iconfont icon-zan" title="点赞"></i> @a.voteStat.count
               <i class="iconfont" title="回答">&#xe60c;</i> @a.replies.size
               <i class="iconfont" title="人气">&#xe60b;</i> @a.viewStat.count
             </span>

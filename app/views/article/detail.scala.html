@@ -1,4 +1,4 @@
-@(article: Article, topViewArticles: List[Article], topReplyArticles: List[Article])(implicit request: RequestHeader)
+@(article: Article)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
@@ -16,7 +16,7 @@
 </style>
 <div class="main layui-clear">
   <div class="wrap">
-    <div class="content detail">
+    <div class="content detail" style="margin-right:0">
       <div class="fly-panel detail-box">
         <h1>@article.title</h1>
         <div class="fly-tip fly-detail-hint" data-id="@article._id" data-type="article">
@@ -49,10 +49,10 @@
           }
 
           <div class="fly-list-hint">
-            <i class="layui-icon" title="收藏">&#xe600;</i> @article.collectStat.count
-            <i class="iconfont icon-zan" title="点赞"></i> @article.voteStat.count
-            <i class="iconfont" title="回答">&#xe60c;</i> @article.replies.size
-            <i class="iconfont" title="人气">&#xe60b;</i> @article.viewStat.count
+            <i class="layui-icon" title="收藏">&#xe600;</i> <em id="collect-count">@article.collectStat.count</em>
+            <i class="iconfont icon-zan" title="点赞"></i> <em id="vote-count">@article.voteStat.count</em>
+            <i class="iconfont" title="回答">&#xe60c;</i> <em id="reply-count">@article.replies.size</em>
+            <i class="iconfont" title="人气">&#xe60b;</i> <em id="view-count">@article.viewStat.count</em>
           </div>
         </div>
         <div class="detail-about">
@@ -146,28 +146,6 @@
         }
       </div>
     </div>
-  </div>
-
-  <div class="edge">
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">最近热帖</dt>
-      @for(a <- topViewArticles){
-      <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
-      </dd>
-      }
-    </dl>
-
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">近期热议</dt>
-      @for(a <- topReplyArticles){
-      <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
-      </dd>
-      }
-    </dl>
   </div>
 </div>
 }

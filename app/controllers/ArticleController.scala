@@ -28,9 +28,9 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
 
-  def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(nav: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = Json.obj()
+    var q = Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))
     var sort = Json.obj("timeStat.createTime" -> -1)
     nav match {
       case "1" =>
@@ -56,9 +56,9 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
       total <- articleCol.count(None)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
-        Redirect(routes.ArticleController.index(nav, math.ceil(total/15.0).toInt))
+        Redirect(routes.ArticleController.index(nav, path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.article.index(nav, topArticles, articles, topViewArticles, topReplyArticles, cPage, total))
+        Ok(views.html.article.index(nav, path, topArticles, articles, topViewArticles, topReplyArticles, cPage, total))
       }
     }
   }
@@ -113,7 +113,7 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
                     articleCol.insert(Article(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
-          Redirect(routes.ArticleController.index("0", 1))
+          Redirect(routes.ArticleController.index("0", categoryPath, 1))
         }
       }
     )
@@ -142,8 +142,6 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
     for {
       articleCol <- articleColFuture
       article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
-      topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
-      topReplyArticles <- articleCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Article]().collect[List](10)
     } yield {
       article match {
         case Some(a) =>
@@ -154,12 +152,12 @@ class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi
               if (!viewBitmap.contains(uid)) {
                 viewBitmap.add(uid)
                 articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
-                Ok(views.html.article.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1)), topViewArticles, topReplyArticles))
+                Ok(views.html.article.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
               } else {
-                Ok(views.html.article.detail(a, topViewArticles, topReplyArticles))
+                Ok(views.html.article.detail(a))
               }
             case None =>
-              Ok(views.html.article.detail(a, topViewArticles, topReplyArticles))
+              Ok(views.html.article.detail(a))
           }
         case None => Redirect(routes.Application.notFound)
       }

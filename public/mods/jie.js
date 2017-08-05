@@ -97,10 +97,13 @@ layui.define(['laypage', 'fly'], function(exports){
         ,resId: div.data('id')
         ,csrfToken: token
       }, function(res){
+        var count = $('#collect-count').html()|0;
         if(type === 'add'){
           othis.data('type', 'remove').html('取消收藏').addClass('layui-btn-danger');
+          $('#collect-count').html(++count);
         } else if(type === 'remove'){
           othis.data('type', 'add').html('收藏').removeClass('layui-btn-danger');
+          $('#collect-count').html(--count);
         }
       });
     }
@@ -263,8 +266,12 @@ layui.define(['laypage', 'fly'], function(exports){
       console.log(zan);
       if(zan == '0'){
         othis.data('zan', '1').html('取消点赞').addClass('layui-btn-danger');
+        var zans = $('#vote-count').html()|0;
+        $('#vote-count').html(++zans);
       } else{
         othis.data('zan', '0').html('点赞').removeClass('layui-btn-danger');
+        var zans = $('#vote-count').html()|0;
+        $('#vote-count').html(--zans);
       }
     });
   });

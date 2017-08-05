@@ -48,14 +48,14 @@ POST    /res/remove                               controllers.UserController.doR
 
 
 # Doc
-GET     /docs                                     controllers.DocController.index(path: String ?= "", page: Int ?= 1)
+GET     /docs                                     controllers.DocController.index(path: String ?= "/", page: Int ?= 1)
 GET     /doc/add                                  controllers.DocController.add
 POST    /doc/add                                  controllers.DocController.doAdd
 GET     /doc/edit                                 controllers.DocController.edit(_id: String)
 GET     /doc/view                                 controllers.DocController.view(_id: String)
 
 # Article
-GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
 GET     /article/add                              controllers.ArticleController.add
 POST    /article/add                              controllers.ArticleController.doAdd
 GET     /article/edit                             controllers.ArticleController.edit(_id: String)
@@ -63,7 +63,7 @@ GET     /article/view                             controllers.ArticleController.
 POST    /article/top                              controllers.ArticleController.doSetTop
 
 # QA
-GET     /qas                                     controllers.QAController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /qas                                     controllers.QAController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                  controllers.QAController.add
 POST    /qa/add                                  controllers.QAController.doAdd
 GET     /qa/edit                                 controllers.QAController.edit(_id: String)
