@@ -27,19 +27,24 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.ActorSystem
 import controllers.admin.routes
 import models.{App, Article, IndexedDocument, SiteSetting}
-import play.api.{Environment, Logger}
+import play.api.{Configuration, Environment, Logger}
 import models.JsonFormats.articleFormat
 import models.JsonFormats.ipLocationFormat
 import models.JsonFormats.siteSettingFormat
 import play.api.inject.ApplicationLifecycle
+import play.api.libs.ws.WSClient
 
 import scala.concurrent.duration._
 
 @Singleton
-class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
+
+  val useEmbedES = config.getOptional[Boolean]("es.useEmbed").getOrElse(true)
+  val esServerOpt = config.getOptional[String]("es.server")
+  val esIndexNameOpt = config.getOptional[String]("es.index")
 
   // 载入网站设置
   for {
@@ -51,24 +56,48 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, va
     }
   }
 
-  Logger.info("Starting ElasticSearch ...")
   val indexExists = Await.result(settingColFuture.flatMap(_.find(Json.obj("_id" -> "esIndex")).one[JsObject]).map(_.nonEmpty), 10 seconds)
-  val esBuilder = EmbeddedElastic.builder()
-    .withDownloadUrl(new URL(s"file:///${env.rootPath}${File.separator}embed${File.separator}elasticsearch-5.5.0.zip"))
-    //.withElasticVersion("5.5.0")
-    .withSetting(PopularProperties.TRANSPORT_TCP_PORT, 9350)
-    .withSetting(PopularProperties.CLUSTER_NAME, "cluster-0")
-    .withInstallationDirectory(new File(s"${env.rootPath}${File.separator}embed"))
-    .withCleanInstallationDirectoryOnStop(false)
-    .withStartTimeout(5, TimeUnit.MINUTES)
-  if (!indexExists) {
-    esBuilder.withIndex("community", IndexSettings.builder().withType("document", new FileInputStream(s"${env.rootPath}${File.separator}conf${File.separator}document-mapping.json")).build())
-    settingColFuture.flatMap(_.update(Json.obj("_id" -> "esIndex"), Json.obj("$set" -> Json.obj("value" -> "community"))))
-    Logger.info("ElasticSearch runs for the first time, index created!")
-  }
+  if (useEmbedES) {
+    Logger.info("Starting ElasticSearch ...")
+    val esBuilder = EmbeddedElastic.builder()
+      .withDownloadUrl(new URL(s"file:///${env.rootPath}${File.separator}embed${File.separator}elasticsearch-5.5.0.zip"))
+      //.withElasticVersion("5.5.0")
+      .withSetting(PopularProperties.TRANSPORT_TCP_PORT, 9350)
+      .withSetting(PopularProperties.CLUSTER_NAME, "cluster-0")
+      .withInstallationDirectory(new File(s"${env.rootPath}${File.separator}embed"))
+      .withCleanInstallationDirectoryOnStop(false)
+      .withStartTimeout(15, TimeUnit.MINUTES)
+    if (!indexExists) {
+      esBuilder.withIndex("community", IndexSettings.builder().withType("document", new FileInputStream(s"${env.rootPath}${File.separator}conf${File.separator}document-mapping.json")).build())
+      settingColFuture.flatMap(_.update(Json.obj("_id" -> "esIndex"), Json.obj("$set" -> Json.obj("value" -> "community"))))
+      Logger.info("ElasticSearch runs for the first time, index created!")
+    }
 
-  esBuilder.build().start()
-  Logger.info("ElasticSearch started!")
+    esBuilder.build().start()
+    Logger.info("ElasticSearch started!")
+  } else {
+    if (esServerOpt.isEmpty || esIndexNameOpt.isEmpty) {
+      Logger.error("Please specify es.server and es.index value in application.conf!")
+      Await.result(appLifecycle.stop(), 24 hours)
+      System.exit(0)
+    } else {
+      Logger.info("Use es.server " + esServerOpt.get)
+      Logger.info("Use es.index " + esIndexNameOpt.get)
+
+      if (!indexExists) {
+        Logger.info("Creating ES Index ...")
+        val indexContent = scala.io.Source.fromFile(env.getFile("document-mapping.json"), "utf-8").mkString("\n")
+        val resp = Await.result(ws.url(s"http://${esServerOpt.get}/${esIndexNameOpt.get}").withBody(Json.parse(indexContent)).execute("put"), 10 minutes)
+        val success = (resp.json \ "acknowledged").asOpt[Boolean].getOrElse(false)
+
+        if (!success) {
+          Logger.error("Create ES Index Error: " + resp.body)
+          Await.result(appLifecycle.stop(), 24 hours)
+          System.exit(0)
+        }
+      }
+    }
+  }
 
   /**
     * Tail oplog.
