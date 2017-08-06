@@ -20,14 +20,14 @@ import reactivemongo.akkastream.{State, cursorProducer}
 import java.lang.ClassLoader._
 import java.net.URL
 import java.nio.file.{Files, Paths}
-import java.time.{Clock, LocalDateTime}
+import java.time.{Clock, LocalDateTime, OffsetDateTime}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
 import controllers.admin.routes
 import models.{App, Article, IndexedDocument, SiteSetting}
-import play.api.{Configuration, Environment, Logger}
+import play.api.{Application, Configuration, Environment, Logger}
 import models.JsonFormats.articleFormat
 import models.JsonFormats.ipLocationFormat
 import models.JsonFormats.siteSettingFormat
@@ -37,14 +37,13 @@ import play.api.libs.ws.WSClient
 import scala.concurrent.duration._
 
 @Singleton
-class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
 
-  val useEmbedES = config.getOptional[Boolean]("es.useEmbed").getOrElse(true)
-  val esServerOpt = config.getOptional[String]("es.server")
-  val esIndexNameOpt = config.getOptional[String]("es.index")
+  val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
+  val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
 
   // 载入网站设置
   for {
@@ -56,10 +55,9 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, co
     }
   }
 
-  val indexExists = Await.result(settingColFuture.flatMap(_.find(Json.obj("_id" -> "esIndex")).one[JsObject]).map(_.nonEmpty), 10 seconds)
-  if (useEmbedES) {
-    Logger.info("Starting ElasticSearch ...")
-    val esBuilder = EmbeddedElastic.builder()
+  if (!useExternalES) {
+    Logger.info("Starting Embedded ElasticSearch ...")
+    val es = EmbeddedElastic.builder()
       .withDownloadUrl(new URL(s"file:///${env.rootPath}${File.separator}embed${File.separator}elasticsearch-5.5.0.zip"))
       //.withElasticVersion("5.5.0")
       .withSetting(PopularProperties.TRANSPORT_TCP_PORT, 9350)
@@ -67,35 +65,22 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, co
       .withInstallationDirectory(new File(s"${env.rootPath}${File.separator}embed"))
       .withCleanInstallationDirectoryOnStop(false)
       .withStartTimeout(15, TimeUnit.MINUTES)
-    if (!indexExists) {
-      esBuilder.withIndex("community", IndexSettings.builder().withType("document", new FileInputStream(s"${env.rootPath}${File.separator}conf${File.separator}document-mapping.json")).build())
-      settingColFuture.flatMap(_.update(Json.obj("_id" -> "esIndex"), Json.obj("$set" -> Json.obj("value" -> "community"))))
-      Logger.info("ElasticSearch runs for the first time, index created!")
-    }
+      .build().start()
 
-    esBuilder.build().start()
-    Logger.info("ElasticSearch started!")
+    Logger.info("Embedded ElasticSearch started!")
   } else {
-    if (esServerOpt.isEmpty || esIndexNameOpt.isEmpty) {
-      Logger.error("Please specify es.server and es.index value in application.conf!")
+    Logger.info("Use external ElasticSearch " + externalESServer)
+  }
+
+  // 检查ES索引是否存在
+  val esIndexExists = Await.result(elasticService.existsIndex, 60 seconds)
+  if (!esIndexExists) {
+    Logger.info("Creating ElasticSearch Index ...")
+    val success = Await.result(elasticService.createIndex, 60 seconds)
+    if (!success) {
+      Logger.error("Create ElasticSearch Index Failed.")
       Await.result(appLifecycle.stop(), 24 hours)
       System.exit(0)
-    } else {
-      Logger.info("Use es.server " + esServerOpt.get)
-      Logger.info("Use es.index " + esIndexNameOpt.get)
-
-      if (!indexExists) {
-        Logger.info("Creating ES Index ...")
-        val indexContent = scala.io.Source.fromFile(env.getFile("document-mapping.json"), "utf-8").mkString("\n")
-        val resp = Await.result(ws.url(s"http://${esServerOpt.get}/${esIndexNameOpt.get}").withBody(Json.parse(indexContent)).execute("put"), 10 minutes)
-        val success = (resp.json \ "acknowledged").asOpt[Boolean].getOrElse(false)
-
-        if (!success) {
-          Logger.error("Create ES Index Error: " + resp.body)
-          Await.result(appLifecycle.stop(), 24 hours)
-          System.exit(0)
-        }
-      }
     }
   }
 
@@ -108,32 +93,32 @@ class InitializeService @Inject()(actorSystem: ActorSystem, env: Environment, co
     lastHeartTime <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-heart-time")).one[JsObject]).map(_.map(obj => obj("value").as[Long]).getOrElse(System.currentTimeMillis()))
     oplogCol <- oplogColFuture
   } {
-    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-article")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj()).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     Logger.info("tailing oplog")
     source.runForeach{ doc =>
       tailCount.addAndGet(1L)
-      //println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
+      println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
       val jsObj = doc.as[JsObject]
-      jsObj("ns").as[String] match {
-        case ns if ns.endsWith(".common-article") =>
-          jsObj("op").as[String] match {
-            case "i" =>
-              val a = jsObj("o").as[Article]
-              elasticService.insert("localhost", 9200, IndexedDocument(a._id, "article", a.title, a.content, a.author.name, a.author._id, a.author.headImg, a.timeStat.createTime.toEpochSecond * 1000, a.viewStat.count, a.replyStat.count, a.voteStat.count, None))
-              println("insert " + a)
-            case "u" =>
-              val _id = jsObj("o2")("_id").as[String]
-              val modifier: JsObject = jsObj("o")("$set").as[JsObject]
-              elasticService.update("localhost", 9200, _id, modifier)
-              println("update " + _id)
-            case "d" =>
-              val _id = jsObj("o")("_id").as[String]
-              elasticService.remove("localhost", 9200, _id)
-              println("remove " + _id)
-          }
-        case _ =>
+      val ns = jsObj("ns").as[String]
+      val resType = ns.split("-")(1)
+      jsObj("op").as[String] match {
+        case "i" =>
+          val r = jsObj("o").as[JsObject]
+          elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], r("author")("headImg").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, r("viewStat")("count").as[Int], r("replyStat")("count").as[Int], r("voteStat")("count").as[Int], None))
+          println("insert " + r("title").as[String])
+        case "u" =>
+          val _id = jsObj("o2")("_id").as[String]
+          val modifier: JsObject = jsObj("o")("$set").as[JsObject]
+          elasticService.update(_id, modifier)
+          println("update " + _id)
+        case "d" =>
+          val _id = jsObj("o")("_id").as[String]
+          elasticService.remove(_id)
+          println("remove " + _id)
       }
+
       if (tailCount.get() % 100 == 0) {
         settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> System.currentTimeMillis()))))
         Logger.info("record heart beat time for tailing oplog.")

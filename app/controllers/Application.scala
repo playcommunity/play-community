@@ -2,10 +2,12 @@ package controllers
 
 import java.io.ByteArrayOutputStream
 import javax.inject._
+
 import akka.stream.Materializer
 import akka.util.ByteString
 import models._
 import models.JsonFormats._
+import play.api.Configuration
 import reactivemongo.play.json._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
@@ -16,12 +18,13 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def oplogColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("oplog.rs"))
@@ -108,7 +111,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   def search(q: String, plate: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
 
-    elasticService.search("localhost", 9200, q).map{ t =>
+    elasticService.search(q).map{ t =>
       Ok(views.html.search(q, plate, t._2, cPage, t._1))
     }
   }
