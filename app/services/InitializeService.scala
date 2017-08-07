@@ -103,7 +103,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     source.runForeach{ doc =>
       try {
         tailCount.addAndGet(1L)
-        println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
+        //println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
         val jsObj = doc.as[JsObject]
         val ns = jsObj("ns").as[String]
         val resType = ns.split("-")(1)

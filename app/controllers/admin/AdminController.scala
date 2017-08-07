@@ -49,7 +49,8 @@ class AdminController @Inject()(cc: ControllerComponents, val reactiveMongoApi: 
         obj.validate[SiteSetting] match {
           case JsSuccess(s, _) =>
             App.siteSetting = s
-            settingColFuture.flatMap(_.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj))).map{ _ =>
+            settingColFuture.flatMap(_.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj), upsert = true)).map{ wr =>
+              println(wr)
               Ok(Json.obj("status" -> 0))
             }
           case JsError(_) =>
