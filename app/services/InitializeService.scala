@@ -36,6 +36,9 @@ import play.api.libs.ws.WSClient
 
 import scala.concurrent.duration._
 
+/**
+  * 执行系统初始化任务
+  */
 @Singleton
 class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, val reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper)(implicit ec: ExecutionContext, mat: Materializer) {
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
@@ -93,35 +96,40 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     lastHeartTime <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-heart-time")).one[JsObject]).map(_.map(obj => obj("value").as[Long]).getOrElse(System.currentTimeMillis()))
     oplogCol <- oplogColFuture
   } {
-    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
-    //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj()).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
-    Logger.info("tailing oplog")
+    Logger.info("start tailing oplog ...")
     source.runForeach{ doc =>
-      tailCount.addAndGet(1L)
-      println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
-      val jsObj = doc.as[JsObject]
-      val ns = jsObj("ns").as[String]
-      val resType = ns.split("-")(1)
-      jsObj("op").as[String] match {
-        case "i" =>
-          val r = jsObj("o").as[JsObject]
-          elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], r("author")("headImg").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, r("viewStat")("count").as[Int], r("replyStat")("count").as[Int], r("voteStat")("count").as[Int], None))
-          println("insert " + r("title").as[String])
-        case "u" =>
-          val _id = jsObj("o2")("_id").as[String]
-          val modifier: JsObject = jsObj("o")("$set").as[JsObject]
-          elasticService.update(_id, modifier)
-          println("update " + _id)
-        case "d" =>
-          val _id = jsObj("o")("_id").as[String]
-          elasticService.remove(_id)
-          println("remove " + _id)
-      }
+      try {
+        tailCount.addAndGet(1L)
+        println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
+        val jsObj = doc.as[JsObject]
+        val ns = jsObj("ns").as[String]
+        val resType = ns.split("-")(1)
+        jsObj("op").as[String] match {
+          case "i" =>
+            val r = jsObj("o").as[JsObject]
+            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], r("author")("headImg").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, r("viewStat")("count").as[Int], r("replyStat")("count").as[Int], r("voteStat")("count").as[Int], None))
+            println("insert " + r("title").as[String])
+          case "u" =>
+            val _id = jsObj("o2")("_id").as[String]
+            val modifier: JsObject = jsObj("o")("$set").as[JsObject]
+            elasticService.update(_id, modifier)
+            println("update " + _id)
+          case "d" =>
+            val _id = jsObj("o")("_id").as[String]
+            elasticService.remove(_id)
+            println("remove " + _id)
+        }
 
-      if (tailCount.get() % 100 == 0) {
-        settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> System.currentTimeMillis()))))
-        Logger.info("record heart beat time for tailing oplog.")
+        if (tailCount.get() % 100 == 0) {
+          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> System.currentTimeMillis()))))
+          Logger.info("record heart beat time for tailing oplog.")
+        }
+      } catch {
+        case t: Throwable =>
+          Logger.error("Tail oplog Error: " + t.getMessage, t)
       }
     }
   }
