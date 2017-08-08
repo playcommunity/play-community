@@ -1,6 +1,7 @@
 logs
 target
 embed
+/conf/reference.conf
 /.idea
 /.idea_modules
 /.classpath
