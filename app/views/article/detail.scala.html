@@ -3,7 +3,7 @@
 @import utils.RequestHelper
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main("欢迎来到社区！", "article", article.keywords, article.title) {
+@main(s"${App.siteSetting.name} - ${article.title}", "article", article.keywords, article.title) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */
@@ -13,6 +13,14 @@
   height: 200px;
 }
 .layui-upload-file, .layui-upload-button { display: none;}
+
+.detail-body ul {
+  padding: 5px 35px 15px;
+}
+.detail-body ul li {
+  list-style-type:circle;
+  padding-left: 10px;
+}
 </style>
 <div class="main layui-clear">
   <div class="wrap">

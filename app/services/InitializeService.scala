@@ -106,7 +106,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
         //println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
         val jsObj = doc.as[JsObject]
         val ns = jsObj("ns").as[String]
-        val resType = ns.split("-")(1)
+        val resType = ns.split("-").last
         jsObj("op").as[String] match {
           case "i" =>
             val r = jsObj("o").as[JsObject]

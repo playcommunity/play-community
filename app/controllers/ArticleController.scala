@@ -22,7 +22,7 @@ import java.time._
 import services.EventService
 
 @Singleton
-class ArticleController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))

@@ -9,7 +9,7 @@ POST    /admin/setting/base                       controllers.admin.AdminControl
 GET     /todo                                     controllers.Default.todo
 
 # Application
-GET     /                                         controllers.DocController.index(path: String ?= "", page: Int ?= 1)
+GET     /                                         controllers.DocController.index(path: String ?= "/", page: Int ?= 1)
 GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
@@ -78,5 +78,6 @@ DELETE /resource/:rid                             controllers.ResourceController
 
 
 # Map static resources from the /public folder to the /assets URL path
+GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
 GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
 GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)

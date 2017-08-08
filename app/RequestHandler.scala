@@ -20,7 +20,7 @@ import reactivemongo.play.json._
   * RequestHandler的主要功能是流量统计，为后台统计报表以及恶意攻击提供分析数据。
   */
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
-  val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo")
+  val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo|/baidu_verify_5vujE3CYCX.html")
   val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
