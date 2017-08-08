@@ -22,7 +22,7 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
   private val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   private val esServer = if (useExternalES) { config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200") } else { "127.0.0.1:9200" }
 
-  def search(q: String): Future[(Int, List[IndexedDocument])] = {
+  def search(q: String, page: Int): Future[(Int, List[IndexedDocument])] = {
     val query =
       if (q.trim != "") {
         Json.obj(
@@ -35,7 +35,9 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
             "pre_tags" -> Json.arr(JsString("<b>")),
             "post_tags" -> Json.arr(JsString("</b>")),
             "fields" -> Json.obj("content" -> Json.obj())
-          )
+          ),
+          "from" -> (page - 1) * 15,
+          "size" -> 15
         )
       } else {
         Json.obj("query" -> Json.obj("match_all" -> Json.obj()))

@@ -8,7 +8,7 @@
       <div class="fly-tab">
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
-            <li> <a href="/docs" @if(path == ""){class="layui-this"}>全部</a> </li>
+            <li> <a href="/docs" @if(path == "/"){class="layui-this"}>全部</a> </li>
             @for(c <- categoryList){
             <li> <a href="/docs?path=@c.path" @if(path == c.path){class="layui-this"}>@c.name</a> </li>
             }

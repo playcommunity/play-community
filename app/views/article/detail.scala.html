@@ -3,7 +3,7 @@
 @import utils.RequestHelper
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main("欢迎来到社区！", "article") {
+@main("欢迎来到社区！", "article", article.keywords, article.title) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */

@@ -35,6 +35,11 @@
               <input id="L_title_hidden" type="hidden" name="title" value="@articleOpt.map(_.title).getOrElse("")"/>
               <input id="L_content" type="hidden" name="content"/>
               <div class="layui-form-item">
+                <label for="L_title" class="layui-form-label">关键词</label>
+                <div class="layui-input-block">
+                  <input name="keywords" value="@articleOpt.map(_.keywords).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input" placeholder="关键词之间以英文逗号分隔"> </div>
+              </div>
+              <div class="layui-form-item">
                 <div class="layui-inline">
                   <label class="layui-form-label">所在类别</label>
                   <div class="layui-input-block">

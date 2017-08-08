@@ -111,8 +111,12 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   def search(q: String, plate: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
 
-    elasticService.search(q).map{ t =>
-      Ok(views.html.search(q, plate, t._2, cPage, t._1))
+    if (q.trim != "") {
+      elasticService.search(q, cPage).map{ t =>
+        Ok(views.html.search(q, plate, t._2, cPage, t._1))
+      }
+    } else {
+      Future.successful(Ok(views.html.search("", plate, Nil, 1, 0)))
     }
   }
 

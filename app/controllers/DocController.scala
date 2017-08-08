@@ -71,10 +71,10 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
   }
 
   def doAdd = checkAdmin.async { implicit request: Request[AnyContent] =>
-    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
+    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText, "content" -> nonEmptyText, "keywords" -> nonEmptyText, "categoryPath" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
-        val (_idOpt, title, content, categoryPath) = tuple
+        val (_idOpt, title, content, keywords, categoryPath) = tuple
         for {
           docCol <- docColFuture
           categoryCol <- categoryColFuture
@@ -95,7 +95,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
-                    docCol.insert(Doc(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
+                    docCol.insert(Doc(_id, title, content, keywords, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
                 }
         } yield {
           Redirect(routes.DocController.index(categoryPath, 1))
