@@ -50,8 +50,14 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
   def getResource(rid: String) = Action.async { implicit request: Request[AnyContent] =>
     val file = gridFS.find[JsObject, JsReadFile[JsString]](Json.obj("_id" -> rid))
     request.getQueryString("inline") match {
-      case Some("true") => serve[JsString, JsReadFile[JsString]](gridFS)(file, CONTENT_DISPOSITION_INLINE)
-      case _            => serve[JsString, JsReadFile[JsString]](gridFS)(file)
+      case Some("true") =>
+        serve[JsString, JsReadFile[JsString]](gridFS)(file, CONTENT_DISPOSITION_INLINE).map{ result =>
+          result.withHeaders("Cache-Control" -> s"max-age=${31 * 86400}")
+        }
+      case _            =>
+        serve[JsString, JsReadFile[JsString]](gridFS)(file).map{ result =>
+          result.withHeaders("Cache-Control" -> s"max-age=${31 * 86400}")
+        }
     }
   }
 
