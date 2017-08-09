@@ -13,6 +13,6 @@ object App {
 }
 
 object Role {
-  val COMMON_USER = "user"
-  val ADMIN_USER = "admin"
+  val USER = "user"
+  val ADMIN = "admin"
 }

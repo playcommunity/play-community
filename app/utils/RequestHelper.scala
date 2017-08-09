@@ -46,7 +46,7 @@ object RequestHelper {
   }
 
   def isAdmin(implicit request: RequestHeader): Boolean = {
-    request.session.get("role").getOrElse("") == Role.ADMIN_USER
+    request.session.get("role").getOrElse("") == Role.ADMIN
   }
 
   def isOwnerOf(_id: String)(implicit request: RequestHeader): Boolean = {

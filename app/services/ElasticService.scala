@@ -44,7 +44,7 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
       }
 
     ws.url(s"http://${esServer}/${esIndexName}/_search").post(query).map{ resp =>
-      println(resp.json)
+      //println(resp.json)
       val total = resp.json("hits")("total").as[Int]
       val docs =
         resp.json("hits")("hits").as[List[JsObject]].map{ hit =>
