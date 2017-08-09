@@ -30,11 +30,13 @@ play.mailer {
 }
 ```
 配置外部ES：
+```
 es {
   esIndexName = "play-community"
   useExternalES = true
   externalESServer = "127.0.0.1:9200"
 }
+```
 如果设置useExternalES为false，则需要下载[elasticsearch-5.5.0.zip](http://pan.baidu.com/s/1jIijkrW)，并将其放到play-community-1.0.0/embed目录下。
 
 ## 启动
