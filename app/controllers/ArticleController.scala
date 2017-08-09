@@ -101,6 +101,7 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
                     articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
+                      "keywords" -> keywords,
                       "categoryPath" -> categoryPath,
                       "categoryName" -> category.map(_.name).getOrElse[String]("-"),
                       "author.name" -> request.session("name"),
@@ -110,7 +111,7 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
-                    articleCol.insert(Article(_id, title, content, keywords, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
+                    articleCol.insert(Article(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", categoryPath, 1))

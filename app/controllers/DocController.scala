@@ -86,6 +86,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                     docCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
+                      "keywords" -> keywords,
                       "categoryPath" -> categoryPath,
                       "categoryName" -> category.map(_.name).getOrElse[String]("-"),
                       "author.name" -> request.session("name"),
@@ -95,7 +96,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
-                    docCol.insert(Doc(_id, title, content, keywords, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
+                    docCol.insert(Doc(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
                 }
         } yield {
           Redirect(routes.DocController.index(categoryPath, 1))

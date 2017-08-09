@@ -10,6 +10,11 @@
   height: 500px;
 }
 .layui-upload-file, .layui-upload-button { display: none;}
+
+.ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+    margin: 5px 0px 5px;
+    padding: 10px 0px 5px;
+}
 </style>
 <div class="main layui-clear">
   <div class="fly-panel" pad20 style="padding-top: 5px;">
@@ -86,7 +91,8 @@ var quill = new Quill('#quill-container', {
         [ 'bold', 'italic', 'underline', 'strike' ],
         [{ 'color': [] }, { 'background': [] }],
         [{ 'script': 'super' }, { 'script': 'sub' }],
-        [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
+        [{ 'header': 1 }, { 'header': 2 }, { 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['blockquote', 'code-block' ],
         [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
         [ 'direction', { 'align': [] }],
         [ 'link', 'image' ],

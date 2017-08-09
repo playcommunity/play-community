@@ -108,7 +108,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "qa", title)
-                    qaCol.insert(QA(_id, title, content, "lay-editor", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
+                    qaCol.insert(QA(_id, title, content, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
                 }
         } yield {
           Redirect(routes.QAController.index("0", categoryPath, 1))
