@@ -3,7 +3,7 @@
 html{background-color: #f1f1f1;}
 html,body{overflow-x: hidden; overflow-y: auto;}
 html body{margin-top: 80px;}
-body{line-height:24px;}
+body{line-height:24px; font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;}
 i{font-style: normal;}
 .main{width: 1079px; min-height: 600px; margin: 0 auto 15px;}
 .wrap{float:left; width: 100%; min-height:300px;}
