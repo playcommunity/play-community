@@ -104,9 +104,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     lastHeartTime <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-heart-time")).one[JsObject]).map(_.map(obj => obj("value").as[Long]).getOrElse(System.currentTimeMillis()))
     oplogCol <- oplogColFuture
   } {
-    //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
-    //val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj()).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
     Logger.info("start tailing oplog ...")
     source.runForeach{ doc =>
       try {
@@ -151,9 +149,10 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
       jsOpt <- userCol.find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).one[JsObject]
     } {
       jsOpt.foreach{ js =>
-        ipHelper.getLocation(js("ip").as[String]).foreach{ locationOpt =>
+        val ip = js("ip").as[String]
+        ipHelper.getLocation(ip).foreach{ locationOpt =>
           locationOpt.foreach{ location =>
-            userCol.update(Json.obj("_id" -> js("_id").as[String]), Json.obj("$set" -> Json.obj("ipLocation" -> location)))
+            userCol.update(Json.obj("ip" -> ip), Json.obj("$set" -> Json.obj("ipLocation" -> location)), multi = true)
           }
         }
       }
