@@ -1,6 +1,6 @@
 # PlayCommunity 社区系统
 
-PlayCommunity社区系统基于Play Framework 2.6.x开发而成，目前正运营于[PlayScala社区](http://www.playscala.cn)。
+PlayCommunity社区系统基于Play Framework 2.6.x开发而成，目前正在运营[PlayScala社区](http://www.playscala.cn)。
 
 ## 下载&编译
 ```
@@ -42,7 +42,7 @@ es {
 ## 启动
 执行下面命令启动应用：
 ```
-nohup ./play-community -J-Xms1g -J-Xms1g -Dhttp.port=80 > ../log.txt &
+nohup ./play-community -J-Xms1g -J-Xmx1g -Dhttp.port=80 > ../log.txt &
 ```
 
 ## 管理
