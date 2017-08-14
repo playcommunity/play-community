@@ -41,7 +41,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
       articleCol <- articleColFuture
       news <- newsCol.find(Json.obj()).sort(Json.obj("createTime" -> -1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[News]().collect[List](15)
       total <- newsCol.count(None)
-      activeUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.articleCount" -> -1)).cursor[User]().collect[List](12)
+      activeUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.resCount" -> -1)).cursor[User]().collect[List](12)
       topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
       topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
     } yield {
@@ -125,7 +125,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                   val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                   for {
                     uid <- counterService.getNextSequence("user-sequence")
-                    wr <- userCol.insert(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", request.remoteAddress, None, Some(activeCode)))
+                    wr <- userCol.insert(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", request.remoteAddress, None, Some(activeCode)))
                   } yield {
                     if (wr.ok && wr.n == 1) {
                       // 发送激活码
@@ -183,7 +183,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
         for{
           userCol <- userColFuture
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
+          _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
         } yield {
           Redirect(routes.DocController.index("/", 1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER)

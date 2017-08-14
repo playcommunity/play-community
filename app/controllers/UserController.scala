@@ -261,7 +261,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
           atIds.foreach{ uid =>
             msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, uid, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false)))
           }
-          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> 1))))
+          userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> 1), "$set" -> Json.obj("stat.lastReplyTime" -> DateTimeUtil.now()))))
 
           Redirect(s"/${resType}/view?_id=${resId}")
         }
@@ -309,7 +309,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
           val answerId = answerObjOpt.flatMap(obj => (obj \ "answer" \ "_id").asOpt[String]).getOrElse("")
           if (answerId != rid) {
             resCol.update(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.count" -> -1)))
-            userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("userStat.replyCount" -> -1))))
+            userColFuture.map(_.update(Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> -1))))
             Ok(Json.obj("status" -> 0))
           } else {
             Ok(Json.obj("status" -> 1, "msg" -> "已采纳回复不允许删除！"))
@@ -334,12 +334,16 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
           if (!bitmap.contains(uid)) {
             bitmap.add(uid)
             resCol.update(Json.obj("_id" -> resId, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> 1))))
+            userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> 1))))
             Ok(Json.obj("status" -> 0))
           }
           // 取消投票
           else {
             bitmap.remove(uid)
             resCol.update(Json.obj("_id" -> resId, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> VoteStat(reply.voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> -1))))
+            userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> -1))))
             Ok(Json.obj("status" -> 0))
           }
         }
@@ -366,12 +370,16 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
             eventService.voteResource(RequestHelper.getAuthor, resId, resType, resTitle)
             bitmap.add(uid)
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
+            userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> 1))))
+            userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> 1))))
             Ok(Json.obj("status" -> 0))
           }
           // 取消投票
           else {
             bitmap.remove(uid)
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
+            userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> -1))))
+            userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> -1))))
             Ok(Json.obj("status" -> 0))
           }
         }
@@ -391,6 +399,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         } yield {
           val resTitle = (objOpt.get \ "title").as[String]
           eventService.removeResource(RequestHelper.getAuthor, resId, resType, resTitle)
+          userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> -1, s"stat.${resType}Count" -> -1))))
           Ok(Json.obj("status" -> 0))
         }
       }

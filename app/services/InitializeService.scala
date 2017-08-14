@@ -61,7 +61,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
   userColFuture.flatMap(_.count(Some(Json.obj("role" -> Role.ADMIN)))).map{ count =>
     if (count <= 0) {
       counter.getNextSequence("user-sequence").map{ uid =>
-        userColFuture.map(_.insert(User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", "127.0.0.1", None, None)))
+        userColFuture.map(_.insert(User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", "127.0.0.1", None, None)))
       }
     }
   }
