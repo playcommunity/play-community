@@ -28,6 +28,7 @@ object JsonFormats {
   implicit val ipLocationFormat = Json.format[IPLocation]
   implicit val userFormat = Json.format[User]
   implicit val messageFormat = Json.format[Message]
+  implicit val newsFormat = Json.format[News]
 
   // Stat
   implicit val eventFormat = Json.format[Event]

@@ -8,7 +8,7 @@ case class User(
   login: String,
   password: String,
   setting: UserSetting,
-  userStat: UserStat,
+  stat: UserStat,
   score: Int,
   enabled: Boolean,
   from: String,
@@ -17,6 +17,16 @@ case class User(
   activeCode: Option[String]
 )
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
+
+// 新闻资讯
+case class News(
+  _id: String,
+  title: String,
+  url: String,
+  author: Author,
+  from: String,
+  createTime: OffsetDateTime
+)
 
 // 已整理文档
 case class Doc (

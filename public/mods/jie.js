@@ -69,7 +69,23 @@ layui.define(['laypage', 'fly'], function(exports){
         });
       });
     }
-    
+
+    //推至首页
+    ,push: function(div){
+      var resId = div.data('id'), resType = div.data('type');
+      fly.json('/res/push', {
+        resId: resId,
+        resType: resType,
+        csrfToken: token
+      }, function(res){
+        if(res.status === 0){
+          layer.msg("推送成功！");
+        } else {
+          layer.msg(res.msg);
+        }
+      });
+    }
+
     //设置置顶、状态
     ,set: function(div){
       var othis = $(this);

@@ -42,7 +42,10 @@
           }
           <!-- <span class="fly-tip-jie">已采纳</span> -->
           @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(doc._id)){
-          <span class="jie-admin" type="del" style="margin-left: 20px;">删除</span>
+          <span class="jie-admin" type="del" style="margin-left: 5px;">删除</span>
+          }
+          @if(RequestHelper.isAdmin){
+          <span class="jie-admin" type="push" style="margin-left: 5px;">推至首页</span>
           }
 
           <div class="fly-list-hint">
@@ -203,7 +206,6 @@ layui.use('upload', function(upload){
 }
 
 $(document).ready(function() {
-
   $('pre').each(function(i, block) {
     //$(block).removeClass('ql-syntax').addClass('scala');
     $(block).addClass('scala');

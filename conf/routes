@@ -9,7 +9,7 @@ POST    /admin/setting/base                       controllers.admin.AdminControl
 GET     /todo                                     controllers.Default.todo
 
 # Application
-GET     /                                         controllers.DocController.index(path: String ?= "/", page: Int ?= 1)
+GET     /                                         controllers.Application.index(page: Int ?= 1)
 GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
@@ -45,6 +45,7 @@ GET     /res/reply/edit                           controllers.UserController.edi
 POST    /res/reply/edit                           controllers.UserController.doEditReply
 POST    /res/reply/remove                         controllers.UserController.doRemoveReply
 POST    /res/remove                               controllers.UserController.doRemove
+POST    /res/push                                 controllers.UserController.doPush
 
 
 # Doc

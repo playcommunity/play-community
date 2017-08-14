@@ -15,7 +15,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
-import services.EventService
+import services.{CounterService, EventService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
@@ -23,9 +23,10 @@ import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction, eventService: EventService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction, eventService: EventService, counter: CounterService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+  def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
   def qaColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-qa"))
@@ -390,6 +391,28 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         } yield {
           val resTitle = (objOpt.get \ "title").as[String]
           eventService.removeResource(RequestHelper.getAuthor, resId, resType, resTitle)
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
+  // 将资源推至首页
+  def doPush = checkAdmin.async { implicit request: Request[AnyContent] =>
+    Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
+      tuple => {
+        val (resType, resId) = tuple
+        for{
+          newsCol <- newsColFuture
+          resCol <- getColFuture(s"common-${resType}")
+          Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1)).one[JsObject]
+        } yield {
+          val resOwner = resObj("author").as[Author]
+          val resTitle = resObj("title").as[String]
+          counter.getNextSequence("common-news").map{index =>
+            newsCol.insert(News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, DateTimeUtil.now()))
+          }
           Ok(Json.obj("status" -> 0))
         }
       }

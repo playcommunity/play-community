@@ -2,7 +2,6 @@ package controllers
 
 import java.io.ByteArrayOutputStream
 import javax.inject._
-
 import akka.stream.Materializer
 import akka.util.ByteString
 import models._
@@ -18,7 +17,6 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
@@ -26,43 +24,28 @@ import scala.util.Random
 @Singleton
 class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+  def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
-  def oplogColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("oplog.rs"))
+  def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
   }
 
-  def index(nav: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = Json.obj()
-    var sort = Json.obj("timeStat.createTime" -> -1)
-    nav match {
-      case "1" =>
-        q ++= Json.obj()
-        sort = Json.obj("lastReply.replyTime" -> -1)
-      case "2" =>
-        q ++= Json.obj()
-        sort = Json.obj("timeStat.createTime" -> -1)
-      case "3" =>
-        q ++= Json.obj("replies.0" -> Json.obj("$exists" -> false))
-        sort = Json.obj("timeStat.createTime" -> -1)
-      case "4" =>
-        q ++= Json.obj("recommended" -> true)
-        sort = Json.obj("timeStat.lastReplyTime" -> -1)
-      case _ =>
-    }
     for {
       userCol <- userColFuture
+      newsCol <- newsColFuture
+      docCol <- docColFuture
       articleCol <- articleColFuture
-      topArticles <- articleCol.find(Json.obj("$or" -> Json.arr(Json.obj("top" -> true), Json.obj("recommended" -> true)))).cursor[Article]().collect[List](5)
-      articles <- articleCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Article]().collect[List](15)
-      total <- articleCol.count(Some(q))
+      news <- newsCol.find(Json.obj()).sort(Json.obj("createTime" -> -1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[News]().collect[List](15)
+      total <- newsCol.count(None)
+      activeUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.articleCount" -> -1)).cursor[User]().collect[List](12)
+      topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
       topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
-      topReplyArticles <- articleCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Article]().collect[List](10)
-      topReplyUsers <- userCol.find(Json.obj()).sort(Json.obj("userStat.replyCount" -> -1)).cursor[User]().collect[List](12)
     } yield {
-      Ok(views.html.index(nav, topArticles, articles, topViewArticles, topReplyArticles, topReplyUsers, cPage, total))
+      Ok(views.html.index(news, activeUsers, topViewDocs, topViewArticles, cPage, total))
     }
   }
 
