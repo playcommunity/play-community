@@ -399,7 +399,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         } yield {
           val resTitle = (objOpt.get \ "title").as[String]
           eventService.removeResource(RequestHelper.getAuthor, resId, resType, resTitle)
-          userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> -1, s"stat.${resType}Count" -> -1))))
+          userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.resCount" -> -1, s"stat.${resType}Count" -> -1))))
           Ok(Json.obj("status" -> 0))
         }
       }
