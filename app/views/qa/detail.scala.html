@@ -46,6 +46,9 @@
           @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(qa._id)){
           <span class="jie-admin" type="del" style="margin-left: 5px;">删除</span>
           }
+          @if(RequestHelper.isAdmin){
+          <span class="jie-admin" type="push" style="margin-left: 5px;">推至首页</span>
+          }
 
           <div class="fly-list-hint">
             <i class="layui-icon" title="收藏">&#xe600;</i> <em id="collect-count">@qa.collectStat.count</em>
