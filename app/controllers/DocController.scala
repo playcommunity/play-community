@@ -34,7 +34,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
       docs <- docCol.find(Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))).sort(Json.obj("index" -> 1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Doc]().collect[List](15)
       topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
       topReplyDocs <- docCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Doc]().collect[List](10)
-      topReplyUsers <- userCol.find(Json.obj()).sort(Json.obj("userStat.replyCount" -> -1)).cursor[User]().collect[List](12)
+      topReplyUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.replyCount" -> -1)).cursor[User]().collect[List](12)
       categoryCol <- categoryColFuture
       categoryList <- categoryCol.find(Json.obj("parentPath" -> "/", "disabled" -> false)).sort(Json.obj("index" -> 1)).cursor[Category]().collect[List]()
       total <- docCol.count(None)
