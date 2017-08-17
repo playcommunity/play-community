@@ -1,7 +1,7 @@
 @(news: List[News], activeUsers: List[User], topViewDocs: List[Doc], topViewArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 @import utils.RequestHelper
 
-@main("欢迎来到社区！") {
+@main(s"${App.siteSetting.indexTitle}") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">
