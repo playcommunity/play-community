@@ -104,13 +104,24 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     lastHeartTime <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-heart-time")).one[JsObject]).map(_.map(obj => obj("value").as[Long]).getOrElse(System.currentTimeMillis()))
     oplogCol <- oplogColFuture
   } {
-    val source: Source[BSONDocument, Future[State]] = oplogCol.find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1)))).options(QueryOpts().tailable.awaitData.noCursorTimeout).cursor[BSONDocument]().documentSource()
+    println("lastHeartTime: " + lastHeartTime)
+    val source: Source[BSONDocument, Future[State]] =
+      oplogCol
+        .find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1))))
+        .options(
+          QueryOpts()
+            .tailable
+            //.oplogReplay
+            .awaitData.noCursorTimeout
+        )
+        .cursor[BSONDocument]().documentSource()
+
     Logger.info("start tailing oplog ...")
     source.runForeach{ doc =>
       try {
         tailCount.addAndGet(1L)
-        //println(tailCount.get() + " - oplog: " + BSONDocument.pretty(doc))
         val jsObj = doc.as[JsObject]
+        println(tailCount.get() + " - oplog: " + jsObj("ts").toString())
         val ns = jsObj("ns").as[String]
         val resType = ns.split("-").last
         jsObj("op").as[String] match {
@@ -130,7 +141,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
         }
 
         if (tailCount.get() % 100 == 0) {
-          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> System.currentTimeMillis()))))
+          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> jsObj("ts")))))
           Logger.info("record heart beat time for tailing oplog.")
         }
       } catch {

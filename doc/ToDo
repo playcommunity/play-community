@@ -1,3 +1,4 @@
+ReactiveMongo Tail Oplog成功之后，如果没有数据就会不断重试，大概每秒重试300次
 说说
 投票
 开源项目库
