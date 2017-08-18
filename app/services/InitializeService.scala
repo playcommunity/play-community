@@ -2,28 +2,23 @@ package services
 
 import java.io.{File, FileInputStream}
 import javax.inject.{Inject, Singleton}
-
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.{NamedDatabase, ReactiveMongoApi}
-import reactivemongo.akkastream.State
 import reactivemongo.api.QueryOpts
 import reactivemongo.bson.{BSONDocument, BSONTimestamp}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.stream.scaladsl.Source
 import pl.allegro.tech.embeddedelasticsearch.{EmbeddedElastic, IndexSettings, PopularProperties}
-import reactivemongo.akkastream.{State, cursorProducer}
 import java.lang.ClassLoader._
 import java.net.URL
 import java.nio.file.{Files, Paths}
 import java.time.{Clock, LocalDateTime, OffsetDateTime}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
-
 import akka.actor.ActorSystem
 import controllers.admin.routes
 import models._
@@ -32,7 +27,6 @@ import models.JsonFormats._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import utils.{DateTimeUtil, HashUtil}
-
 import scala.concurrent.duration._
 
 /**
@@ -97,27 +91,24 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
 
   /**
     * Tail oplog.
+    *
+    * 保存的check point时间使用ts原始格式。
     */
   var tailCount = new AtomicLong(0L)
   for{
-    db <- reactiveMongoApi.database.map(_.name)
-    lastHeartTime <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-heart-time")).one[JsObject]).map(_.map(obj => obj("value").as[Long]).getOrElse(System.currentTimeMillis()))
     oplogCol <- oplogColFuture
+    db <- reactiveMongoApi.database.map(_.name)
+    lastTS <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-last-ts")).one[JsObject]).map(_.map(obj => obj("value").as[BSONDocument]).getOrElse(BSONTimestamp(System.currentTimeMillis()/1000, 1)))
   } {
-    println("lastHeartTime: " + lastHeartTime)
-    val source: Source[BSONDocument, Future[State]] =
+    println("lastTS: " + lastTS)
+    val tailingCursor =
       oplogCol
-        .find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> BSONTimestamp(lastHeartTime/1000, 1))))
-        .options(
-          QueryOpts()
-            .tailable
-            //.oplogReplay
-            .awaitData.noCursorTimeout
-        )
-        .cursor[BSONDocument]().documentSource()
+        .find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> lastTS)))
+        .options(QueryOpts().tailable.oplogReplay.awaitData.noCursorTimeout)
+        .cursor[BSONDocument]()
 
     Logger.info("start tailing oplog ...")
-    source.runForeach{ doc =>
+    tailingCursor.fold(()){ (_, doc) =>
       try {
         tailCount.addAndGet(1L)
         val jsObj = doc.as[JsObject]
@@ -140,9 +131,9 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
             println("remove " + _id)
         }
 
-        if (tailCount.get() % 100 == 0) {
-          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-heart-time"), Json.obj("$set" -> Json.obj("value" -> jsObj("ts")))))
-          Logger.info("record heart beat time for tailing oplog.")
+        if (tailCount.get() % 10 == 0) {
+          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-last-ts"), Json.obj("$set" -> Json.obj("value" -> jsObj("ts"))), upsert = true))
+          Logger.info("record last ts time for tailing oplog.")
         }
       } catch {
         case t: Throwable =>
