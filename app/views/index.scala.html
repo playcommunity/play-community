@@ -53,10 +53,10 @@
             <ul class="fly-panel fly-list">
               <template v-for="(t, index) in tweets">
                 <li class="fly-list-li" style="padding: 2px 10px 2px 50px;height: auto;border-bottom: 0px;">
-                  <a href="/" class="fly-list-avatar" style="top: 0px;">
+                  <a :href="'/user/home?uid=' + t.author._id" class="fly-list-avatar" style="top: 0px;">
                     <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
                   </a>
-                  <span><a href="/user/home?uid=">{{ t.author.name }}：</a> {{ t.content }}</span>
+                  <span><a :href="'/user/home?uid=' + t.author._id">{{ t.author.name }}：</a> {{ t.content }}</span>
                   <p>
                     <span>{{ t.time }}</span>
                     <span class="fly-list-hint">
