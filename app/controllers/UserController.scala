@@ -372,7 +372,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
             userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> 1))))
             userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> 1))))
-            Ok(Json.obj("status" -> 0))
+            Ok(Json.obj("status" -> 0, "count" -> 1))
           }
           // 取消投票
           else {
@@ -380,7 +380,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
             resCol.update(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> VoteStat(voteStat.count - 1, BitmapUtil.toBase64String(bitmap)))))
             userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> -1))))
             userColFuture.map(_.update(Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> -1))))
-            Ok(Json.obj("status" -> 0))
+            Ok(Json.obj("status" -> 0, "count" -> -1))
           }
         }
       }

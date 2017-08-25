@@ -1,7 +1,7 @@
 @(nav: String, path: String, topArticles: List[Article], articles: List[Article], topViewArticles: List[Article], topReplyArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main("欢迎来到社区！", "article") {
+@main(s"${App.siteSetting.name} - 社区分享", "article") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">

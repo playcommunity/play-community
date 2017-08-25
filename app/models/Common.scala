@@ -2,6 +2,10 @@ package models
 
 import java.time.OffsetDateTime
 
+import play.api.libs.json.{JsObject, Json}
+import utils.DateTimeUtil
+import models.JsonFormats.authorFormat
+
 case class User(
   _id: String,
   role: String,
@@ -100,6 +104,12 @@ case class Event(
   resTitle: String,
   createTime: OffsetDateTime
 )
+
+case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: OffsetDateTime, voteStat: VoteStat, replyStat: ReplyStat, replies: List[Reply]){
+  def toJson: JsObject = {
+    Json.obj("_id" -> _id, "author" -> author, "content" -> content, "images" -> images, "replyCount" -> replies.size, "voteCount" -> voteStat.count, "time" -> DateTimeUtil.toPrettyString(createTime))
+  }
+}
 
 /**
   * 消息提醒

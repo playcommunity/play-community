@@ -1,6 +1,6 @@
 @(docOpt: Option[Doc], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
-@main("欢迎来到社区！", "doc") {
+@main(s"${App.siteSetting.name} - 创建文档", "doc") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */

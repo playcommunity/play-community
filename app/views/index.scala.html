@@ -1,4 +1,5 @@
-@(news: List[News], activeUsers: List[User], topViewDocs: List[Doc], topViewArticles: List[Article], page: Int, total: Int)(implicit request: RequestHeader)
+@(news: List[News], activeUsers: List[User], topViewDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@import helper._
 @import utils.RequestHelper
 
 @main(s"${App.siteSetting.indexTitle}") {
@@ -41,6 +42,68 @@
   </div>
 
   <div class="edge">
+    <div class="fly-panel">
+      <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0px;">
+        <ul class="layui-tab-title fly-panel-title">
+          <li class="layui-this">最新说说</li>
+          <li>热门说说</li>
+        </ul>
+        <div id="app" class="layui-tab-content" style="padding: 0px;">
+          <div class="layui-tab-item layui-show">
+            <ul class="fly-panel fly-list">
+              <template v-for="(t, index) in tweets">
+                <li class="fly-list-li" style="padding: 2px 10px 2px 50px;height: auto;border-bottom: 0px;">
+                  <a href="/" class="fly-list-avatar" style="top: 0px;">
+                    <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
+                  </a>
+                  <span><a href="/user/home?uid=">{{ t.author.name }}：</a> {{ t.content }}</span>
+                  <p>
+                    <span>{{ t.time }}</span>
+                    <span class="fly-list-hint">
+                    <a :href="'/tweet/view?_id=' + t._id"><i class="iconfont" title="回答">&#xe60c;</i></a> {{ t.replyCount }}
+                    <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                  </span>
+                  </p>
+                </li>
+              </template>
+            </ul>
+          </div>
+          <div class="layui-tab-item">
+            <ul class="fly-panel fly-list">
+            <template v-for="(t, index) in hotTweets">
+              <li class="fly-list-li" style="padding: 2px 10px 2px 50px;height: auto;border-bottom: 0px;">
+                <a href="/" class="fly-list-avatar" style="top: 0px;">
+                  <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
+                </a>
+                <span><a href="/user/home?uid=">{{ t.author.name }}：</a> {{ t.content }}</span>
+                <p>
+                  <span>{{ t.time }}</span>
+                  <span class="fly-list-hint">
+                    <a :href="'/tweet/view?_id=' + t._id"><i class="iconfont" title="回答">&#xe60c;</i></a> {{ t.replyCount }}
+                    <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                  </span>
+                </p>
+              </li>
+            </template>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="jie-add">
+      <form id="tweet-form" class="layui-form">
+        <div class="layui-form-item layui-form-text" style="margin-bottom: 0px;">
+          <div class="layui-input-block" style="margin-left: 0px;">
+            <textarea id="tweet" placeholder="发表说说" class="layui-textarea" rows="2" style="min-height:20px;"></textarea>
+          </div>
+        </div>
+        <div class="layui-form-item">
+          <div class="layui-input-block" style="margin-left: 0px;">
+            <button class="layui-btn layui-btn-small" style="width: 100%; font-size: 15px;">发表说说</button>
+          </div>
+        </div>
+      </form>
+    </div>
     <div class="fly-panel leifeng-rank">
       <h3 class="fly-panel-title">活跃用户</h3>
       <dl>
@@ -60,18 +123,8 @@
       <dt class="fly-panel-title">热门文档</dt>
       @for(a <- topViewDocs){
       <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
+        <a href="/doc/view?_id=@{a._id}">@a.title</a>
         <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
-      </dd>
-      }
-    </dl>
-
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">热门分享</dt>
-      @for(a <- topViewArticles){
-      <dd>
-        <a href="/article/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
       </dd>
       }
     </dl>
@@ -89,3 +142,78 @@
   </div>
 </div>
 }
+
+<script src="/assets/js/socket.io.js"></script>
+<script src="/assets/js/vue.js"></script>
+<script>
+var token = '@CSRF.getToken.value';
+layui.use('element', function(){});
+
+var app = new Vue({
+  el: '#app',
+  data: { tweets: [], hotTweets: [] }
+});
+
+var socket = io("/tweet");
+socket.on('chat message', function(tweet) {
+    app.tweets.unshift(JSON.parse(tweet));
+});
+
+$('#tweet-form').submit(function(){
+  var tweet = $('#tweet').val();
+  if($.trim(tweet) == ""){ return false; }
+  $.ajax({
+    type: 'post',
+    dataType: 'json',
+    data: {content: tweet, images: []},
+    url: '/tweet/add?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        $('#tweet').val('');
+        socket.emit('chat message', JSON.stringify(res.tweet));
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
+  return false;
+});
+
+$(function () {
+ $.ajax({
+    type: 'get',
+    dataType: 'json',
+    url: '/tweet/json?count=10',
+    success: function(res){
+      if(res.status === 0) {
+        app.tweets = res.tweets;
+        app.hotTweets = res.hotTweets;
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }
+  });
+});
+
+$(document).on('click', 'i.zan-resource', function(){
+  var othis = $(this), resId = othis.attr('data-id'), resType = othis.attr('data-type');
+  layui.fly.json('/res/vote', {
+    resId: resId
+    ,resType: resType
+    ,csrfToken: token
+  }, function(res){
+    for(i in app.tweets){
+      if(app.tweets[i]._id == resId){
+        app.tweets[i].voteCount += res.count;
+      }
+    }
+    for(i in app.hotTweets){
+      if(app.hotTweets[i]._id == resId){
+        app.hotTweets[i].voteCount += res.count;
+      }
+    }
+  });
+});
+</script>

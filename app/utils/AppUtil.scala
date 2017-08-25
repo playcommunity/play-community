@@ -13,6 +13,7 @@ object AppUtil {
       case "doc" => "文档"
       case "article" => "分享"
       case "qa" => "问答"
+      case "tweet" => "说说"
       case _ => "其它"
     }
   }

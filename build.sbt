@@ -19,5 +19,6 @@ libraryDependencies ++= Seq(
   "org.roaringbitmap" % "RoaringBitmap" % "0.6.44",
   "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0",
   "com.typesafe.play" %% "play-mailer" % "6.0.0",
-  "com.typesafe.play" %% "play-mailer-guice" % "6.0.0"
+  "com.typesafe.play" %% "play-mailer-guice" % "6.0.0",
+  "com.lightbend.play" %% "play-socket-io" % "1.0.0-beta-2"
 )

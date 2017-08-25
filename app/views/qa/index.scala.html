@@ -1,7 +1,7 @@
 @(nav: String, path: String, qas: List[QA], topViewQAs: List[QA], topReplyQAs: List[QA], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main("欢迎来到社区！", "qa") {
+@main(s"${App.siteSetting.name} - 社区问答", "qa") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">

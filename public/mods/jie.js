@@ -272,7 +272,7 @@ layui.define(['laypage', 'fly'], function(exports){
     gather.jiedaActive[type].call(this, othis.parents('li'));
   });
 
-  $('span.zan-resource').on('click', function(){
+  $(document).on('click', 'span.zan-resource', function(){
     var othis = $(this), zan = othis.data('zan');
     fly.json('/res/vote', {
       resId: othis.data('id')

@@ -1,7 +1,7 @@
 @(categoryList: List[Category], path: String, docs: List[Doc], topReplyUsers: List[User], topViewDocs: List[Doc], topReplyDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main(s"欢迎来到${App.siteSetting.name}！", "doc") {
+@main(s"${App.siteSetting.name} - 社区文档", "doc") {
 <div class="main layui-clear">
   <div class="wrap">
     <div class="content">

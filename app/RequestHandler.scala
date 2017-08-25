@@ -19,9 +19,9 @@ import reactivemongo.play.json._
 /**
   * RequestHandler的主要功能是流量统计，为后台统计报表以及恶意攻击提供分析数据。
   */
-class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) {
-  val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo|/baidu_verify_5vujE3CYCX.html")
-  val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*")
+class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) with Rendering with AcceptExtractors {
+  val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo|/baidu_verify_5vujE3CYCX.html|/socket.io/.*")
+  val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*|/tweet.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
@@ -101,7 +101,13 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
                   Some(Action(Redirect(request.path, request.queryString, 302).withSession("visitor" -> visitorId)))
                 }
               } else {
-                Some(Action(Forbidden))
+                //Some(Action(Forbidden))
+                Some(Action(
+                  render {
+                    case Accepts.Html() => Results.Ok(views.html.message("系统提示", "您尚未登录，无权执行该操作！")(request))
+                    case Accepts.Json() => Results.Ok(Json.obj("status" -> 1, "msg" -> "您尚未登录，无权执行该操作！"))
+                  }(request)
+                ))
               }
           }
       }

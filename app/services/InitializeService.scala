@@ -2,6 +2,7 @@ package services
 
 import java.io.{File, FileInputStream}
 import javax.inject.{Inject, Singleton}
+
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
 import play.api.libs.json.{JsObject, Json}
@@ -10,6 +11,7 @@ import reactivemongo.api.QueryOpts
 import reactivemongo.bson.{BSONDocument, BSONTimestamp}
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
+
 import scala.concurrent.{Await, ExecutionContext, Future}
 import akka.stream.scaladsl.Source
 import pl.allegro.tech.embeddedelasticsearch.{EmbeddedElastic, IndexSettings, PopularProperties}
@@ -19,6 +21,7 @@ import java.nio.file.{Files, Paths}
 import java.time.{Clock, LocalDateTime, OffsetDateTime}
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+
 import akka.actor.ActorSystem
 import controllers.admin.routes
 import models._
@@ -26,7 +29,8 @@ import play.api.{Application, Configuration, Environment, Logger}
 import models.JsonFormats._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
-import utils.{DateTimeUtil, HashUtil}
+import utils.{DateTimeUtil, HashUtil, VersionComparator}
+
 import scala.concurrent.duration._
 
 /**
@@ -41,12 +45,23 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
   val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
 
-  // 载入网站设置
+  // 系统初始化
   for {
     settingCol <- settingColFuture
-    opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
+    versionOpt <- settingCol.find(Json.obj("_id" -> "version")).one[JsObject]
+    siteSettingOpt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
   } yield {
-    opt.foreach{ siteSetting =>
+    versionOpt match {
+      case Some(js) =>
+        val ver = js("value").as[String]
+        if (VersionComparator.compareVersion(ver, App.version) > 0) {
+          Logger.warn("You are using a lower version than before.")
+        }
+
+      case None =>
+        settingCol.update(Json.obj("_id" -> "version"), Json.obj("$set" -> Json.obj("value" -> App.version)), upsert = true)
+    }
+    siteSettingOpt.foreach{ siteSetting =>
       App.siteSetting = siteSetting
     }
   }

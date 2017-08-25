@@ -63,23 +63,21 @@
               <em>@utils.DateTimeUtil.toPrettyString(doc.timeStat.createTime)发布</em>
             </cite>
           </a>
-          @if(RequestHelper.isLogin){
           <div class="detail-hits" data-id="@doc._id">
-            @if(doc.author._id == request.session.get("uid").getOrElse("")){
+            @if(RequestHelper.isLogin && doc.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/doc/edit?_id=@{doc._id}">编辑此贴</a></span>
             }
-            @if(utils.BitmapUtil.fromBase64String(doc.collectStat.bitmap).contains(RequestHelper.getUid.toInt)){
+            @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(doc.collectStat.bitmap).contains(RequestHelper.getUid.toInt)){
             <span class="layui-btn layui-btn-mini jie-admin layui-btn-danger" type="collect" data-type="remove" data-resource="doc">取消收藏</span>
             }else{
             <span class="layui-btn layui-btn-mini jie-admin " type="collect" data-type="add" data-resource="doc">收藏</span>
             }
-            @if(utils.BitmapUtil.fromBase64String(doc.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
+            @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(doc.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
             <span class="layui-btn layui-btn-mini zan-resource layui-btn-danger" data-zan="1" data-id="@doc._id"  data-type="doc">取消点赞</span>
             }else{
             <span class="layui-btn layui-btn-mini zan-resource" data-zan="0" data-id="@doc._id"  data-type="doc">点赞</span>
             }
           </div>
-          }
         </div>
 
         <div class="detail-body photos ql-snow" style="margin-bottom: 20px;">

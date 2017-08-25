@@ -71,12 +71,21 @@ GET     /qa/edit                                 controllers.QAController.edit(_
 GET     /qa/view                                 controllers.QAController.view(_id: String)
 POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
 
+# Tweet
+GET     /tweets                                  controllers.TweetController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /tweet/json                              controllers.TweetController.getLatestAndHot(count: Int ?= 15)
+POST    /tweet/add                               controllers.TweetController.doAdd
+GET     /tweet/view                              controllers.TweetController.view(_id: String)
 
 # Resource
-POST   /resource/owner/:ownerId                   controllers.ResourceController.saveResource(ownerId: String)
-GET    /resource/:rid                             controllers.ResourceController.getResource(rid: String)
-DELETE /resource/:rid                             controllers.ResourceController.removeResource(rid: String)
+POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
+GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
+DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
 
++ nocsrf
+GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
++ nocsrf
+POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")

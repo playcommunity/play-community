@@ -43,9 +43,8 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
       total <- newsCol.count(None)
       activeUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.resCount" -> -1)).cursor[User]().collect[List](12)
       topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
-      topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
     } yield {
-      Ok(views.html.index(news, activeUsers, topViewDocs, topViewArticles, cPage, total))
+      Ok(views.html.index(news, activeUsers, topViewDocs, cPage, total))
     }
   }
 

@@ -29,6 +29,7 @@ object JsonFormats {
   implicit val userFormat = Json.format[User]
   implicit val messageFormat = Json.format[Message]
   implicit val newsFormat = Json.format[News]
+  implicit val tweetFormat = Json.format[Tweet]
 
   // Stat
   implicit val eventFormat = Json.format[Event]

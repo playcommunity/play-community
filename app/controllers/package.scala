@@ -26,12 +26,17 @@ package object controllers {
     }
   }
 
-  def checkLogin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
+  def checkLogin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) with Rendering with AcceptExtractors {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       if (RequestHelper.isLogin(request)) {
         block(request)
       } else {
-        Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
+        Future.successful {
+          render {
+            case Accepts.Html() => Results.Ok(views.html.message("系统提示", "您尚未登录，无权执行该操作！")(request))
+            case Accepts.Json() => Results.Ok(Json.obj("status" -> 1, "msg" -> "您尚未登录，无权执行该操作！"))
+          }(request)
+        }
       }
     }
   }
