@@ -6,6 +6,14 @@
 GET     /admin                                    controllers.admin.AdminController.index
 GET     /admin/setting/base                       controllers.admin.AdminController.base
 POST    /admin/setting/base                       controllers.admin.AdminController.doBaseSetting
+GET     /admin/doc/catalog                        controllers.admin.AdminController.catalog
+POST    /admin/doc/catalog                        controllers.admin.AdminController.doSetCatalog
+GET     /admin/docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
+GET     /admin/doc/add                            controllers.admin.AdminDocController.add
+GET     /admin/doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
+POST    /admin/doc/add                            controllers.admin.AdminDocController.doAdd
+GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog
+GET     /admin/doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
 GET     /todo                                     controllers.Default.todo
 
 # Application
@@ -47,13 +55,9 @@ POST    /res/reply/remove                         controllers.UserController.doR
 POST    /res/remove                               controllers.UserController.doRemove
 POST    /res/push                                 controllers.UserController.doPush
 
-
 # Doc
-GET     /docs                                     controllers.DocController.index(path: String ?= "/", page: Int ?= 1)
-GET     /doc/add                                  controllers.DocController.add
-POST    /doc/add                                  controllers.DocController.doAdd
-GET     /doc/edit                                 controllers.DocController.edit(_id: String)
-GET     /doc/view                                 controllers.DocController.view(_id: String)
+GET     /docs                                     controllers.DocController.index
+GET     /doc/view                                 controllers.DocController.view(catalogId: String)
 
 # Article
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
@@ -81,6 +85,8 @@ GET     /tweet/view                              controllers.TweetController.vie
 POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
 GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
 DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
+GET      /ueditor                                controllers.ResourceController.ueditorGet(action: String)
+POST     /ueditor                                controllers.ResourceController.ueditorPost(action: String)
 
 + nocsrf
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)

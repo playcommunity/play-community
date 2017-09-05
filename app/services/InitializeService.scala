@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.ActorSystem
 import controllers.admin.routes
 import models._
-import play.api.{Application, Configuration, Environment, Logger}
+import play.api._
 import models.JsonFormats._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
@@ -45,6 +45,10 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
   val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
 
+  if (env.mode == Mode.Dev) {
+    App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
+  }
+
   // 系统初始化
   for {
     settingCol <- settingColFuture
@@ -63,6 +67,9 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     }
     siteSettingOpt.foreach{ siteSetting =>
       App.siteSetting = siteSetting
+      if (env.mode == Mode.Dev) {
+        App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
+      }
     }
   }
 

@@ -1,0 +1,108 @@
+@(siteSetting: SiteSetting)(implicit request: RequestHeader)
+
+@import helper._
+@import utils.RequestHelper
+@import play.api.libs.json.Json
+@import models.JsonFormats.linkFormat
+@import models.JsonFormats.siteSettingFormat
+@views.html.admin.main("系统设置 - 基础设置", "setting", "setting-base") {
+<link href="/assets/plugins/vue-draggable/vuedraggable.css" rel="stylesheet" type="text/css" />
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>板块设置
+            <small>学习板块设置</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 文档目录管理</span>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-circle green" href="javascript:;">
+                        <i class="icon-cloud-upload"></i> 新增类别
+                    </a>
+                    <a class="btn btn-circle green" href="javascript:;">
+                        <i class="icon-cloud-upload"></i> 保存修改
+                    </a>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div id="app" class="portlet-body">
+                <template v-for="p in parts">
+                    <h3 class="block">{{ p.name }}
+                        <span class="badge badge-default" style="cursor:pointer;"> 编辑 </span>
+                        <span class="badge badge-default"> 删除 </span>
+                        <span class="badge badge-default"> 新增章 </span>
+                    </h3>
+                    <draggable element="ul" class="list-group dragArea" :list="p.chapters" :options="{group:'catalog'}">
+                        <template v-for="element in p.chapters">
+                            <li class="list-group-item"> {{ element.name }}
+                                <span class="badge badge-default" style="cursor:pointer;"> 编辑 </span>
+                                <span class="badge badge-default"> 删除 </span>
+                            </li>
+                        </template>
+                    </draggable>
+                </template>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+
+}
+<script src="/assets/plugins/layer/layer.js"></script>
+<script src="/assets/js/vue.js"></script>
+<script type="text/javascript" src="/assets/plugins/vue-draggable/Sortable.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/vue-draggable/vuedraggable.min.js"></script>
+<script>
+var token = '@CSRF.getToken.value';
+
+var vm = new Vue({
+	el: "#app",
+	data: {
+		parts: [
+		  {name: "第一部分", chapters: [{name: "Scala基础", url: ""}, {name: "Scala高级", url: ""}]},
+		  {name: "第二部分", chapters: [{name: "Play基础", url: ""}, {name: "Play高级", url: ""}]},
+		  {name: "第三部分", chapters: [{name: "综合基础", url: ""}, {name: "综合实战", url: ""}]}
+		],
+		dragging: false
+	}
+});
+
+$('#save-btn').click(function(){
+  $.ajax({
+    type: 'post',
+    dataType: 'json',
+    contentType: 'application/json; charset=utf-8',
+    data: app.getSubmitData(),
+    url: '/admin/setting/base?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        layer.msg("保存成功！");
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
+});
+
+</script>

@@ -71,4 +71,35 @@ class ResourceController @Inject()(val reactiveMongoApi: ReactiveMongoApi)(impli
     }
   }
 
+  def ueditorGet(action: String) = Action.async { request =>
+    action match{
+      case "config" =>
+        Future.successful(TemporaryRedirect("/assets/plugins/ueditor/config.json"))
+      case "listimage" =>
+        gridFS.find[JsObject, JsReadFile[JsString]](Json.obj("resType" -> "ueditor")).collect[List](100).map{ list =>
+          val urls = list.map{ i => Json.obj("url" -> s"/resource/${i.id.as[String]}", "mtime" -> 0)}
+
+          Ok(Json.obj("state" -> "SUCCESS", "start" -> "0", "total" -> list.size, "list" -> urls))
+        }
+      case _ =>
+        Future.successful(Ok("unknown action"))
+    }
+  }
+
+  def ueditorPost(action: String) = Action.async(gridFSBodyParser(gridFS)) { request =>
+    action match{
+      case action if action == "uploadimage" || action == "uploadvideo" || action == "uploadfile" =>
+        for {
+          file  <- request.body.files.head.ref
+          ur    <- gridFS.files.update(Json.obj("_id" -> file.id), Json.obj("$set" -> Json.obj("resType" -> "ueditor", "action" -> action)))
+        } yield {
+          val url = s"/resource/${file.id.as[String]}"
+          Ok(Json.obj("original" -> file.filename.getOrElse[String]("file"), "name" -> file.filename.getOrElse[String]("file"), "url" -> url, "type" -> ".", "state" -> "SUCCESS"))
+        }
+
+      case _ =>
+        Future.successful(Ok("unknown action"))
+    }
+  }
+
 }

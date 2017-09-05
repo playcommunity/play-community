@@ -175,7 +175,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     userColFuture.flatMap(_.find(Json.obj("login" -> RequestHelper.getLogin)).one[User]).flatMap {
       case Some(u) =>
         Future.successful {
-          Redirect(routes.DocController.index("/", 1))
+          Redirect(routes.Application.index(1))
             .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
         }
       case None =>
@@ -184,7 +184,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
           uid <- counterService.getNextSequence("user-sequence")
           _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
         } yield {
-          Redirect(routes.DocController.index("/", 1))
+          Redirect(routes.Application.index(1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER)
         }
     }

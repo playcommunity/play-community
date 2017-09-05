@@ -6,11 +6,10 @@ import models.JsonFormats._
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
-import reactivemongo.bson.BSONObjectID
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CounterService, EventService}
@@ -21,12 +20,48 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
+  def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
   def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
 
-  def index(path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+
+  def index = Action.async { implicit request: Request[AnyContent] =>
+    for{
+      docCatalog <- docCatalogFuture
+      Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
+    } yield {
+      Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], None))
+    }
+  }
+
+  def view(catalogId: String) = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      docCol <- docColFuture
+      docCatalog <- docCatalogFuture
+      Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
+      docOpt <- docCol.find(Json.obj("catalogId" -> catalogId)).one[Doc]
+    } yield {
+      docOpt match {
+        case Some(doc) =>
+          // 记录访问次数
+          if (RequestHelper.isLogin) {
+            val uid = request.session("uid").toInt
+            val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
+            if (!viewBitmap.contains(uid)) {
+              viewBitmap.add(uid)
+              docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+            }
+          }
+          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], Some(doc)))
+
+        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], None))
+      }
+    }
+  }
+
+/*  def index(path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     for {
       userCol <- userColFuture
@@ -45,8 +80,8 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
         Ok(views.html.doc.index(categoryList, path, docs, topReplyUsers, topViewDocs, topReplyDocs, cPage, total))
       }
     }
-  }
-
+  }*/
+/*
   def add = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
       categoryCol <- categoryColFuture
@@ -79,7 +114,6 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
           docCol <- docColFuture
           categoryCol <- categoryColFuture
           category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
-          index <- counter.getNextSequence("doc-index")
           _ <-  _idOpt match {
                   case Some(_id) =>
                     eventService.updateResource(RequestHelper.getAuthor, _id, "doc", title)
@@ -96,7 +130,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
-                    docCol.insert(Doc(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), index))
+                    //docCol.insert(Doc(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), ""))
                     userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.docCount" -> 1))))
                 }
         } yield {
@@ -130,6 +164,6 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
         case None => Redirect(routes.Application.notFound)
       }
     }
-  }
+  }*/
 
 }

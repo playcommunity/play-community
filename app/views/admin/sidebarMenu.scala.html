@@ -31,7 +31,7 @@
                 <span class="arrow @if(menu1 == "setting"){open}"></span>
             </a>
             <ul class="sub-menu">
-                <li class="nav-item  @if(menu1 == "setting"){active open}">
+                <li class="nav-item  @if(menu1 == "setting"){active}">
                     <a href="/admin/setting/base" class="nav-link ">
                         <span class="title">基础设置</span>
                         @if(menu1 == "setting-base"){
@@ -41,29 +41,32 @@
                 </li>
                 <li class="nav-item  ">
                     <a href="/todo" class="nav-link ">
-                        <span class="title">高级设置</span>
+                        <span class="title">分类管理</span>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="heading">
-            <h3 class="uppercase">系统管理</h3>
+            <h3 class="uppercase">板块设置</h3>
         </li>
-        <li class="nav-item  ">
+        <li class="nav-item  @if(menu1 == "learn"){active open}">
             <a href="javascript:;" class="nav-link nav-toggle">
                 <i class="icon-layers"></i>
-                <span class="title">用户管理</span>
-                <span class="arrow"></span>
+                <span class="title">学习板块</span>
+                <span class='arrow @if(menu1 == "learn"){open}'></span>
             </a>
             <ul class="sub-menu">
-                <li class="nav-item  ">
-                    <a href="/todo" class="nav-link ">
-                        <span class="title">用户列表</span>
+                <li class="nav-item @if(menu2 == "catalog"){active open}">
+                    <a href="/admin/doc/catalog" class="nav-link ">
+                        <span class="title">目录管理</span>
+                        @if(menu2 == "catalog"){
+                        <span class="selected"></span>
+                        }
                     </a>
                 </li>
-                <li class="nav-item  ">
-                    <a href="/todo" class="nav-link ">
-                        <span class="title">用户分析</span>
+                <li class="nav-item @if(menu2 == "docs"){active open}">
+                    <a href="/admin/docs" class="nav-link ">
+                        <span class="title">文档管理</span>
                     </a>
                 </li>
             </ul>

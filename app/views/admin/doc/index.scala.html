@@ -1,0 +1,97 @@
+@(docs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+
+@import helper._
+@import utils.RequestHelper
+@import play.api.libs.json.Json
+@import models.JsonFormats.linkFormat
+@import models.JsonFormats.siteSettingFormat
+@views.html.admin.main("学习板块 - 文档管理", "learn", "docs") {
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>学习板块
+            <small>文档管理</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 文档管理</span>
+                </div>
+                <div class="actions">
+                    <a id="save-btn" class="btn btn-circle green" href="/admin/doc/add">
+                        <i class="icon-cloud-upload"></i> 创建文档
+                    </a>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div class="table-scrollable">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th class="col-md-6">
+                                <i class="fa fa-user"></i> 文档标题
+                            </th>
+                            <th class="col-md-1">
+                                <i class="fa fa-user"></i> 阅读
+                            </th>
+                            <th class="col-md-2">
+                                <i class="fa fa-edit"></i> 更新时间
+                            </th>
+                            <th class="col-md-3">
+                                <i class="fa fa-edit"></i> 操作
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @for(d <- docs){
+                        <tr>
+                            <td>@d.title</td>
+                            <td>@d.viewStat.count</td>
+                            <td>@utils.DateTimeUtil.toString(d.timeStat.updateTime)</td>
+                            <td>
+                                <a href="/admin/doc/edit?_id=@d._id" class="btn default btn-xs green">
+                                    <i class="fa fa-edit"></i> 编辑 </a>
+                                <button onclick="onRemoveUser(this);" _id="@d._id" class="btn default btn-xs green">
+                                    <i class="fa fa-times"></i> 删除 </button>
+                            </td>
+                        </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+                <ul class="pagination  pagination-sm pull-right">
+                    <li>
+                        <a href="/admin/docs?page=@{page - 1}" class="btn btn-xs green @if(page <= 1){disabled}"><i class="fa fa-caret-left"></i>上一页</a>
+                    </li>
+                    <li><a href="javascript:void(0);" class="btn btn-xs green disabled">@if(docs.nonEmpty){ @{page + "/" + (math.ceil(total/15.0).toInt)} }else{1/1}</a></li>
+                    <li><a href="/admin/docs?page=@{page + 1}" class="btn btn-xs green @if(page >= math.ceil(total/15.0).toInt){disabled}">下一页<i class="fa fa-caret-right"></i></a></li>
+                </ul>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+<!-- END PAGE BASE CONTENT -->
+
+}
+<script>
+var token = '@CSRF.getToken.value';
+
+</script>

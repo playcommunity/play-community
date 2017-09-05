@@ -34,7 +34,7 @@ object DateTimeUtil {
     toPrettyString(time)
   }
 
-  def toString(time: OffsetDateTime, format: String): String = {
+  def toString(time: OffsetDateTime, format: String = "yyyy-MM-dd HH:mm"): String = {
     time.format(DateTimeFormatter.ofPattern(format))
   }
 
