@@ -1,17 +1,17 @@
-@(docs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(list: List[Category])(implicit request: RequestHeader)
 
 @import helper._
 @import utils.RequestHelper
 @import play.api.libs.json.Json
 @import models.JsonFormats.linkFormat
 @import models.JsonFormats.siteSettingFormat
-@views.html.admin.main("学习板块 - 文档管理", "learn", "docs") {
+@views.html.admin.main("学习板块 - 文档管理", "setting", "category") {
 <!-- BEGIN PAGE HEAD-->
 <div class="page-head">
     <!-- BEGIN PAGE TITLE -->
     <div class="page-title">
-        <h1>学习板块
-            <small>文档管理</small>
+        <h1>系统设置
+            <small>分类管理</small>
         </h1>
     </div>
     <!-- END PAGE TITLE -->
@@ -31,12 +31,12 @@
             <div class="portlet-title">
                 <div class="caption font-green-haze">
                     <i class="icon-settings font-green-haze"></i>
-                    <span class="caption-subject bold uppercase"> 文档管理</span>
+                    <span class="caption-subject bold uppercase"> 分类管理</span>
                 </div>
                 <div class="actions">
-                    <a id="save-btn" class="btn btn-circle green" href="/admin/doc/add">
-                        <i class="icon-cloud-upload"></i> 创建文档
-                    </a>
+                    <button id="add-btn" class="btn btn-circle green">
+                        <i class="icon-cloud-upload"></i> 创建分类
+                    </button>
                     <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
                 </div>
             </div>
@@ -46,29 +46,21 @@
                         <thead>
                         <tr>
                             <th class="col-md-6">
-                                <i class="fa fa-user"></i> 文档标题
+                                <i class="fa fa-user"></i> 分类名称
                             </th>
-                            <th class="col-md-1">
-                                <i class="fa fa-user"></i> 阅读
-                            </th>
-                            <th class="col-md-2">
-                                <i class="fa fa-edit"></i> 更新时间
-                            </th>
-                            <th class="col-md-3">
+                            <th class="col-md-6">
                                 <i class="fa fa-edit"></i> 操作
                             </th>
                         </tr>
                         </thead>
                         <tbody>
-                        @for(d <- docs){
+                        @for(l <- list){
                         <tr>
-                            <td>@d.title</td>
-                            <td>@d.viewStat.count</td>
-                            <td>@utils.DateTimeUtil.toString(d.timeStat.updateTime)</td>
+                            <td>@l.name</td>
                             <td>
-                                <a href="/admin/doc/edit?_id=@d._id" class="btn default btn-xs green">
-                                    <i class="fa fa-edit"></i> 编辑 </a>
-                                <button _id="@d._id" class="btn default btn-xs green remove-btn">
+                                <button _id="@l._id" _title="@l.name" class="btn default btn-xs green edit-btn">
+                                    <i class="fa fa-edit"></i> 编辑 </button>
+                                <button _id="@l._id" _title="@l.name" class="btn default btn-xs green remove-btn">
                                     <i class="fa fa-times"></i> 删除 </button>
                             </td>
                         </tr>
@@ -76,13 +68,6 @@
                         </tbody>
                     </table>
                 </div>
-                <ul class="pagination  pagination-sm pull-right">
-                    <li>
-                        <a href="/admin/docs?page=@{page - 1}" class="btn btn-xs green @if(page <= 1){disabled}"><i class="fa fa-caret-left"></i>上一页</a>
-                    </li>
-                    <li><a href="javascript:void(0);" class="btn btn-xs green disabled">@if(docs.nonEmpty){ @{page + "/" + (math.ceil(total/15.0).toInt)} }else{1/1}</a></li>
-                    <li><a href="/admin/docs?page=@{page + 1}" class="btn btn-xs green @if(page >= math.ceil(total/15.0).toInt){disabled}">下一页<i class="fa fa-caret-right"></i></a></li>
-                </ul>
             </div>
         </div>
         <!-- END SAMPLE FORM PORTLET-->
@@ -95,15 +80,31 @@
 <script>
 var token = '@CSRF.getToken.value';
 
+$('#add-btn').click(function(){
+    layer.prompt({title: '请输入分类名称', formType: 0}, function(val, index){
+      layer.close(index);
+      addCategory({name: val});
+    });
+});
+
+$('.edit-btn').click(function(){
+    var _id = $(this).attr("_id");
+    var _title = $(this).attr("_title");
+    layer.prompt({title: '请输入新分类名称', formType: 0, value: _title}, function(val, index){
+      layer.close(index);
+      addCategory({_id: _id, name: val});
+    });
+});
+
 $('.remove-btn').click(function(){
     var btn = $(this);
     var _id = $(this).attr("_id");
     var _title = $(this).attr("_title");
-    layer.confirm('删除文档？', {icon: 3, title:'提示'}, function(index){
+    layer.confirm('删除分类' + _title + '？', {icon: 3, title:'提示'}, function(index){
       $.ajax({
         type: 'post',
         data: {_id: _id},
-        url: '/admin/doc/remove?csrfToken=' + token,
+        url: '/admin/category/remove?csrfToken=' + token,
         success: function(res){
           if(res.status === 0) {
             btn.parent().parent().remove();
@@ -118,4 +119,22 @@ $('.remove-btn').click(function(){
       layer.close(index);
     });
 });
+
+function addCategory(data){
+  $.ajax({
+    type: 'post',
+    data: data,
+    url: '/admin/category?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        layer.msg("操作成功！");
+        setTimeout("window.location.reload()", 500);
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
+}
 </script>

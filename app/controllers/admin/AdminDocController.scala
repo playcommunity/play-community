@@ -87,6 +87,17 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     )
   }
 
+  def doRemove = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+    Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
+      _id => {
+        docColFuture.flatMap(_.remove(Json.obj("_id" -> _id))).map{ wr =>
+          Ok(Json.obj("status" -> 0))
+        }
+      }
+    )
+  }
+
   def chooseCatalog = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
       docCatalog <- docCatalogFuture
