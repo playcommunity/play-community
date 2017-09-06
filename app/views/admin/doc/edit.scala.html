@@ -77,6 +77,9 @@
                     </div>
                     <div class="form-actions noborder">
                         @CSRF.formField
+                        @if(docOpt.nonEmpty){
+                        <input name="_id" type="hidden" value="@docOpt.get._id" />
+                        }
                         <button type="submit" class="btn green">确认提交</button>
                         <a href="/admin/docs" class="btn default">取消修改</a>
                     </div>
@@ -104,7 +107,7 @@ $('.choose-catalog').click(function(){
     maxmin: true,
     shadeClose: true,
     area : ['800px' , '700px'],
-    content: ['/admin/doc/catalog/view', 'no']
+    content: ['/admin/doc/catalog/view@{docOpt.map(d => "?select=" + d.catalogId).getOrElse("")}', 'no']
   });
 });
 

@@ -98,14 +98,14 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     )
   }
 
-  def chooseCatalog = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def chooseCatalog(selectOpt: Option[String]) = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
       docCatalog <- docCatalogFuture
       catalogOpt <- docCatalog.find(Json.obj()).one[JsValue]
     } yield {
       catalogOpt match {
-        case Some(c) => Ok(views.html.admin.doc.chooseCatalog((c \ "nodes").as[JsArray]))
-        case None => Ok(views.html.admin.doc.chooseCatalog(Json.arr()))
+        case Some(c) => Ok(views.html.admin.doc.chooseCatalog((c \ "nodes").as[JsArray], selectOpt))
+        case None => Ok(views.html.admin.doc.chooseCatalog(Json.arr(), None))
       }
     }
   }

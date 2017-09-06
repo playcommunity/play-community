@@ -21,7 +21,7 @@ GET     /admin/doc/add                            controllers.admin.AdminDocCont
 GET     /admin/doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
 POST    /admin/doc/add                            controllers.admin.AdminDocController.doAdd
 POST    /admin/doc/remove                         controllers.admin.AdminDocController.doRemove
-GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog
+GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
 GET     /admin/doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
 GET     /todo                                     controllers.Default.todo
 
@@ -95,6 +95,7 @@ POST     /resource/owner/:ownerId                controllers.ResourceController.
 GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
 DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
 GET      /ueditor                                controllers.ResourceController.ueditorGet(action: String)
++ nocsrf
 POST     /ueditor                                controllers.ResourceController.ueditorPost(action: String)
 
 + nocsrf

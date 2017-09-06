@@ -1,4 +1,4 @@
-@(nodes: play.api.libs.json.JsArray)(implicit request: RequestHeader)
+@(nodes: play.api.libs.json.JsArray, selectOpt: Option[String])(implicit request: RequestHeader)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -41,7 +41,8 @@
 $(function() {
   $('#tree').jstree({
     'core' : {
-      'data' : @Html(nodes.toString)
+      'data' : @Html(nodes.toString),
+      'multiple': false
     },
     "plugins" : ["types", "state"],
     "state" : { "key" : "choose-catalog" },
@@ -62,6 +63,12 @@ $(function() {
      }
   });
 
+  @if(selectOpt.nonEmpty){
+  setTimeout(function(){
+    $('#tree').jstree().deselect_all(true);
+    $('#tree').jstree().select_node('#@selectOpt.get');
+  }, 500);
+  }
 });
 
 $('#choose-btn').click(function(){
