@@ -1,16 +1,19 @@
 package services
 
 import javax.inject.{Inject, Singleton}
+
+import models.DocSetting
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
+
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import reactivemongo.play.json._
 
 @Singleton
-class CounterService @Inject()(val reactiveMongoApi: ReactiveMongoApi) {
-  def counterColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-counter"))
+class CommonService @Inject()(reactiveMongoApi: ReactiveMongoApi) {
+  private def counterColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-counter"))
 
   def getNextSequence(name: String): Future[Int] = {
     counterColFuture.flatMap{ counterCol =>
@@ -23,4 +26,5 @@ class CounterService @Inject()(val reactiveMongoApi: ReactiveMongoApi) {
       }
     }
   }
+
 }

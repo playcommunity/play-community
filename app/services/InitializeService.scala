@@ -37,7 +37,7 @@ import scala.concurrent.duration._
   * 执行系统初始化任务
   */
 @Singleton
-class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, counter: CounterService)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
   def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
@@ -76,7 +76,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
   // 初始化管理员账户
   userColFuture.flatMap(_.count(Some(Json.obj("role" -> Role.ADMIN)))).map{ count =>
     if (count <= 0) {
-      counter.getNextSequence("user-sequence").map{ uid =>
+      commonService.getNextSequence("user-sequence").map{ uid =>
         userColFuture.map(_.insert(User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", "127.0.0.1", None, None)))
       }
     }

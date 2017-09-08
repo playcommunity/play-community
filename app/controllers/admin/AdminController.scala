@@ -17,25 +17,24 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import models.JsonFormats.siteSettingFormat
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, ElasticService, MailerService}
+import services.{CommonService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil}
-
 import scala.concurrent.{ExecutionContext, Future}
-
+import controllers.checkAdmin
 
 @Singleton
-class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
   def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
   def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
 
-  def index = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def index = checkAdmin.async { implicit request: Request[AnyContent] =>
     Future.successful(Ok(views.html.admin.index()))
   }
 
-  def base = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def base = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
       settingCol <- settingColFuture
       opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
@@ -44,7 +43,7 @@ class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: Reac
     }
   }
 
-  def doBaseSetting = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def doBaseSetting = checkAdmin.async { implicit request: Request[AnyContent] =>
     request.body.asJson match {
       case Some(obj) =>
         obj.validate[SiteSetting] match {
@@ -61,7 +60,7 @@ class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: Reac
     }
   }
 
-  def category = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def category = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
       categoryCol <- categoryColFuture
       list <- categoryCol.find(Json.obj()).cursor[Category]().collect[List]()
@@ -71,7 +70,7 @@ class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: Reac
   }
 
   // 临时实现，重命名时允许重名
-  def doAddCategory = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def doAddCategory = checkAdmin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> optional(nonEmptyText), "name" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
@@ -99,7 +98,7 @@ class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: Reac
     )
   }
 
-  def doRemoveCategory = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def doRemoveCategory = checkAdmin.async { implicit request: Request[AnyContent] =>
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       _id => {
@@ -108,36 +107,6 @@ class AdminController @Inject()(cc: ControllerComponents, reactiveMongoApi: Reac
         }
       }
     )
-  }
-
-  def catalog = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
-    for{
-      docCatalog <- docCatalogFuture
-      catalogOpt <- docCatalog.find(Json.obj()).one[JsValue]
-    } yield {
-      catalogOpt match {
-        case Some(c) => Ok(views.html.admin.doc.catalog((c \ "nodes").as[JsArray]))
-        case None => Ok(views.html.admin.doc.catalog(Json.arr()))
-      }
-    }
-  }
-
-  def doSetCatalog = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
-    for {
-      docCatalog <- docCatalogFuture
-    } yield {
-      val js = request.body.asJson
-      docCatalog.update(
-        Json.obj("_id" -> "1.6.x"),
-        Json.obj(
-          "$set" -> Json.obj("nodes" -> js, "updateTime" -> DateTimeUtil.now()),
-          "$setOnInsert" -> Json.obj("isDefault" -> false, "createTime" -> DateTimeUtil.now())
-        ),
-        upsert = true
-      )
-
-      Ok(Json.obj("status" -> 0))
-    }
   }
 
 }

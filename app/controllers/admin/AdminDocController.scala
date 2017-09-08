@@ -3,12 +3,12 @@ package controllers.admin
 import javax.inject._
 
 import akka.stream.Materializer
-import controllers.{checkAdmin, routes}
+import controllers.checkAdmin
 import models.JsonFormats.siteSettingFormat
 import models._
 import models.JsonFormats._
 import play.api.data.Form
-import play.api.data.Forms.{optional, text, tuple}
+import play.api.data.Forms.{optional, text, tuple, _}
 import play.api.libs.json._
 import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
@@ -17,13 +17,12 @@ import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
 import services._
 import utils.{DateTimeUtil, RequestHelper}
-import play.api.data.Forms.{tuple, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
-class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, eventService: EventService, catalogService: CatalogService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, elasticService: ElasticService, eventService: EventService, catalogService: CatalogService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -31,7 +30,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
   def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
 
 
-  def index(page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(page: Int) = checkAdmin.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     for {
       docCol <- docColFuture
@@ -42,11 +41,11 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     }
   }
 
-  def add = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def add = checkAdmin.async { implicit request: Request[AnyContent] =>
     Future.successful(Ok(views.html.admin.doc.edit(None)))
   }
 
-  def edit(_id: String) = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def edit(_id: String) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
       docCol <- docColFuture
       docOpt <- docCol.find(Json.obj("_id" -> _id)).one[Doc]
@@ -87,7 +86,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     )
   }
 
-  def doRemove = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def doRemove = checkAdmin.async { implicit request: Request[AnyContent] =>
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       _id => {
@@ -98,7 +97,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     )
   }
 
-  def chooseCatalog(selectOpt: Option[String]) = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def chooseCatalog(selectOpt: Option[String]) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
       docCatalog <- docCatalogFuture
       catalogOpt <- docCatalog.find(Json.obj()).one[JsValue]
@@ -110,11 +109,65 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     }
   }
 
-  def getCatalogName(catalogId: String) = controllers.checkAdmin.async { implicit request: Request[AnyContent] =>
+  def getCatalogName(catalogId: String) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
       name <- catalogService.getCatalogName(catalogId)
     } yield {
       Ok(Json.obj("name" -> name))
+    }
+  }
+
+  def docSetting = checkAdmin.async { implicit request: Request[AnyContent] =>
+    for {
+      settingCol <- settingColFuture
+      opt <- settingCol.find(Json.obj("_id" -> "docSetting")).one[DocSetting]
+    } yield {
+      Ok(views.html.admin.doc.setting(opt.getOrElse(DocSetting("docSetting", "", "未设置"))))
+    }
+  }
+
+  def doDocSetting = checkAdmin.async { implicit request: Request[AnyContent] =>
+    Form(tuple("defaultCatalogId" -> nonEmptyText, "defaultCatalogName" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
+      tuple => {
+        val (defaultCatalogId, defaultCatalogName) = tuple
+        for {
+          settingCol <- settingColFuture
+        } yield {
+          settingCol.update(Json.obj("_id" -> "docSetting"), Json.obj("$set" -> Json.obj("defaultCatalogId" -> defaultCatalogId, "defaultCatalogName" -> defaultCatalogName)), upsert = true)
+          Redirect(routes.AdminDocController.docSetting())
+        }
+      }
+    )
+  }
+
+  def catalog = checkAdmin.async { implicit request: Request[AnyContent] =>
+    for{
+      docCatalog <- docCatalogFuture
+      catalogOpt <- docCatalog.find(Json.obj()).one[JsValue]
+    } yield {
+      catalogOpt match {
+        case Some(c) => Ok(views.html.admin.doc.catalog((c \ "nodes").as[JsArray]))
+        case None => Ok(views.html.admin.doc.catalog(Json.arr()))
+      }
+    }
+  }
+
+  def doSetCatalog = checkAdmin.async { implicit request: Request[AnyContent] =>
+    for {
+      docCatalog <- docCatalogFuture
+    } yield {
+      val js = request.body.asJson
+      docCatalog.update(
+        Json.obj("_id" -> "1.6.x"),
+        Json.obj(
+          "$set" -> Json.obj("nodes" -> js, "updateTime" -> DateTimeUtil.now()),
+          "$setOnInsert" -> Json.obj("isDefault" -> false, "createTime" -> DateTimeUtil.now())
+        ),
+        upsert = true
+      )
+
+      Ok(Json.obj("status" -> 0))
     }
   }
 

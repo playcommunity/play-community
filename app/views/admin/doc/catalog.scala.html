@@ -129,7 +129,7 @@ $('#save-btn').click(function(){
     dataType: 'json',
     contentType: 'application/json; charset=utf-8',
     data: JSON.stringify($('#tree').jstree(true).get_json(null, { "no_state": true, "no_li_attr": true, "no_a_attr": true })[0].children),
-    url: '/admin/setting/catalog?csrfToken=' + token,
+    url: '/admin/doc/catalog?csrfToken=' + token,
     success: function(res){
       if(res.status === 0) {
         layer.msg("保存成功！");

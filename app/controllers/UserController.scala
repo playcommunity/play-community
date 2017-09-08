@@ -15,7 +15,7 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json.collection.JSONCollection
 import play.api.libs.json.{JsObject, Json}
 import reactivemongo.bson.BSONObjectID
-import services.{CounterService, EventService}
+import services.{CommonService, EventService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
@@ -23,7 +23,7 @@ import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 import scala.concurrent.duration._
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction, eventService: EventService, counter: CounterService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, resourceController: ResourceController, userAction: UserAction, eventService: EventService, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
@@ -419,7 +419,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
         } yield {
           val resOwner = resObj("author").as[Author]
           val resTitle = resObj("title").as[String]
-          counter.getNextSequence("common-news").map{index =>
+          commonService.getNextSequence("common-news").map{index =>
             newsCol.insert(News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, DateTimeUtil.now()))
           }
           Ok(Json.obj("status" -> 0))

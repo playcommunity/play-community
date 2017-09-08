@@ -56,6 +56,14 @@
                 <span class='arrow @if(menu1 == "learn"){open}'></span>
             </a>
             <ul class="sub-menu">
+                <li class='nav-item @if(menu2 == "setting"){active open}'>
+                    <a href="/admin/doc/setting" class="nav-link ">
+                        <span class="title">基础设置</span>
+                        @if(menu2 == "setting"){
+                        <span class="selected"></span>
+                        }
+                    </a>
+                </li>
                 <li class='nav-item @if(menu2 == "catalog"){active open}'>
                     <a href="/admin/doc/catalog" class="nav-link ">
                         <span class="title">目录管理</span>

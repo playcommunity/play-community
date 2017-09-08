@@ -12,13 +12,13 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, EventService}
+import services.{CommonService, EventService}
 import utils.{BitmapUtil, DateTimeUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TweetController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counter: CounterService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class TweetController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
   def tweetColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-tweet"))
   def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
   def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))

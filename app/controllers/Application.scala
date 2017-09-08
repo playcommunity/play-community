@@ -15,14 +15,14 @@ import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, ElasticService, MailerService}
+import services.{CommonService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))

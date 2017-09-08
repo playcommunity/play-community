@@ -14,55 +14,18 @@ POST    /admin/category/remove                   controllers.admin.AdminControll
 
 
 # Admin Doc
-GET     /admin/doc/catalog                        controllers.admin.AdminController.catalog
-POST    /admin/doc/catalog                        controllers.admin.AdminController.doSetCatalog
 GET     /admin/docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
+GET     /admin/doc/catalog                        controllers.admin.AdminDocController.catalog
+POST    /admin/doc/catalog                        controllers.admin.AdminDocController.doSetCatalog
 GET     /admin/doc/add                            controllers.admin.AdminDocController.add
 GET     /admin/doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
 POST    /admin/doc/add                            controllers.admin.AdminDocController.doAdd
 POST    /admin/doc/remove                         controllers.admin.AdminDocController.doRemove
+GET     /admin/doc/setting                        controllers.admin.AdminDocController.docSetting
+POST    /admin/doc/setting                        controllers.admin.AdminDocController.doDocSetting
 GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
 GET     /admin/doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
 GET     /todo                                     controllers.Default.todo
-
-# Application
-GET     /                                         controllers.Application.index(page: Int ?= 1)
-GET     /icons                                    controllers.Application.icons
-GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
-GET     /login                                    controllers.Application.login(login: Option[String])
-POST    /login                                    controllers.Application.doLogin
-GET     /register                                 controllers.Application.register
-POST    /register                                 controllers.Application.doRegister
-GET     /logout                                   controllers.Application.logout
-GET     /404                                      controllers.Application.notFound
-GET     /message                                  controllers.Application.message(title: String, message: String)
-GET     /verifyCode                               controllers.Application.verifyCode
-GET     /autoRegister                             controllers.Application.autoRegister
-POST    /activate                                 controllers.Application.doActive
-POST    /activate/email                           controllers.Application.doSendActiveMail
-
-# User
-GET     /user                                     controllers.UserController.index
-GET     /user/home                                controllers.UserController.home(uid: Option[String])
-GET     /user/message                             controllers.UserController.message
-POST    /user/message/remove                      controllers.UserController.removeMessage
-GET     /user/message/count                       controllers.UserController.messageCount()
-GET     /user/message/read                        controllers.UserController.readMessage()
-POST    /user/message/clear                       controllers.UserController.clearMessage
-GET     /user/activate                            controllers.UserController.activate
-GET     /user/setting                             controllers.UserController.setting
-POST    /user/setting                             controllers.UserController.doSetting
-POST    /user/password                            controllers.UserController.doSetPassword
-POST    /user/head                                controllers.UserController.doSetHeadImg()
-POST    /user/collect                             controllers.UserController.doCollect()
-POST    /res/reply                                controllers.UserController.doReply
-POST    /res/vote                                 controllers.UserController.doVote
-POST    /res/reply/vote                           controllers.UserController.doVoteReply
-GET     /res/reply/edit                           controllers.UserController.editReply(aid: String, rid: String)
-POST    /res/reply/edit                           controllers.UserController.doEditReply
-POST    /res/reply/remove                         controllers.UserController.doRemoveReply
-POST    /res/remove                               controllers.UserController.doRemove
-POST    /res/push                                 controllers.UserController.doPush
 
 # Doc
 GET     /docs                                     controllers.DocController.index
@@ -102,6 +65,45 @@ POST     /ueditor                                controllers.ResourceController.
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 + nocsrf
 POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
+
+# Application
+GET     /                                         controllers.Application.index(page: Int ?= 1)
+GET     /icons                                    controllers.Application.icons
+GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
+GET     /login                                    controllers.Application.login(login: Option[String])
+POST    /login                                    controllers.Application.doLogin
+GET     /register                                 controllers.Application.register
+POST    /register                                 controllers.Application.doRegister
+GET     /logout                                   controllers.Application.logout
+GET     /404                                      controllers.Application.notFound
+GET     /message                                  controllers.Application.message(title: String, message: String)
+GET     /verifyCode                               controllers.Application.verifyCode
+GET     /autoRegister                             controllers.Application.autoRegister
+POST    /activate                                 controllers.Application.doActive
+POST    /activate/email                           controllers.Application.doSendActiveMail
+
+# User
+GET     /user                                     controllers.UserController.index
+GET     /user/home                                controllers.UserController.home(uid: Option[String])
+GET     /user/message                             controllers.UserController.message
+POST    /user/message/remove                      controllers.UserController.removeMessage
+GET     /user/message/count                       controllers.UserController.messageCount()
+GET     /user/message/read                        controllers.UserController.readMessage()
+POST    /user/message/clear                       controllers.UserController.clearMessage
+GET     /user/activate                            controllers.UserController.activate
+GET     /user/setting                             controllers.UserController.setting
+POST    /user/setting                             controllers.UserController.doSetting
+POST    /user/password                            controllers.UserController.doSetPassword
+POST    /user/head                                controllers.UserController.doSetHeadImg()
+POST    /user/collect                             controllers.UserController.doCollect()
+POST    /res/reply                                controllers.UserController.doReply
+POST    /res/vote                                 controllers.UserController.doVote
+POST    /res/reply/vote                           controllers.UserController.doVoteReply
+GET     /res/reply/edit                           controllers.UserController.editReply(aid: String, rid: String)
+POST    /res/reply/edit                           controllers.UserController.doEditReply
+POST    /res/reply/remove                         controllers.UserController.doRemoveReply
+POST    /res/remove                               controllers.UserController.doRemove
+POST    /res/push                                 controllers.UserController.doPush
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
