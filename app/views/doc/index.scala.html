@@ -7,7 +7,7 @@
     case Some(children) if children.value.size > 0 => {
       <li id='@(node("id").as[String])' class="nav-item  ">
         <a href="javascript:;" class="nav-link nav-toggle">
-          <i class="icon-directions"></i>
+          <i class="icon-direction"></i>
           <span class="title">@(node("text").as[String])</span>
           <span class="arrow"></span>
         </a>
@@ -86,85 +86,44 @@
     <div class="page-top">
       <!-- BEGIN HEADER SEARCH BOX -->
       <!-- DOC: Apply "search-form-expanded" right after the "search-form" class to have half expanded search box -->
-      <form class="search-form" action="page_general_search_2.html" method="GET">
+      <form class="search-form" action="/search" method="GET">
         <div class="input-group">
-          <input type="text" class="form-control input-sm" placeholder="Search..." name="query">
+          <input type="text" class="form-control input-sm" placeholder="Search..." name="q">
           <span class="input-group-btn">
-                                <a href="javascript:;" class="btn submit">
-                                    <i class="icon-magnifier"></i>
-                                </a>
-                            </span>
+              <a href="javascript:;" class="btn submit">
+                  <i class="icon-magnifier"></i>
+              </a>
+          </span>
         </div>
       </form>
       <!-- END HEADER SEARCH BOX -->
       <!-- BEGIN TOP NAVIGATION MENU -->
+      @if(utils.RequestHelper.isLogin){
       <div class="top-menu">
         <ul class="nav navbar-nav pull-right">
-          <li class="separator hide"> </li>
-          <!-- BEGIN NOTIFICATION DROPDOWN -->
-          <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
-          <!-- DOC: Apply "dropdown-hoverable" class after "dropdown" and remove data-toggle="dropdown" data-hover="dropdown" data-close-others="true" attributes to enable hover dropdown mode -->
-          <!-- DOC: Remove "dropdown-hoverable" and add data-toggle="dropdown" data-hover="dropdown" data-close-others="true" attributes to the below A element with dropdown-toggle class -->
-          <li class="dropdown dropdown-extended dropdown-notification dropdown-dark" id="header_notification_bar">
-            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
-              <i class="icon-bell"></i>
-              <span class="badge badge-success"> 0 </span>
-            </a>
-          </li>
-          <!-- END NOTIFICATION DROPDOWN -->
-          <li class="separator hide"> </li>
-          <!-- BEGIN INBOX DROPDOWN -->
-          <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
-          <li class="dropdown dropdown-extended dropdown-inbox dropdown-dark" id="header_inbox_bar">
-            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
-              <i class="icon-envelope-open"></i>
-              <span class="badge badge-danger"> 0 </span>
-            </a>
-          </li>
-          <!-- END INBOX DROPDOWN -->
           <li class="separator hide"> </li>
           <!-- BEGIN USER LOGIN DROPDOWN -->
           <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
           <li class="dropdown dropdown-user dropdown-dark">
             <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
-              <span class="username username-hide-on-mobile"> request.session("name") </span>
+              <span class="username username-hide-on-mobile"> @request.session("name") </span>
               <!-- DOC: Do not remove below empty space(&nbsp;) as its purposely used -->
-              <img alt="" class="img-circle" src="request.session("headImg")" /> </a>
+              <img alt="" class="img-circle" src='@request.session("headImg")' /> </a>
             <ul class="dropdown-menu dropdown-menu-default">
               <li>
-                <a href="page_user_profile_1.html">
-                  <i class="icon-user"></i> My Profile </a>
+                <a href="/docs">
+                  <i class="icon-home"></i> 文档首页 </a>
               </li>
               <li>
-                <a href="app_calendar.html">
-                  <i class="icon-calendar"></i> My Calendar </a>
-              </li>
-              <li>
-                <a href="app_inbox.html">
-                  <i class="icon-envelope-open"></i> My Inbox
-                  <span class="badge badge-danger"> 3 </span>
-                </a>
-              </li>
-              <li>
-                <a href="app_todo_2.html">
-                  <i class="icon-rocket"></i> My Tasks
-                  <span class="badge badge-success"> 7 </span>
-                </a>
-              </li>
-              <li class="divider"> </li>
-              <li>
-                <a href="page_user_lock_1.html">
-                  <i class="icon-lock"></i> Lock Screen </a>
-              </li>
-              <li>
-                <a href="page_user_login_1.html">
-                  <i class="icon-key"></i> Log Out </a>
+                <a href="/">
+                  <i class="icon-book-open"></i> 社区首页 </a>
               </li>
             </ul>
           </li>
           <!-- END USER LOGIN DROPDOWN -->
         </ul>
       </div>
+      }
       <!-- END TOP NAVIGATION MENU -->
     </div>
     <!-- END PAGE TOP -->
@@ -216,12 +175,12 @@
           <div class="portlet light bordered">
             <div class="portlet-title">
               <div class="caption font-green-haze">
-                <i class="icon-settings font-green-haze"></i>
-                <span class="caption-subject bold uppercase"> 文档目录管理</span>
-                <span class="caption-helper">Horizontal Timeline</span>
+                <i class="icon-book-open font-green-haze"></i>
+                <span class="caption-subject bold uppercase"> @docOpt.map(_.title).getOrElse("尚未完成")</span>
+                <span class="caption-helper">@docOpt.map(d => utils.DateTimeUtil.toPrettyString(d.timeStat.updateTime) + "更新").getOrElse("")</span>
               </div>
               <div class="actions">
-                <a class="btn btn-circle btn-icon-only green btn-outline btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                <a class="btn btn-circle btn-icon-only btn-outline btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
               </div>
             </div>
             <div class="portlet-body">
