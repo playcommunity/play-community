@@ -59,15 +59,7 @@ $(function() {
   $('#tree').jstree({
     'core' : {
       'data' : [{text: '文档根目录', type: 'root', children: @Html(nodes.toString)}],
-      'check_callback' : function (operation, node, node_parent, node_position, more) {
-          if(operation =="move_node"){
-              if(node_parent.id == node.parent ){
-                  return true;
-              }
-              return false;
-          }
-          return true;
-      }
+      'check_callback' : true
     },
     "plugins" : ["contextmenu", "dnd", "types", "state", "wholerow"],
     "contextmenu": {

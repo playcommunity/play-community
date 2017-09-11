@@ -71,7 +71,8 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
                 "keywords" -> "",
                 "author.name" -> request.session("name"),
                 "author.headImg" -> request.session("headImg"),
-                "timeStat.updateTime" -> DateTimeUtil.now()
+                "timeStat.updateTime" -> DateTimeUtil.now(),
+                "catalogId" -> catalogId
               )))
             case None =>
               val _id = RequestHelper.generateId

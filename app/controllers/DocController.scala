@@ -42,9 +42,9 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
       if (firstDocOpt.nonEmpty && catalogOpt.nonEmpty) {
         defaultDocOpt match {
           case Some(doc) =>
-            Ok(views.html.doc.index((catalogOpt.get \ "nodes").as[JsArray], Some(doc)))
+            Ok(views.html.doc.index((catalogOpt.get \ "nodes").as[JsArray], "", Some(doc)))
           case None =>
-            Ok(views.html.doc.index((catalogOpt.get \ "nodes").as[JsArray], firstDocOpt))
+            Ok(views.html.doc.index((catalogOpt.get \ "nodes").as[JsArray], "", firstDocOpt))
         }
       } else {
         Ok(views.html.message("系统提示", "版主很懒，还未整理任何文档！"))
@@ -70,9 +70,9 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
               docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
-          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], Some(doc)))
+          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], catalogId, Some(doc)))
 
-        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], None))
+        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], catalogId, None))
       }
     }
   }

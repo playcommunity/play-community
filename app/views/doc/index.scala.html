@@ -1,4 +1,4 @@
-@(nodes: play.api.libs.json.JsArray, docOpt: Option[Doc])(implicit request: RequestHeader)
+@(nodes: play.api.libs.json.JsArray, catalogId: String, docOpt: Option[Doc])(implicit request: RequestHeader)
 
 @import helper._
 @import play.api.libs.json._
@@ -227,22 +227,20 @@
 <!-- END THEME LAYOUT SCRIPTS -->
 <script>
 $(function() {
-  @if(docOpt.nonEmpty){
-    var node = $('#@docOpt.get.catalogId');
-    node.addClass('active open');
-    node.parents('li').each(function () {
-      $(this).addClass('active');
-      $(this).find('> a > span.arrow').addClass('open');
+  var node = $('#@docOpt.map(_.catalogId).getOrElse(catalogId)');
+  node.addClass('active open');
+  node.parents('li').each(function () {
+    $(this).addClass('active');
+    $(this).find('> a > span.arrow').addClass('open');
 
-      if ($(this).parent('ul.page-sidebar-menu').size() === 1) {
-          $(this).find('> a').append('<span class="selected"></span>');
-      }
+    if ($(this).parent('ul.page-sidebar-menu').size() === 1) {
+        $(this).find('> a').append('<span class="selected"></span>');
+    }
 
-      if ($(this).children('ul.sub-menu').size() === 1) {
-          $(this).addClass('open');
-      }
-    });
-  }
+    if ($(this).children('ul.sub-menu').size() === 1) {
+        $(this).addClass('open');
+    }
+  });
 });
 </script>
 </body>
