@@ -24,7 +24,7 @@ class CatalogService @Inject() (val reactiveMongoApi: ReactiveMongoApi) {
   def getCatalogName(catalogId: String): Future[String] = {
     for{
       docCatalog <- docCatalogFuture
-      catalogOpt <- docCatalog.find().one[JsObject]
+      catalogOpt <- docCatalog.find(Json.obj()).one[JsObject]
     } yield {
       catalogOpt match {
         case Some(obj) =>
