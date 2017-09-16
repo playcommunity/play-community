@@ -1,0 +1,137 @@
+@(nodes: play.api.libs.json.JsArray)(implicit request: RequestHeader)
+
+@import helper._
+@import utils.RequestHelper
+@import play.api.libs.json.Json
+@import models.JsonFormats.linkFormat
+@import models.JsonFormats.siteSettingFormat
+@views.html.admin.main("系统设置 - 基础设置", "learn", "catalog") {
+<link rel="stylesheet" href="/assets/theme/global/plugins/jstree/themes/default/style.min.css" />
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>板块设置
+            <small>学习板块设置</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 文档目录管理</span>
+                </div>
+                <div class="actions">
+                    <a id="save-btn" class="btn btn-circle green" href="javascript:;">
+                        <i class="icon-cloud-upload"></i> 保存修改
+                    </a>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div id="tree" class="portlet-body">
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+<!-- END PAGE BASE CONTENT -->
+
+}
+<script src="/assets/plugins/layer/layer.js"></script>
+<script src="/assets/theme/global/plugins/jstree/jstree.min.js"></script>
+<script>
+var token = '@CSRF.getToken.value';
+
+$(function() {
+  $('#tree').jstree({
+    'core' : {
+      'data' : [{text: '文档根目录', type: 'root', children: @Html(nodes.toString)}],
+      'check_callback' : true
+    },
+    "plugins" : ["contextmenu", "dnd", "types", "state", "wholerow"],
+    "contextmenu": {
+      "items": context_menu
+    },
+    "state" : { "key" : "catalog-tree" },
+    "types" : {
+       "default" : {
+           "icon" : "fa fa-bookmark icon-state-success icon-lg "
+       },
+       "root" : {
+           "icon" : "fa fa-book icon-state-success icon-lg "
+       }
+    }
+  });
+});
+
+function context_menu(node){
+  var items = {
+      "Create": {
+          "separator_before": false,
+          "separator_after": false,
+          "label": "新建目录",
+          "icon": "fa fa-plus icon-state-success icon-lg",
+          "action": function (data) {
+              var inst = $.jstree.reference(data.reference);
+              var new_node = {text: '新建目录', data: {url: ''}};
+              var $node = inst.create_node(node, new_node);
+              inst.edit($node);
+          }
+      },
+      "Rename": {
+          "separator_before": false,
+          "separator_after": false,
+          "label": "编辑目录",
+          "icon": "fa fa-pencil-square-o icon-state-success icon-lg",
+          "action": function (data) {
+              var inst = $.jstree.reference(data.reference);
+              inst.edit(node);
+          }
+      },
+      "Remove": {
+          "separator_before": false,
+          "separator_after": false,
+          "label": "删除目录",
+          "icon": "fa fa-times icon-state-success icon-lg",
+          "action": function (data) {
+              var inst = $.jstree.reference(data.reference);
+              inst.delete_node(node);
+          }
+      },
+  };
+  return items;
+}
+
+$('#save-btn').click(function(){
+  $.ajax({
+    type: 'post',
+    dataType: 'json',
+    contentType: 'application/json; charset=utf-8',
+    data: JSON.stringify($('#tree').jstree(true).get_json(null, { "no_state": true, "no_li_attr": true, "no_a_attr": true })[0].children),
+    url: '/admin/doc/catalog?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        layer.msg("保存成功！");
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
+});
+
+</script>

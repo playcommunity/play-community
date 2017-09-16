@@ -1,0 +1,79 @@
+@(nodes: play.api.libs.json.JsArray, selectOpt: Option[String])(implicit request: RequestHeader)
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="/assets/theme/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/css/components.min.css" rel="stylesheet" id="style_components" type="text/css" />
+    <link rel="stylesheet" href="/assets/theme/global/plugins/jstree/themes/default/style.min.css" />
+</head>
+<body>
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 选择目录</span>
+                </div>
+                <div class="actions">
+                    <a id="choose-btn" class="btn btn-circle green" href="javascript:;">
+                        <i class="icon-cloud-upload"></i> 确认选择
+                    </a>
+                </div>
+            </div>
+            <div id="tree" class="portlet-body">
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+<!-- END PAGE BASE CONTENT -->
+</body>
+<script src="/assets/theme/global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jstree/jstree.min.js"></script>
+<script>
+$(function() {
+  $('#tree').jstree({
+    'core' : {
+      'data' : @Html(nodes.toString),
+      'multiple': false
+    },
+    "plugins" : ["types", "state"],
+    "state" : { "key" : "choose-catalog" },
+    "types" : {
+       "default" : {
+           "icon" : "fa fa-bookmark icon-state-success icon-lg "
+       },
+       "gray" : {
+           "icon" : "fa fa-bookmark icon-state-default icon-lg "
+       }
+    }
+  });
+
+  $('#tree').on('changed.jstree', function (e, data) {
+     if(data.action == "select_node"){
+         parent.$('#catalogIdInput').val(data.node.id);
+         parent.$('#catalogTextInput').val(data.node.text);
+     }
+  });
+
+  @if(selectOpt.nonEmpty){
+  setTimeout(function(){
+    $('#tree').jstree().deselect_all(true);
+    $('#tree').jstree().select_node('#@selectOpt.get');
+  }, 500);
+  }
+});
+
+$('#choose-btn').click(function(){
+  var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+  parent.layer.close(index);
+});
+</script>
+</html>

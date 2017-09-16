@@ -1,0 +1,140 @@
+@(list: List[Category])(implicit request: RequestHeader)
+
+@import helper._
+@import utils.RequestHelper
+@import play.api.libs.json.Json
+@import models.JsonFormats.linkFormat
+@import models.JsonFormats.siteSettingFormat
+@views.html.admin.main("学习板块 - 文档管理", "setting", "category") {
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>系统设置
+            <small>分类管理</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 分类管理</span>
+                </div>
+                <div class="actions">
+                    <button id="add-btn" class="btn btn-circle green">
+                        <i class="icon-cloud-upload"></i> 创建分类
+                    </button>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div class="table-scrollable">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th class="col-md-6">
+                                <i class="fa fa-user"></i> 分类名称
+                            </th>
+                            <th class="col-md-6">
+                                <i class="fa fa-edit"></i> 操作
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @for(l <- list){
+                        <tr>
+                            <td>@l.name</td>
+                            <td>
+                                <button _id="@l._id" _title="@l.name" class="btn default btn-xs green edit-btn">
+                                    <i class="fa fa-edit"></i> 编辑 </button>
+                                <button _id="@l._id" _title="@l.name" class="btn default btn-xs green remove-btn">
+                                    <i class="fa fa-times"></i> 删除 </button>
+                            </td>
+                        </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+<!-- END PAGE BASE CONTENT -->
+
+}
+<script src="/assets/plugins/layer/layer.js"></script>
+<script>
+var token = '@CSRF.getToken.value';
+
+$('#add-btn').click(function(){
+    layer.prompt({title: '请输入分类名称', formType: 0}, function(val, index){
+      layer.close(index);
+      addCategory({name: val});
+    });
+});
+
+$('.edit-btn').click(function(){
+    var _id = $(this).attr("_id");
+    var _title = $(this).attr("_title");
+    layer.prompt({title: '请输入新分类名称', formType: 0, value: _title}, function(val, index){
+      layer.close(index);
+      addCategory({_id: _id, name: val});
+    });
+});
+
+$('.remove-btn').click(function(){
+    var btn = $(this);
+    var _id = $(this).attr("_id");
+    var _title = $(this).attr("_title");
+    layer.confirm('删除分类' + _title + '？', {icon: 3, title:'提示'}, function(index){
+      $.ajax({
+        type: 'post',
+        data: {_id: _id},
+        url: '/admin/category/remove?csrfToken=' + token,
+        success: function(res){
+          if(res.status === 0) {
+            btn.parent().parent().remove();
+          } else {
+            layer.msg(res.msg||res.code);
+          }
+        }, error: function(e){
+          layer.msg('请求异常，请重试');
+        }
+      });
+
+      layer.close(index);
+    });
+});
+
+function addCategory(data){
+  $.ajax({
+    type: 'post',
+    data: data,
+    url: '/admin/category?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        layer.msg("操作成功！");
+        setTimeout("window.location.reload()", 500);
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
+}
+</script>

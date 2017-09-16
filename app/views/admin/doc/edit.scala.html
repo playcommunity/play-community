@@ -1,0 +1,119 @@
+@(docOpt: Option[Doc])(implicit request: RequestHeader)
+
+@import helper._
+@views.html.admin.main("系统设置 - 基础设置", "learn", "docs") {
+<link href="/assets/theme/global/plugins/bootstrap-daterangepicker/daterangepicker.min.css" rel="stylesheet" type="text/css" />
+<style>
+</style>
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>学习板块
+            <small>添加/编辑文档</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 添加/编辑文档</span>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-circle btn-icon-only blue" href="javascript:;">
+                        <i class="icon-cloud-upload"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only green" href="javascript:;">
+                        <i class="icon-wrench"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only red" href="javascript:;">
+                        <i class="icon-trash"></i>
+                    </a>
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div id="app" class="portlet-body form">
+                <form role="form" action="/admin/doc/add" method="post">
+                    <div class="form-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group form-md-line-input has-success" style="margin-bottom: 0px;">
+                                    <div class="input-icon">
+                                        <input name="title" type="text" class="form-control" value='@docOpt.map(_.title).getOrElse("")'>
+                                        <label>标题</label>
+                                        <i class="fa fa-bell-o"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group form-md-line-input has-success" style="margin-bottom: 0px;">
+                                    <div class="input-group">
+                                        <div class="input-group-control">
+                                            <input id="catalogIdInput" name="catalogId" type="hidden" value='@docOpt.map(_.catalogId).getOrElse("")'>
+                                            <input id="catalogTextInput" type="text" class="form-control" placeholder="请选择目录" readonly>
+                                            <label>关联目录</label>
+                                        </div>
+                                        <span class="input-group-btn btn-right">
+                                            <button type="button" class="btn green-haze choose-catalog"><i class="fa fa-sitemap"></i> 选择目录 </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>
+                    </div>
+                    <div class="form-actions noborder">
+                        @CSRF.formField
+                        @if(docOpt.nonEmpty){
+                        <input name="_id" type="hidden" value="@docOpt.get._id" />
+                        }
+                        <button type="submit" class="btn green">确认提交</button>
+                        <a href="/admin/docs" class="btn default">取消修改</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+
+}
+<script src="/assets/plugins/layer/layer.js"></script>
+<script type="text/javascript" src="/assets/plugins/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" src="/assets/plugins/ueditor/ueditor.all.min.js"></script>
+<script type="text/javascript">
+var token = '@CSRF.getToken.value';
+var ue = UE.getEditor('container', {
+    scaleEnabled: true
+});
+
+$('.choose-catalog').click(function(){
+  layer.open({
+    type: 2,
+    title: '选择目录',
+    maxmin: true,
+    shadeClose: true,
+    area : ['800px' , '700px'],
+    content: ['/admin/doc/catalog/view@{docOpt.map(d => "?select=" + d.catalogId).getOrElse("")}', 'no']
+  });
+});
+
+$(document).ready(function(){
+    $.get("/admin/doc/catalog/" + $("#catalogIdInput").val(), function(data){
+        $("#catalogTextInput").val(data.name);
+    });
+});
+</script>

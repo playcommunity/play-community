@@ -1,0 +1,88 @@
+@(docSetting: DocSetting)(implicit request: RequestHeader)
+
+@import helper._
+@import utils.RequestHelper
+@views.html.admin.main("文档设置 - 基础设置", "learn", "setting") {
+<link href="/assets/theme/global/plugins/bootstrap-daterangepicker/daterangepicker.min.css" rel="stylesheet" type="text/css" />
+
+<!-- BEGIN PAGE HEAD-->
+<div class="page-head">
+    <!-- BEGIN PAGE TITLE -->
+    <div class="page-title">
+        <h1>文档设置
+            <small>基础设置</small>
+        </h1>
+    </div>
+    <!-- END PAGE TITLE -->
+    <!-- BEGIN PAGE TOOLBAR -->
+    <div class="page-toolbar">
+
+    </div>
+    <!-- END PAGE TOOLBAR -->
+</div>
+<!-- END PAGE HEAD-->
+
+<!-- BEGIN PAGE BASE CONTENT -->
+<div class="row">
+    <div class="col-md-12">
+        <!-- BEGIN SAMPLE FORM PORTLET-->
+        <div class="portlet light bordered">
+            <div class="portlet-title">
+                <div class="caption font-green-haze">
+                    <i class="icon-settings font-green-haze"></i>
+                    <span class="caption-subject bold uppercase"> 基础设置</span>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-circle btn-icon-only btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+                </div>
+            </div>
+            <div id="app" class="portlet-body form">
+                <form action="/admin/doc/setting" method="post">
+                    <div class="form-body">
+                        <div class="form-group form-md-line-input has-success" style="margin-bottom: 0px;">
+                            <div class="input-group">
+                                <div class="input-group-control">
+                                    <input id="catalogIdInput" name="defaultCatalogId" type="hidden" value='@docSetting.defaultCatalogId'>
+                                    <input id="catalogTextInput" name="defaultCatalogName" type="text" value="@docSetting.defaultCatalogName" class="form-control" placeholder="请选择目录" title="进入文档首页时默认展示的目录节点。" readonly>
+                                    <label>默认目录</label>
+                                </div>
+                                <span class="input-group-btn btn-right">
+                                    <button type="button" class="btn green-haze choose-catalog"><i class="fa fa-sitemap"></i> 选择目录 </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <div class="row">
+                            <div class="col-md-10">
+                                @CSRF.formField
+                                <button type="submit" class="btn blue">保存设置</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- END SAMPLE FORM PORTLET-->
+    </div>
+</div>
+
+}
+
+<script src="/assets/plugins/layer/layer.js"></script>
+<script type="text/javascript">
+var token = '@CSRF.getToken.value';
+
+$('.choose-catalog').click(function(){
+  layer.open({
+    type: 2,
+    title: '选择目录',
+    maxmin: true,
+    shadeClose: true,
+    area : ['800px' , '700px'],
+    content: ['/admin/doc/catalog/view?select=@{docSetting.defaultCatalogId}', 'no']
+  });
+});
+
+
+</script>

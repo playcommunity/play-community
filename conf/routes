@@ -6,7 +6,65 @@
 GET     /admin                                    controllers.admin.AdminController.index
 GET     /admin/setting/base                       controllers.admin.AdminController.base
 POST    /admin/setting/base                       controllers.admin.AdminController.doBaseSetting
+
+# Admin Category
+GET     /admin/category                          controllers.admin.AdminController.category
+POST    /admin/category                          controllers.admin.AdminController.doAddCategory
+POST    /admin/category/remove                   controllers.admin.AdminController.doRemoveCategory
+
+
+# Admin Doc
+GET     /admin/docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
+GET     /admin/doc/catalog                        controllers.admin.AdminDocController.catalog
+POST    /admin/doc/catalog                        controllers.admin.AdminDocController.doSetCatalog
+GET     /admin/doc/add                            controllers.admin.AdminDocController.add
+GET     /admin/doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
+POST    /admin/doc/add                            controllers.admin.AdminDocController.doAdd
+POST    /admin/doc/remove                         controllers.admin.AdminDocController.doRemove
+GET     /admin/doc/setting                        controllers.admin.AdminDocController.docSetting
+POST    /admin/doc/setting                        controllers.admin.AdminDocController.doDocSetting
+GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
+GET     /admin/doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
 GET     /todo                                     controllers.Default.todo
+
+# Doc
+GET     /docs                                     controllers.DocController.index
+GET     /doc/view                                 controllers.DocController.view(catalogId: String)
+
+# Article
+GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /article/add                              controllers.ArticleController.add
+POST    /article/add                              controllers.ArticleController.doAdd
+GET     /article/edit                             controllers.ArticleController.edit(_id: String)
+GET     /article/view                             controllers.ArticleController.view(_id: String)
+POST    /article/top                              controllers.ArticleController.doSetTop
+
+# QA
+GET     /qas                                     controllers.QAController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /qa/add                                  controllers.QAController.add
+POST    /qa/add                                  controllers.QAController.doAdd
+GET     /qa/edit                                 controllers.QAController.edit(_id: String)
+GET     /qa/view                                 controllers.QAController.view(_id: String)
+POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
+
+# Tweet
+GET     /tweets                                  controllers.TweetController.index(nav: String ?= "0", page: Int ?= 1)
+GET     /tweet/json                              controllers.TweetController.getLatestAndHot(count: Int ?= 15)
+POST    /tweet/add                               controllers.TweetController.doAdd
+GET     /tweet/view                              controllers.TweetController.view(_id: String)
+
+# Resource
+POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
+GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
+DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
+GET      /ueditor                                controllers.ResourceController.ueditorGet(action: String)
++ nocsrf
+POST     /ueditor                                controllers.ResourceController.ueditorPost(action: String)
+
++ nocsrf
+GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
++ nocsrf
+POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Application
 GET     /                                         controllers.Application.index(page: Int ?= 1)
@@ -46,46 +104,6 @@ POST    /res/reply/edit                           controllers.UserController.doE
 POST    /res/reply/remove                         controllers.UserController.doRemoveReply
 POST    /res/remove                               controllers.UserController.doRemove
 POST    /res/push                                 controllers.UserController.doPush
-
-
-# Doc
-GET     /docs                                     controllers.DocController.index(path: String ?= "/", page: Int ?= 1)
-GET     /doc/add                                  controllers.DocController.add
-POST    /doc/add                                  controllers.DocController.doAdd
-GET     /doc/edit                                 controllers.DocController.edit(_id: String)
-GET     /doc/view                                 controllers.DocController.view(_id: String)
-
-# Article
-GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
-GET     /article/add                              controllers.ArticleController.add
-POST    /article/add                              controllers.ArticleController.doAdd
-GET     /article/edit                             controllers.ArticleController.edit(_id: String)
-GET     /article/view                             controllers.ArticleController.view(_id: String)
-POST    /article/top                              controllers.ArticleController.doSetTop
-
-# QA
-GET     /qas                                     controllers.QAController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
-GET     /qa/add                                  controllers.QAController.add
-POST    /qa/add                                  controllers.QAController.doAdd
-GET     /qa/edit                                 controllers.QAController.edit(_id: String)
-GET     /qa/view                                 controllers.QAController.view(_id: String)
-POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
-
-# Tweet
-GET     /tweets                                  controllers.TweetController.index(nav: String ?= "0", page: Int ?= 1)
-GET     /tweet/json                              controllers.TweetController.getLatestAndHot(count: Int ?= 15)
-POST    /tweet/add                               controllers.TweetController.doAdd
-GET     /tweet/view                              controllers.TweetController.view(_id: String)
-
-# Resource
-POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
-GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
-DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
-
-+ nocsrf
-GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
-+ nocsrf
-POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")

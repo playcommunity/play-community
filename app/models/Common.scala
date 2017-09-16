@@ -2,7 +2,7 @@ package models
 
 import java.time.OffsetDateTime
 
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
 import models.JsonFormats.authorFormat
 
@@ -38,18 +38,23 @@ case class Doc (
   title: String,
   content: String,
   keywords: String,
-  editorType: String,
   author: Author,
-  categoryPath: String,
-  categoryName: String,
-  tags: List[String],
   replies: List[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
   replyStat: ReplyStat,
   collectStat: CollectStat,
   timeStat: DocTimeStat,
-  index: Int // 显示排序
+  catalogId: String
+)
+
+// 已整理文档目录
+case class DocCatalog(
+  _id: String,
+  nodes: JsArray,
+  isDefault: Boolean,
+  createTime: OffsetDateTime,
+  updateTime: OffsetDateTime
 )
 
 // 分享

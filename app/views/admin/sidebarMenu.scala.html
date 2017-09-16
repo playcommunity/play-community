@@ -9,7 +9,7 @@
     <!-- DOC: Set data-keep-expand="true" to keep the submenues expanded -->
     <!-- DOC: Set data-auto-speed="200" to adjust the sub menu slide up/down speed -->
     <ul class="page-sidebar-menu   " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
-        <li class="nav-item start @if(menu1 == "dashboard"){active open}">
+        <li class='nav-item start @if(menu1 == "dashboard"){active open}'>
             <a href="/admin" class="nav-link nav-toggle">
                 <i class="icon-home"></i>
                 <span class="title">管理首页</span>
@@ -21,17 +21,17 @@
         <li class="heading">
             <h3 class="uppercase">系统设置</h3>
         </li>
-        <li class="nav-item  @if(menu1 == "setting"){active open}">
+        <li class='nav-item  @if(menu1 == "setting"){active open}'>
             <a href="javascript:;" class="nav-link nav-toggle">
                 <i class="icon-diamond"></i>
                 <span class="title">系统设置</span>
                 @if(menu1 == "setting"){
                 <span class="selected"></span>
                 }
-                <span class="arrow @if(menu1 == "setting"){open}"></span>
+                <span class='arrow @if(menu1 == "setting"){open}'></span>
             </a>
             <ul class="sub-menu">
-                <li class="nav-item  @if(menu1 == "setting"){active open}">
+                <li class='nav-item @if(menu2 == "base"){active}'>
                     <a href="/admin/setting/base" class="nav-link ">
                         <span class="title">基础设置</span>
                         @if(menu1 == "setting-base"){
@@ -39,31 +39,42 @@
                         }
                     </a>
                 </li>
-                <li class="nav-item  ">
-                    <a href="/todo" class="nav-link ">
-                        <span class="title">高级设置</span>
+                <li class='nav-item @if(menu2 == "category"){active}'>
+                    <a href="/admin/category" class="nav-link ">
+                        <span class="title">分类管理</span>
                     </a>
                 </li>
             </ul>
         </li>
         <li class="heading">
-            <h3 class="uppercase">系统管理</h3>
+            <h3 class="uppercase">板块设置</h3>
         </li>
-        <li class="nav-item  ">
+        <li class='nav-item  @if(menu1 == "learn"){active open}'>
             <a href="javascript:;" class="nav-link nav-toggle">
                 <i class="icon-layers"></i>
-                <span class="title">用户管理</span>
-                <span class="arrow"></span>
+                <span class="title">学习板块</span>
+                <span class='arrow @if(menu1 == "learn"){open}'></span>
             </a>
             <ul class="sub-menu">
-                <li class="nav-item  ">
-                    <a href="/todo" class="nav-link ">
-                        <span class="title">用户列表</span>
+                <li class='nav-item @if(menu2 == "setting"){active open}'>
+                    <a href="/admin/doc/setting" class="nav-link ">
+                        <span class="title">基础设置</span>
+                        @if(menu2 == "setting"){
+                        <span class="selected"></span>
+                        }
                     </a>
                 </li>
-                <li class="nav-item  ">
-                    <a href="/todo" class="nav-link ">
-                        <span class="title">用户分析</span>
+                <li class='nav-item @if(menu2 == "catalog"){active open}'>
+                    <a href="/admin/doc/catalog" class="nav-link ">
+                        <span class="title">目录管理</span>
+                        @if(menu2 == "catalog"){
+                        <span class="selected"></span>
+                        }
+                    </a>
+                </li>
+                <li class='nav-item @if(menu2 == "docs"){active open}'>
+                    <a href="/admin/docs" class="nav-link ">
+                        <span class="title">文档管理</span>
                     </a>
                 </li>
             </ul>

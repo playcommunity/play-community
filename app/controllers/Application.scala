@@ -15,14 +15,14 @@ import play.api.mvc._
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.play.json.collection.JSONCollection
-import services.{CounterService, ElasticService, MailerService}
+import services.{CommonService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CounterService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -175,7 +175,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
     userColFuture.flatMap(_.find(Json.obj("login" -> RequestHelper.getLogin)).one[User]).flatMap {
       case Some(u) =>
         Future.successful {
-          Redirect(routes.DocController.index("/", 1))
+          Redirect(routes.Application.index(1))
             .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
         }
       case None =>
@@ -184,7 +184,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
           uid <- counterService.getNextSequence("user-sequence")
           _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
         } yield {
-          Redirect(routes.DocController.index("/", 1))
+          Redirect(routes.Application.index(1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER)
         }
     }

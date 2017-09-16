@@ -14,24 +14,25 @@
 <head>
     <meta charset="utf-8" />
     <title>@title</title>
+    <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1" name="viewport" />
     <meta content="Preview page of Metronic Admin Theme #4 for statistics, charts, recent events and reports" name="description" />
     <meta content="" name="author" />
     <!-- BEGIN GLOBAL MANDATORY STYLES -->
     <!--<link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css" />-->
-    <link href="/assets/admin/assets/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/admin/assets/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/admin/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- END GLOBAL MANDATORY STYLES -->
     <!-- BEGIN THEME GLOBAL STYLES -->
-    <link href="/assets/admin/assets/global/css/components.min.css" rel="stylesheet" id="style_components" type="text/css" />
-    <link href="/assets/admin/assets/global/css/plugins.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/global/css/components.min.css" rel="stylesheet" id="style_components" type="text/css" />
+    <link href="/assets/theme/global/css/plugins.min.css" rel="stylesheet" type="text/css" />
     <!-- END THEME GLOBAL STYLES -->
     <!-- BEGIN THEME LAYOUT STYLES -->
-    <link href="/assets/admin/assets/layouts/layout4/css/layout.min.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/admin/assets/layouts/layout4/css/themes/default.min.css" rel="stylesheet" type="text/css" id="style_color" />
-    <link href="/assets/admin/assets/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/layouts/layout4/css/layout.min.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/theme/layouts/layout4/css/themes/default.min.css" rel="stylesheet" type="text/css" id="style_color" />
+    <link href="/assets/theme/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
     <!-- END THEME LAYOUT STYLES -->
     <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
 <!-- END HEAD -->
@@ -57,14 +58,14 @@
         <div class="page-top">
             <!-- BEGIN HEADER SEARCH BOX -->
             <!-- DOC: Apply "search-form-expanded" right after the "search-form" class to have half expanded search box -->
-            <form class="search-form" action="page_general_search_2.html" method="GET">
+            <form class="search-form" action="/search" method="GET">
                 <div class="input-group">
-                    <input type="text" class="form-control input-sm" placeholder="Search..." name="query">
+                    <input type="text" class="form-control input-sm" placeholder="Search..." name="q">
                     <span class="input-group-btn">
-                                <a href="javascript:;" class="btn submit">
-                                    <i class="icon-magnifier"></i>
-                                </a>
-                            </span>
+                        <a href="javascript:;" class="btn submit">
+                            <i class="icon-magnifier"></i>
+                        </a>
+                    </span>
                 </div>
             </form>
             <!-- END HEADER SEARCH BOX -->
@@ -103,33 +104,16 @@
                             <img alt="" class="img-circle" src="@request.session("headImg")" /> </a>
                         <ul class="dropdown-menu dropdown-menu-default">
                             <li>
-                                <a href="page_user_profile_1.html">
-                                    <i class="icon-user"></i> My Profile </a>
+                                <a href="/docs">
+                                    <i class="icon-home"></i> 文档首页 </a>
                             </li>
                             <li>
-                                <a href="app_calendar.html">
-                                    <i class="icon-calendar"></i> My Calendar </a>
+                                <a href="/">
+                                    <i class="icon-book-open"></i> 社区首页 </a>
                             </li>
                             <li>
-                                <a href="app_inbox.html">
-                                    <i class="icon-envelope-open"></i> My Inbox
-                                    <span class="badge badge-danger"> 3 </span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="app_todo_2.html">
-                                    <i class="icon-rocket"></i> My Tasks
-                                    <span class="badge badge-success"> 7 </span>
-                                </a>
-                            </li>
-                            <li class="divider"> </li>
-                            <li>
-                                <a href="page_user_lock_1.html">
-                                    <i class="icon-lock"></i> Lock Screen </a>
-                            </li>
-                            <li>
-                                <a href="page_user_login_1.html">
-                                    <i class="icon-key"></i> Log Out </a>
+                                <a href="/">
+                                    <i class="icon-logout"></i> 退出登录 </a>
                             </li>
                         </ul>
                     </li>
@@ -178,23 +162,23 @@
 <!-- END FOOTER -->
 
 <!--[if lt IE 9]>
-<script src="/assets/admin/assets/global/plugins/respond.min.js"></script>
-<script src="/assets/admin/assets/global/plugins/excanvas.min.js"></script>
-<script src="/assets/admin/assets/global/plugins/ie8.fix.min.js"></script>
+<script src="/assets/theme/global/plugins/respond.min.js"></script>
+<script src="/assets/theme/global/plugins/excanvas.min.js"></script>
+<script src="/assets/theme/global/plugins/ie8.fix.min.js"></script>
 <![endif]-->
 <!-- BEGIN CORE PLUGINS -->
-<script src="/assets/admin/assets/global/plugins/jquery.min.js" type="text/javascript"></script>
-<script src="/assets/admin/assets/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
-<script src="/assets/admin/assets/global/plugins/js.cookie.min.js" type="text/javascript"></script>
-<script src="/assets/admin/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
-<script src="/assets/admin/assets/global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/js.cookie.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
 <!-- END CORE PLUGINS -->
 
 <!-- BEGIN THEME GLOBAL SCRIPTS -->
-<script src="/assets/admin/assets/global/scripts/app.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/scripts/app.min.js" type="text/javascript"></script>
 <!-- END THEME GLOBAL SCRIPTS -->
 <!-- BEGIN THEME LAYOUT SCRIPTS -->
-<script src="/assets/admin/assets/layouts/layout4/scripts/layout.min.js" type="text/javascript"></script>
+<script src="/assets/theme/layouts/layout4/scripts/layout.min.js" type="text/javascript"></script>
 <!-- END THEME LAYOUT SCRIPTS -->
 <script>
 </script>

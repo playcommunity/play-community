@@ -1,109 +1,248 @@
-@(categoryList: List[Category], path: String, docs: List[Doc], topReplyUsers: List[User], topViewDocs: List[Doc], topReplyDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(nodes: play.api.libs.json.JsArray, catalogId: String, docOpt: Option[Doc])(implicit request: RequestHeader)
 
-@import utils.RequestHelper
-@main(s"${App.siteSetting.name} - 社区文档", "doc") {
-<div class="main layui-clear">
-  <div class="wrap">
-    <div class="content">
-      <div class="fly-tab">
-        <div class="layui-tab layui-tab-brief">
-          <ul class="layui-tab-title">
-            <li> <a href="/docs" @if(path == "/"){class="layui-this"}>全部</a> </li>
-            @for(c <- categoryList){
-            <li> <a href="/docs?path=@c.path" @if(path == c.path){class="layui-this"}>@c.name</a> </li>
-            }
-          </ul>
-        </div>
-        <i class="layui-icon fly-search">&#xe615;</i>
-      </div>
-
-      <ul class="fly-panel fly-list">
-        @for(a <- docs){
-        <li class="fly-list-li">
-          <a href="/user/home?uid=@{a.author._id}" class="fly-list-avatar">
-            <img src="@a.author.headImg" alt="">
-          </a>
-          <h2 class="fly-tip">
-            <a href="/doc/view?_id=@a._id">@a.title</a>
-          </h2>
-          <p>
-            <span><a href="/user/home?uid=@{a.author._id}">@a.author.name</a></span>
-            <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
-            <span><a href="/docs?path=@{a.categoryPath}&page=@page">@a.categoryName</a></span>
-            <span class="fly-list-hint">
-              <i class="layui-icon" title="收藏">&#xe600;</i> @a.collectStat.count
-              <i class="iconfont icon-zan" title="点赞"></i> @a.voteStat.count
-              <i class="iconfont" title="回答">&#xe60c;</i> @a.replies.size
-              <i class="iconfont" title="人气">&#xe60b;</i> @a.viewStat.count
-            </span>
-          </p>
-        </li>
-        }
-      </ul>
-
-      <div style="text-align: center">
-        <div class="laypage-main">
-          <a href="/docs?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(docs.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/docs?page=@{page+1}" class="laypage-next">下一页</a></div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="edge">
-    @if(RequestHelper.isAdmin){
-    <div class="jie-add">
-      <a href="/doc/add" class="layui-btn layui-btn-big">创建文档</a>
-      <a href="/user" class="layui-btn layui-btn-big layui-btn-normal" style="margin-left: 10px;">我的文档</a>
-    </div>
+@import helper._
+@import play.api.libs.json._
+@renderNode(node: JsValue) = {
+  @((node \ "children").asOpt[JsArray]) match {
+    case Some(children) if children.value.size > 0 => {
+      <li id='@(node("id").as[String])' class="nav-item  ">
+        <a href="javascript:;" class="nav-link nav-toggle">
+          <i class="icon-direction"></i>
+          <span class="title">@(node("text").as[String])</span>
+          <span class="arrow"></span>
+        </a>
+        <ul class="sub-menu">
+          @for(n <- children.value){
+            @renderNode(n)
+          }
+        </ul>
+      </li>
     }
-    <div class="fly-panel leifeng-rank">
-      <h3 class="fly-panel-title">回答月榜</h3>
-      <dl>
-        @for(u <- topReplyUsers){
-        <dd>
-          <a href="/user/home?uid=@u._id">
-            <img src="@{u.setting.headImg}">
-            <cite>@{u.setting.name}</cite>
-            <i>@{u.stat.replyCount}次回答</i>
-          </a>
-        </dd>
-        }
-      </dl>
-    </div>
 
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">近期热文</dt>
-      @for(a <- topViewDocs){
-      <dd>
-        <a href="/doc/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
-      </dd>
-      }
-    </dl>
-
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">近期热议</dt>
-      @for(a <- topReplyDocs){
-      <dd>
-        <a href="/doc/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60c;</i> @a.replyStat.count</span>
-      </dd>
-      }
-    </dl>
-
-    <div class="fly-panel fly-link">
-      <h3 class="fly-panel-title">友情链接</h3>
-      <dl>
-        @for(l <- App.siteSetting.links){
-        <dd>
-          <a href="@l.url" target="@l.target">@l.title</a>
-        </dd>
-        }
-      </dl>
-    </div>
-  </div>
-</div>
+    case _ => {
+      <li id='@(node("id").as[String])' class='nav-item '>
+        <a href='/doc/view?catalogId=@(node("id").as[String])'>
+          <i class="icon-direction"></i>
+          <span class="title">@(node("text").as[String])</span>
+        </a>
+      </li>
+    }
+  }
 }
 
+<!DOCTYPE html>
+<!-- Metronic Version: 4.7.5 -->
+<!--[if IE 8]> <html lang="en" class="ie8 no-js"> <![endif]-->
+<!--[if IE 9]> <html lang="en" class="ie9 no-js"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="en">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+
+<head>
+  <meta charset="utf-8" />
+  <title></title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <meta content="Preview page of Metronic Admin Theme #4 for statistics, charts, recent events and reports" name="description" />
+  <meta content="" name="author" />
+  <!-- BEGIN GLOBAL MANDATORY STYLES -->
+  <!--<link href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700&subset=all" rel="stylesheet" type="text/css" />-->
+  <link href="/assets/theme/global/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+  <link href="/assets/theme/global/plugins/simple-line-icons/simple-line-icons.min.css" rel="stylesheet" type="text/css" />
+  <link href="/assets/theme/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+  <!-- END GLOBAL MANDATORY STYLES -->
+  <!-- BEGIN THEME GLOBAL STYLES -->
+  <link href="/assets/theme/global/css/components.min.css" rel="stylesheet" id="style_components" type="text/css" />
+  <link href="/assets/theme/global/css/plugins.min.css" rel="stylesheet" type="text/css" />
+  <!-- END THEME GLOBAL STYLES -->
+  <!-- BEGIN THEME LAYOUT STYLES -->
+  <link href="/assets/theme/layouts/layout4/css/layout.min.css" rel="stylesheet" type="text/css" />
+  <link href="/assets/theme/layouts/layout4/css/themes/default.min.css" rel="stylesheet" type="text/css" id="style_color" />
+  <link href="/assets/theme/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
+  <!-- END THEME LAYOUT STYLES -->
+  <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
+  <!-- END HEAD -->
+
+<body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo">
+<!-- BEGIN HEADER -->
+<div class="page-header navbar navbar-fixed-top">
+  <!-- BEGIN HEADER INNER -->
+  <div class="page-header-inner ">
+    <!-- BEGIN LOGO -->
+    <div class="page-logo">
+      <a href="@App.siteSetting.url">
+        <img src="@App.siteSetting.logo" alt="logo" class="logo-default" style="margin: 15px 0px 0;" /> </a>
+      <div class="menu-toggler sidebar-toggler">
+        <!-- DOC: Remove the above "hide" to enable the sidebar toggler button on header -->
+      </div>
+    </div>
+    <!-- END LOGO -->
+    <!-- BEGIN RESPONSIVE MENU TOGGLER -->
+    <a href="javascript:;" class="menu-toggler responsive-toggler" data-toggle="collapse" data-target=".navbar-collapse"> </a>
+    <!-- END RESPONSIVE MENU TOGGLER -->
+    <!-- BEGIN PAGE TOP -->
+    <div class="page-top">
+      <!-- BEGIN HEADER SEARCH BOX -->
+      <!-- DOC: Apply "search-form-expanded" right after the "search-form" class to have half expanded search box -->
+      <form class="search-form" action="/search" method="GET">
+        <div class="input-group">
+          <input type="text" class="form-control input-sm" placeholder="Search..." name="q">
+          <span class="input-group-btn">
+              <a href="javascript:;" class="btn submit">
+                  <i class="icon-magnifier"></i>
+              </a>
+          </span>
+        </div>
+      </form>
+      <!-- END HEADER SEARCH BOX -->
+      <!-- BEGIN TOP NAVIGATION MENU -->
+      @if(utils.RequestHelper.isLogin){
+      <div class="top-menu">
+        <ul class="nav navbar-nav pull-right">
+          <li class="separator hide"> </li>
+          <!-- BEGIN USER LOGIN DROPDOWN -->
+          <!-- DOC: Apply "dropdown-dark" class after below "dropdown-extended" to change the dropdown styte -->
+          <li class="dropdown dropdown-user dropdown-dark">
+            <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" data-hover="dropdown" data-close-others="true">
+              <span class="username username-hide-on-mobile"> @request.session("name") </span>
+              <!-- DOC: Do not remove below empty space(&nbsp;) as its purposely used -->
+              <img alt="" class="img-circle" src='@request.session("headImg")' /> </a>
+            <ul class="dropdown-menu dropdown-menu-default">
+              <li>
+                <a href="/docs">
+                  <i class="icon-home"></i> 文档首页 </a>
+              </li>
+              <li>
+                <a href="/">
+                  <i class="icon-book-open"></i> 社区首页 </a>
+              </li>
+            </ul>
+          </li>
+          <!-- END USER LOGIN DROPDOWN -->
+        </ul>
+      </div>
+      }
+      <!-- END TOP NAVIGATION MENU -->
+    </div>
+    <!-- END PAGE TOP -->
+  </div>
+  <!-- END HEADER INNER -->
+</div>
+<!-- END HEADER -->
+<!-- BEGIN HEADER & CONTENT DIVIDER -->
+<div class="clearfix"> </div>
+<!-- END HEADER & CONTENT DIVIDER -->
+<!-- BEGIN CONTAINER -->
+<div class="page-container">
+  <!-- BEGIN SIDEBAR -->
+  <div class="page-sidebar-wrapper">
+    <!-- BEGIN SIDEBAR -->
+    <!-- DOC: Set data-auto-scroll="false" to disable the sidebar from auto scrolling/focusing -->
+    <!-- DOC: Change data-auto-speed="200" to adjust the sub menu slide up/down speed -->
+    <div class="page-sidebar navbar-collapse collapse">
+      <!-- BEGIN SIDEBAR MENU -->
+      <!-- DOC: Apply "page-sidebar-menu-light" class right after "page-sidebar-menu" to enable light sidebar menu style(without borders) -->
+      <!-- DOC: Apply "page-sidebar-menu-hover-submenu" class right after "page-sidebar-menu" to enable hoverable(hover vs accordion) sub menu mode -->
+      <!-- DOC: Apply "page-sidebar-menu-closed" class right after "page-sidebar-menu" to collapse("page-sidebar-closed" class must be applied to the body element) the sidebar sub menu mode -->
+      <!-- DOC: Set data-auto-scroll="false" to disable the sidebar from auto scrolling/focusing -->
+      <!-- DOC: Set data-keep-expand="true" to keep the submenues expanded -->
+      <!-- DOC: Set data-auto-speed="200" to adjust the sub menu slide up/down speed -->
+      <ul class="page-sidebar-menu   " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
+        @for(node <- nodes.value){
+          <li class="heading">
+            <h3 class="uppercase">@(node("text").as[String])</h3>
+          </li>
+          @for(n <- (node \ "children").as[JsArray].value){
+            @renderNode(n)
+          }
+        }
+      </ul>
+      <!-- END SIDEBAR MENU -->
+    </div>
+    <!-- END SIDEBAR -->
+  </div>
+  <!-- END SIDEBAR -->
+  <!-- BEGIN CONTENT -->
+  <div class="page-content-wrapper">
+    <!-- BEGIN CONTENT BODY -->
+    <div class="page-content" style="padding-top: 0px;">
+      <!-- BEGIN PAGE BASE CONTENT -->
+      <div class="row">
+        <div class="col-md-12">
+          <!-- BEGIN SAMPLE FORM PORTLET-->
+          <div class="portlet light bordered">
+            <div class="portlet-title">
+              <div class="caption font-green-haze">
+                <i class="icon-book-open font-green-haze"></i>
+                <span class="caption-subject bold uppercase"> @docOpt.map(_.title).getOrElse("尚未完成")</span>
+                <span class="caption-helper">@docOpt.map(d => utils.DateTimeUtil.toPrettyString(d.timeStat.updateTime) + "更新").getOrElse("")</span>
+              </div>
+              <div class="actions">
+                <a class="btn btn-circle btn-icon-only btn-outline btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
+              </div>
+            </div>
+            <div class="portlet-body" style="font-size: 16px;">
+              @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content) }
+            </div>
+          </div>
+          <!-- END SAMPLE FORM PORTLET-->
+        </div>
+      </div>
+      <!-- END PAGE BASE CONTENT -->
+    </div>
+    <!-- END CONTENT BODY -->
+  </div>
+  <!-- END CONTENT -->
+</div>
+<!-- END CONTAINER -->
+<!-- BEGIN FOOTER -->
+<div class="page-footer">
+  <div class="page-footer-inner"> 2017 &copy; PlayScala社区</div>
+  <div class="scroll-to-top">
+    <i class="icon-arrow-up"></i>
+  </div>
+</div>
+<!-- END FOOTER -->
+
+<!--[if lt IE 9]>
+<script src="/assets/theme/global/plugins/respond.min.js"></script>
+<script src="/assets/theme/global/plugins/excanvas.min.js"></script>
+<script src="/assets/theme/global/plugins/ie8.fix.min.js"></script>
+<![endif]-->
+<!-- BEGIN CORE PLUGINS -->
+<script src="/assets/theme/global/plugins/jquery.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/js.cookie.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jquery-slimscroll/jquery.slimscroll.min.js" type="text/javascript"></script>
+<script src="/assets/theme/global/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+<!-- END CORE PLUGINS -->
+
+<!-- BEGIN THEME GLOBAL SCRIPTS -->
+<script src="/assets/theme/global/scripts/app.min.js" type="text/javascript"></script>
+<!-- END THEME GLOBAL SCRIPTS -->
+<!-- BEGIN THEME LAYOUT SCRIPTS -->
+<script src="/assets/theme/layouts/layout4/scripts/layout.min.js" type="text/javascript"></script>
+<!-- END THEME LAYOUT SCRIPTS -->
 <script>
+$(function() {
+  var node = $('#@docOpt.map(_.catalogId).getOrElse(catalogId)');
+  node.addClass('active open');
+  node.parents('li').each(function () {
+    $(this).addClass('active');
+    $(this).find('> a > span.arrow').addClass('open');
+
+    if ($(this).parent('ul.page-sidebar-menu').size() === 1) {
+        $(this).find('> a').append('<span class="selected"></span>');
+    }
+
+    if ($(this).children('ul.sub-menu').size() === 1) {
+        $(this).addClass('open');
+    }
+  });
+});
 </script>
+</body>
+
+</html>
