@@ -53,7 +53,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   }
 
   def logout = checkLogin(parser, ec) { implicit request: Request[AnyContent] =>
-    Redirect(routes.Application.login(request.session.get("login"))).withNewSession
+    Redirect("https://secure.playscala.cn/login").withNewSession
   }
 
   def doLogin = Action.async { implicit request: Request[AnyContent] =>
@@ -69,10 +69,10 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
             userOpt match {
               case Some(u) =>
                 if (u.activeCode.nonEmpty) {
-                  Redirect(routes.UserController.activate())
+                  Redirect("http://www.playscala.cn/user/activate")
                     .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0")
                 } else {
-                  Redirect(routes.UserController.home(Some(u._id)))
+                  Redirect(s"http://www.playscala.cn/user/home?uid=${u._id}")
                     .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
                 }
               case None =>
@@ -129,7 +129,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                     if (wr.ok && wr.n == 1) {
                       // 发送激活码
                       mailer.sendEmail(name, login, views.html.mail.activeMail(name, activeCode).body)
-                      Redirect(routes.UserController.activate())
+                      Redirect("http://www.playscala.cn/user/activate")
                         .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                     } else {
                       Redirect(routes.Application.message("注册出错了", "很抱歉，似乎是发生了系统错误！"))

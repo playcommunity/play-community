@@ -20,7 +20,7 @@
 
 <div class="header">
     <div class="main">
-        <a class="logo" href="/" title="Fly" style="width:220px;height:40px;background: url(@App.siteSetting.logo) no-repeat;">@App.siteSetting.name</a>
+        <a class="logo" href="@App.siteSetting.url" title="Fly" style="width:220px;height:40px;background: url(@App.siteSetting.logo) no-repeat;">@App.siteSetting.name</a>
         <div class="nav">
             <a class='@if(activeNav == "doc"){nav-this}' href="/docs">
                 <i class="iconfont icon-iconmingxinganli" style="top: 2px;"></i>学习
@@ -58,7 +58,7 @@
                 case None => {
                     <!-- 未登入状态 -->
                     <a class="unlogin" href="javascript:void(0);"><i class="iconfont icon-touxiang"></i></a>
-                    <span><a href="/login">登入</a><a href="/register">注册</a></span>
+                    <span><a href="https://secure.playscala.cn/login">登入</a><a href="https://secure.playscala.cn/register">注册</a></span>
                     <!--<span><a href="https://cloud.chatbot.cn/cloud/login">公有云登入</a><a href="https://vip.chatbot.cn/cloud/login">企业云登入</a></span>-->
                     <!--<p class="out-login">
                         <a href="" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-qq" title="QQ登入"></a>
