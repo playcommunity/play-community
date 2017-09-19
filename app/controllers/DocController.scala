@@ -52,12 +52,12 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
     }
   }
 
-  def view(catalogId: String) = Action.async { implicit request: Request[AnyContent] =>
+  def viewCatalog(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
       docCol <- docColFuture
       docCatalog <- docCatalogFuture
       Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
-      docOpt <- docCol.find(Json.obj("catalogId" -> catalogId)).one[Doc]
+      docOpt <- docCol.find(Json.obj("catalogId" -> _id)).one[Doc]
     } yield {
       docOpt match {
         case Some(doc) =>
@@ -70,9 +70,34 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
               docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
-          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], catalogId, Some(doc)))
+          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))
 
-        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], catalogId, None))
+        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, None))
+      }
+    }
+  }
+
+  def viewDoc(_id: String) = Action.async { implicit request: Request[AnyContent] =>
+    for {
+      docCol <- docColFuture
+      docCatalog <- docCatalogFuture
+      Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
+      docOpt <- docCol.find(Json.obj("_id" -> _id)).one[Doc]
+    } yield {
+      docOpt match {
+        case Some(doc) =>
+          // 记录访问次数
+          if (RequestHelper.isLogin) {
+            val uid = request.session("uid").toInt
+            val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
+            if (!viewBitmap.contains(uid)) {
+              viewBitmap.add(uid)
+              docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+            }
+          }
+          Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))
+
+        case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, None))
       }
     }
   }

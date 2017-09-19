@@ -21,7 +21,7 @@
 
     case _ => {
       <li id='@(node("id").as[String])' class='nav-item '>
-        <a href='/doc/view?catalogId=@(node("id").as[String])'>
+        <a href='/doc/catalog?_id=@(node("id").as[String])'>
           <i class="icon-direction"></i>
           <span class="title">@(node("text").as[String])</span>
         </a>

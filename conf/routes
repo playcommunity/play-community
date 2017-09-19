@@ -29,7 +29,8 @@ GET     /todo                                     controllers.Default.todo
 
 # Doc
 GET     /docs                                     controllers.DocController.index
-GET     /doc/view                                 controllers.DocController.view(catalogId: String)
+GET     /doc/view                                 controllers.DocController.viewDoc(_id: String)
+GET     /doc/catalog                              controllers.DocController.viewCatalog(_id: String)
 
 # Article
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
