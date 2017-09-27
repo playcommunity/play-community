@@ -3,7 +3,7 @@ package services
 import models.JsonFormats.indexedDocumentFormat
 import javax.inject.{Inject, Singleton}
 
-import models.IndexedDocument
+import models.{IndexedDocument}
 import play.api.{Configuration, Environment}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsObject, JsString, Json}
@@ -11,6 +11,7 @@ import play.api.libs.ws.WSClient
 import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.play.json._
 import reactivemongo.play.json.collection.JSONCollection
+
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
@@ -34,7 +35,7 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
           "highlight" -> Json.obj(
             "pre_tags" -> Json.arr(JsString("<b>")),
             "post_tags" -> Json.arr(JsString("</b>")),
-            "fields" -> Json.obj("content" -> Json.obj())
+            "fields" -> Json.obj("title" -> Json.obj(), "content" -> Json.obj())
           ),
           "from" -> (page - 1) * 15,
           "size" -> 15
@@ -44,14 +45,12 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
       }
 
     ws.url(s"http://${esServer}/${esIndexName}/_search").post(query).map{ resp =>
-      //println(resp.json)
-      val total = resp.json("hits")("total").as[Int]
+      val total = (resp.json \ "hits")("total").as[Int]
       val docs =
-        resp.json("hits")("hits").as[List[JsObject]].map{ hit =>
-          (hit \ "highlight").asOpt[JsObject].map(_("content").head.as[String]) match {
-            case Some(h) => hit("_source").as[IndexedDocument].copy(highlight = Some(h))
-            case None =>  hit("_source").as[IndexedDocument]
-          }
+        (resp.json \ "hits" \ "hits").as[List[JsObject]].map{ hit =>
+          val hlTitle = (hit \ "highlight" \ "title").asOpt[List[String]].map(_.mkString("..."))
+          val hlContent = (hit \ "highlight" \ "content").asOpt[List[String]].map(_.mkString("..."))
+          hit("_source").as[IndexedDocument].copy(hlTitle = hlTitle, hlContent = hlContent)
         }
       (total, docs)
     }
@@ -59,19 +58,20 @@ class ElasticService @Inject()(env: Environment, config: Configuration, val reac
 
   def insert(doc: IndexedDocument): Future[Boolean] = {
     ws.url(s"http://${esServer}/${esIndexName}/document/${doc.id}").post(Json.toJson(doc)).map{ resp =>
-      resp.json("created").asOpt[Boolean].nonEmpty
+      (resp.json \ "created").asOpt[Boolean].nonEmpty
     }
   }
 
+
   def update(_id: String, fragment: JsObject): Future[Boolean] = {
     ws.url(s"http://${esServer}/${esIndexName}/document/${_id}/_update").post(Json.obj("doc" -> fragment)).map{ resp =>
-      resp.json("created").asOpt[Boolean].nonEmpty
+      (resp.json \ "created").asOpt[Boolean].nonEmpty
     }
   }
 
   def remove(_id: String): Future[Boolean] = {
     ws.url(s"http://${esServer}/${esIndexName}/document/${_id}").delete().map{ resp =>
-      resp.json("found").asOpt[Boolean].getOrElse(false)
+      (resp.json \ "found").asOpt[Boolean].getOrElse(false)
     }
   }
 

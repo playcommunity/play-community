@@ -1,11 +1,13 @@
 package controllers
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayOutputStream, File}
 import javax.inject._
+
 import akka.stream.Materializer
 import akka.util.ByteString
 import models._
 import models.JsonFormats._
+import org.apache.pdfbox.pdmodel.PDDocument
 import play.api.Configuration
 import reactivemongo.play.json._
 import play.api.data.Form
@@ -16,10 +18,12 @@ import play.modules.reactivemongo.ReactiveMongoApi
 import reactivemongo.api.QueryOpts
 import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, ElasticService, MailerService}
-import utils.{DateTimeUtil, HashUtil, RequestHelper, VerifyCodeUtils}
+import utils.PDFUtil.{getCatalogs, getText}
+import utils._
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
-
+import scala.collection.JavaConverters._
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
@@ -95,11 +99,32 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
 
     if (q.trim != "") {
       elasticService.search(q, cPage).map{ t =>
+        //t._2.foreach(println _)
         Ok(views.html.search(q, plate, t._2, cPage, t._1))
       }
     } else {
       Future.successful(Ok(views.html.search("", plate, Nil, 1, 0)))
     }
+  }
+
+  // FIXME 临时索引电子书
+  def tempForIndexingBook = Action { implicit request: Request[AnyContent] =>
+    val doc = PDDocument.load(new File("f:/p3-2.pdf"))
+    val totalPages = doc.getNumberOfPages
+    val items = doc.getDocumentCatalog.getDocumentOutline.children().asScala.flatMap( i => getCatalogs("/", i))
+    val scannedItems =
+      items.filter(_._3 >= 0).sliding(2).toList.map(_.toList).map{ t =>
+        val endPage = if (t(0)._3 == t(1)._3) { t(0)._3 } else { t(1)._3 - 1 }
+        t(0).copy(_4 = endPage)
+      }
+    (scannedItems ::: List(items.last.copy(_4 = totalPages))).map(i => i.copy(_5 = PDFUtil.getText(doc, i._3, i._4))).foreach{ t =>
+      val bookName = "Programming in Scala - Third Edition"
+      val doc = IndexedDocument(HashUtil.md5(bookName + t._2), "book", t._2, t._5, "沐风", "1", System.currentTimeMillis, None, None, Some(BookInfo("0", bookName, "Martin Odersky", t._1, t._2, t._3, t._4)))
+      elasticService.insert(doc)
+      Thread.sleep(100)
+      println("Index " + t._2)
+    }
+    Ok("Finish.")
   }
 
   def register = Action { implicit request: Request[AnyContent] =>

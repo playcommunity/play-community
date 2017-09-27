@@ -297,11 +297,25 @@ layui.define(['layer', 'laytpl', 'form', 'upload', 'util'], function(exports){
       ,maxWidth: 10000
       ,skin: 'fly-layer-search'
       ,content: ['<form action="/search">'
-        ,'<input autocomplete="off" placeholder="搜索内容，回车跳转" type="text" name="q">'
+        ,'<input autocomplete="off" placeholder="Ctrl+回车进入安全搜索" type="text" name="q">'
       ,'</form>'].join('')
       ,success: function(layero){
         var input = layero.find('input');
         input.focus();
+        input.on("keydown", function(e) {
+          //console.log(e.keyCode);
+          switch(e.keyCode) {
+              case 13:
+                  //e.preventDefault();
+                  if(event.ctrlKey){
+                    console.log("safe search ...");
+                  }
+                  break;
+              default:
+                  break
+          }
+        });
+
 
         layero.find('form').submit(function(){
           var val = input.val();

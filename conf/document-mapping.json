@@ -10,7 +10,7 @@
       "id": {
         "type": "keyword"
       },
-      "plate": {
+      "source": {
         "type": "keyword"
       },
       "title": {
@@ -29,21 +29,9 @@
       "authorId": {
         "type": "keyword"
       },
-      "authorHeadImg": {
-        "type": "keyword"
-      },
       "createTime": {
         "type": "date",
         "format": "epoch_millis"
-      },
-      "viewCount": {
-        "type": "integer"
-      },
-      "replyCount": {
-        "type": "integer"
-      },
-      "voteCount": {
-        "type": "integer"
       }
     }
   }

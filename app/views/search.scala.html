@@ -1,36 +1,63 @@
 @(query: String, plate: String, list: List[IndexedDocument], page: Int, total: Int)(implicit request: RequestHeader)
 
 @main("欢迎来到社区！") {
+<style>
+  .fly-list .fly-list-li { height: auto; }
+  .fly-list-li h2 a { font-size: 18px; }
+  p.content { color: #545454; font-size: 13px; }
+</style>
 <div class="main layui-clear">
   <div class="wrap">
-    <div class="content" style="margin-right:0">
+    <div class="">
+      <form action="/search" >
+        <div class="layui-form">
+          <div class="layui-inline">
+            <input type="text" name="q" required lay-verify="required" placeholder="请输入搜索内容" autocomplete="off" class="layui-input" style="width:300px;">
+          </div>
+          <div class="layui-inline">
+            <div class="layui-btn-group">
+              <button class="layui-btn">站内搜索</button>
+              <button class="layui-btn">站外搜索</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="content" style="margin-right:0; margin-top:10px;">
       <div class="fly-tab">
         <div class="layui-tab layui-tab-brief">
           <ul class="layui-tab-title">
             <li> <a href="javascript:void(0);" class="layui-this">搜索结果 (@total)</a> </li>
           </ul>
         </div>
-        <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
       <ul class="fly-panel fly-list">
         @for(a <- list){
         <li class="fly-list-li">
-          <a href="/user/home?uid=@{a.authorId}" class="fly-list-avatar">
-            <img src="@a.authorHeadImg" alt="">
-          </a>
+          @if(a.plate == "book"){
           <h2 class="fly-tip">
-            <a href="/@{a.plate}/view?_id=@a.id">@a.title</a>
+            <a target="_blank" href='http://www.playscala.cn/book/p-i-s-3/index.html#pf@{a.bookInfo.get.pageFrom.toHexString}' style="color: #009688;">@Html(a.title)</a>
+          </h2>
+          <p class="content">
+            @Html(a.hlContent.getOrElse(a.content.take(100) + "..."))
+          </p>
+          <p>
+            <span><a target="_blank" href='http://www.playscala.cn/book/p-i-s-3/index.html'>@a.bookInfo.get.bookName</a></span>
+            <span>@a.bookInfo.get.parentCatalog.replace("/", " / ")</span>
+            <span>@{a.bookInfo.get.pageFrom}-@{a.bookInfo.get.pageTo}</span>
+          </p>
+          } else {
+          <h2 class="fly-tip">
+            <a href="/@{a.plate}/view?_id=@a.id" style="color: #009688;">@Html(a.title)</a>
           </h2>
           <p>
             <span><a href="/user/home?uid=@{a.authorId}">@a.author</a></span>
             <span>@utils.DateTimeUtil.toPrettyString(a.createTime)</span>
             <span>@utils.AppUtil.prettyResource(a.plate)</span>
-            <span class="fly-list-hint">
-              <i class="iconfont" title="回答">&#xe60c;</i> @a.replyCount
-              <i class="iconfont" title="人气">&#xe60b;</i> @a.viewCount
-            </span>
           </p>
+          }
         </li>
         }
       </ul>

@@ -2,10 +2,7 @@ name := """play-community"""
 
 version := "1.0.0"
 
-//lazy val root = (project in file(".")).enablePlugins(PlayScala)
-lazy val root = (project in file("."))
-  .enablePlugins(PlayScala, PlayNettyServer)
-  .disablePlugins(PlayAkkaHttpServer)
+lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.2"
 
@@ -20,5 +17,6 @@ libraryDependencies ++= Seq(
   "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0",
   "com.typesafe.play" %% "play-mailer" % "6.0.0",
   "com.typesafe.play" %% "play-mailer-guice" % "6.0.0",
-  "com.lightbend.play" %% "play-socket-io" % "1.0.0-beta-2"
+  "com.lightbend.play" %% "play-socket-io" % "1.0.0-beta-2",
+  "org.apache.pdfbox" % "pdfbox" % "2.0.7"
 )

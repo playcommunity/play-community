@@ -140,7 +140,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
         jsObj("op").as[String] match {
           case "i" =>
             val r = jsObj("o").as[JsObject]
-            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], r("author")("headImg").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, r("viewStat")("count").as[Int], r("replyStat")("count").as[Int], r("voteStat")("count").as[Int], None))
+            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, None, None, None))
             println("insert " + r("title").as[String])
           case "u" =>
             val _id = jsObj("o2")("_id").as[String]

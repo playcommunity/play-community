@@ -83,6 +83,9 @@ GET     /autoRegister                             controllers.Application.autoRe
 POST    /activate                                 controllers.Application.doActive
 POST    /activate/email                           controllers.Application.doSendActiveMail
 
+# FIXME
+GET     /tempForIndexingBook                      controllers.Application.tempForIndexingBook
+
 # User
 GET     /user                                     controllers.UserController.index
 GET     /user/home                                controllers.UserController.home(uid: Option[String])

@@ -65,6 +65,10 @@
   <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
   <!-- END HEAD -->
 
+  <style>
+    blockquote { font-size: 15px; line-height: 1.7; }
+  </style>
+
 <body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo">
 <!-- BEGIN HEADER -->
 <div class="page-header navbar navbar-fixed-top">
@@ -183,7 +187,7 @@
                 <a class="btn btn-circle btn-icon-only btn-outline btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>
               </div>
             </div>
-            <div class="portlet-body" style="font-size: 16px;">
+            <div class="portlet-body" style="font-size: 15px; line-height: 1.7;">
               @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content) }
             </div>
           </div>

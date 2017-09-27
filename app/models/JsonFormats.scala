@@ -39,6 +39,7 @@ object JsonFormats {
   implicit val statVisitorFormat = Json.format[StatVisitor]
 
   // Search & Setting
+  implicit val bookInfoFormat = Json.format[BookInfo]
   implicit val indexedDocumentFormat = Json.format[IndexedDocument]
   implicit val siteSettingFormat = Json.format[SiteSetting]
   implicit val docSettingFormat = Json.format[DocSetting]
