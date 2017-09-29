@@ -84,7 +84,7 @@ POST    /activate                                 controllers.Application.doActi
 POST    /activate/email                           controllers.Application.doSendActiveMail
 
 # FIXME
-GET     /tempForIndexingBook                      controllers.Application.tempForIndexingBook
+GET     /temp/indexBook                           controllers.Application.indexBook
 
 # User
 GET     /user                                     controllers.UserController.index

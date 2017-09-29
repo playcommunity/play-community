@@ -1,6 +1,6 @@
 name := """play-community"""
 
-version := "1.0.0"
+version := "1.1.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -18,5 +18,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-mailer" % "6.0.0",
   "com.typesafe.play" %% "play-mailer-guice" % "6.0.0",
   "com.lightbend.play" %% "play-socket-io" % "1.0.0-beta-2",
-  "org.apache.pdfbox" % "pdfbox" % "2.0.7"
+  "org.apache.pdfbox" % "pdfbox" % "2.0.7",
+  "org.jsoup" % "jsoup" % "1.10.3"
 )

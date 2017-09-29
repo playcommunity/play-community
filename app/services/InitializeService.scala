@@ -27,6 +27,7 @@ import controllers.admin.routes
 import models._
 import play.api._
 import models.JsonFormats._
+import org.jsoup.Jsoup
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import utils.{DateTimeUtil, HashUtil, VersionComparator}
@@ -140,13 +141,21 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
         jsObj("op").as[String] match {
           case "i" =>
             val r = jsObj("o").as[JsObject]
-            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], r("content").as[String], r("author")("name").as[String], r("author")("_id").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, None, None, None))
+            val content = Jsoup.parse(r("content").as[String]).text()
+            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], content, r("author")("name").as[String], r("author")("_id").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, None, None, None))
             println("insert " + r("title").as[String])
           case "u" =>
             val _id = jsObj("o2")("_id").as[String]
             val modifier: JsObject = jsObj("o")("$set").as[JsObject]
-            elasticService.update(_id, modifier)
-            println("update " + _id)
+            val title = (modifier \ "title").asOpt[String]
+            val content = (modifier \ "content").asOpt[String]
+            if (title.nonEmpty || content.nonEmpty){
+              var obj = Json.obj()
+              title.foreach(t => obj ++= Json.obj("title" -> t))
+              content.foreach(c => obj ++= Json.obj("content" -> Jsoup.parse(c).text()))
+              println("update " + _id)
+              elasticService.update(_id, obj)
+            }
           case "d" =>
             val _id = jsObj("o")("_id").as[String]
             elasticService.remove(_id)

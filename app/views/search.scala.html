@@ -12,12 +12,12 @@
       <form action="/search" >
         <div class="layui-form">
           <div class="layui-inline">
-            <input type="text" name="q" required lay-verify="required" placeholder="请输入搜索内容" autocomplete="off" class="layui-input" style="width:300px;">
+            <input id="q" type="text" name="q" value="@query" required lay-verify="required" placeholder="请输入搜索内容" autocomplete="off" class="layui-input" style="width:300px;">
           </div>
           <div class="layui-inline">
             <div class="layui-btn-group">
               <button class="layui-btn">站内搜索</button>
-              <button class="layui-btn">站外搜索</button>
+              <button class="layui-btn" id="gBtn" type="button">站外搜索</button>
             </div>
           </div>
         </div>
@@ -38,13 +38,13 @@
         <li class="fly-list-li">
           @if(a.plate == "book"){
           <h2 class="fly-tip">
-            <a target="_blank" href='http://www.playscala.cn/book/p-i-s-3/index.html#pf@{a.bookInfo.get.pageFrom.toHexString}' style="color: #009688;">@Html(a.title)</a>
+            <a target="_blank" href='http://www.playscala.cn/book/@{a.bookInfo.get.bookId}/index.html#pf@{a.bookInfo.get.pageFrom.toHexString}' style="color: #009688;">@Html(a.title)</a>
           </h2>
           <p class="content">
             @Html(a.hlContent.getOrElse(a.content.take(100) + "..."))
           </p>
           <p>
-            <span><a target="_blank" href='http://www.playscala.cn/book/p-i-s-3/index.html'>@a.bookInfo.get.bookName</a></span>
+            <span><a target="_blank" href='http://www.playscala.cn/book/@{a.bookInfo.get.bookId}/index.html'>@a.bookInfo.get.bookName</a></span>
             <span>@a.bookInfo.get.parentCatalog.replace("/", " / ")</span>
             <span>@{a.bookInfo.get.pageFrom}-@{a.bookInfo.get.pageTo}</span>
           </p>
@@ -77,4 +77,11 @@
 }
 
 <script>
+$('#gBtn').click(function(){
+  var val = $('#q').val();
+  if(val.replace(/\s/g, '') === ''){
+    return ;
+  }
+  window.location.href = "https://search.playscala.cn/search?q=" + val;
+});
 </script>

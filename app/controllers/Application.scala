@@ -97,31 +97,37 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   def search(q: String, plate: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
 
-    if (q.trim != "") {
-      elasticService.search(q, cPage).map{ t =>
-        //t._2.foreach(println _)
-        Ok(views.html.search(q, plate, t._2, cPage, t._1))
-      }
-    } else {
-      Future.successful(Ok(views.html.search("", plate, Nil, 1, 0)))
+    elasticService.search(q, cPage).map{ t =>
+      //t._2.foreach(println _)
+      Ok(views.html.search(q, plate, t._2, cPage, t._1))
     }
   }
 
   // FIXME 临时索引电子书
-  def tempForIndexingBook = Action { implicit request: Request[AnyContent] =>
-    val doc = PDDocument.load(new File("f:/p3-2.pdf"))
+  def indexBook = Action { implicit request: Request[AnyContent] =>
+    val doc = PDDocument.load(new File("f:/Scala in Depth.pdf"))
+    /*val bookId = "p-i-s-3"
+    val bookName = "Programming in Scala - Third Edition"
+    val author = "Martin Odersky"*/
+    /*val bookId = "scala-cookbook"
+    val bookName = "Scala Cookbook"
+    val author = "Alvin Alexander"*/
+    val bookId = "scala-in-depth"
+    val bookName = "Scala In Depth"
+    val author = "Joshua D. Suereth"
+
     val totalPages = doc.getNumberOfPages
     val items = doc.getDocumentCatalog.getDocumentOutline.children().asScala.flatMap( i => getCatalogs("/", i))
+    items.foreach(println _)
     val scannedItems =
       items.filter(_._3 >= 0).sliding(2).toList.map(_.toList).map{ t =>
         val endPage = if (t(0)._3 == t(1)._3) { t(0)._3 } else { t(1)._3 - 1 }
         t(0).copy(_4 = endPage)
       }
     (scannedItems ::: List(items.last.copy(_4 = totalPages))).map(i => i.copy(_5 = PDFUtil.getText(doc, i._3, i._4))).foreach{ t =>
-      val bookName = "Programming in Scala - Third Edition"
-      val doc = IndexedDocument(HashUtil.md5(bookName + t._2), "book", t._2, t._5, "沐风", "1", System.currentTimeMillis, None, None, Some(BookInfo("0", bookName, "Martin Odersky", t._1, t._2, t._3, t._4)))
+      val doc = IndexedDocument(HashUtil.md5(bookName + t._2), "book", t._2, t._5, "沐风", "1", System.currentTimeMillis, None, None, Some(BookInfo(bookId, bookName, author, t._1, t._2, t._3, t._4)))
       elasticService.insert(doc)
-      Thread.sleep(100)
+      Thread.sleep(50)
       println("Index " + t._2)
     }
     Ok("Finish.")
