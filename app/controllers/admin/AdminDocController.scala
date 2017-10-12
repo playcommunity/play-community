@@ -81,7 +81,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
               docCol.insert(Doc(_id, title, content, "", RequestHelper.getAuthor, List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), catalogId))
           }
         } yield {
-          Redirect(routes.AdminDocController.index(1))
+          Ok(Json.obj("status" -> 0))
         }
       }
     )

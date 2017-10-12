@@ -62,11 +62,14 @@
   <link href="/assets/theme/layouts/layout4/css/themes/default.min.css" rel="stylesheet" type="text/css" id="style_color" />
   <link href="/assets/theme/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
   <!-- END THEME LAYOUT STYLES -->
+  <link rel="stylesheet" href="/assets/plugins/highlight/styles/default.css">
   <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
   <!-- END HEAD -->
 
   <style>
-    blockquote { font-size: 15px; line-height: 1.7; }
+    hr, p {
+      margin: 6px 0;
+    }
   </style>
 
 <body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo">
@@ -229,6 +232,7 @@
 <!-- BEGIN THEME LAYOUT SCRIPTS -->
 <script src="/assets/theme/layouts/layout4/scripts/layout.min.js" type="text/javascript"></script>
 <!-- END THEME LAYOUT SCRIPTS -->
+<script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
 $(function() {
   var node = $('#@docOpt.map(_.catalogId).getOrElse(catalogId)');
@@ -244,6 +248,12 @@ $(function() {
     if ($(this).children('ul.sub-menu').size() === 1) {
         $(this).addClass('open');
     }
+  });
+});
+
+$(document).ready(function() {
+  $('pre').each(function(i, block) {
+    hljs.highlightBlock(block);
   });
 });
 </script>

@@ -52,7 +52,7 @@
                             <div class="col-md-8">
                                 <div class="form-group form-md-line-input has-success" style="margin-bottom: 0px;">
                                     <div class="input-icon">
-                                        <input name="title" type="text" class="form-control" value='@docOpt.map(_.title).getOrElse("")'>
+                                        <input id="title" name="title" type="text" class="form-control" value='@docOpt.map(_.title).getOrElse("")'>
                                         <label>标题</label>
                                         <i class="fa fa-bell-o"></i>
                                     </div>
@@ -80,7 +80,7 @@
                         @if(docOpt.nonEmpty){
                         <input name="_id" type="hidden" value="@docOpt.get._id" />
                         }
-                        <button type="submit" class="btn green">确认提交</button>
+                        <button id="submit-btn" type="button" class="btn green">确认提交</button>
                         <a href="/admin/docs" class="btn default">取消修改</a>
                     </div>
                 </form>
@@ -97,7 +97,8 @@
 <script type="text/javascript">
 var token = '@CSRF.getToken.value';
 var ue = UE.getEditor('container', {
-    scaleEnabled: true
+    scaleEnabled: true,
+    allowDivTransToP: false
 });
 
 $('.choose-catalog').click(function(){
@@ -115,5 +116,26 @@ $(document).ready(function(){
     $.get("/admin/doc/catalog/" + $("#catalogIdInput").val(), function(data){
         $("#catalogTextInput").val(data.name);
     });
+});
+
+$('#submit-btn').click(function(){
+  $.ajax({
+    type: 'post',
+    @if(docOpt.nonEmpty){
+    data: {_id: "@docOpt.get._id", title: $('#title').val(), catalogId: $('#catalogIdInput').val(), content: ue.getContent()},
+    }else{
+    data: {title: $('#title').val(), catalogId: $('#catalogIdInput').val(), content: ue.getContent()},
+    }
+    url: '/admin/doc/add?csrfToken=' + token,
+    success: function(res){
+      if(res.status === 0) {
+        layer.msg("保存成功！");
+      } else {
+        layer.msg(res.msg||res.code);
+      }
+    }, error: function(e){
+      layer.msg('请求异常，请重试');
+    }
+  });
 });
 </script>
