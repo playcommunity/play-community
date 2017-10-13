@@ -70,6 +70,10 @@
     hr, p {
       margin: 6px 0;
     }
+    .h4, .h5, .h6, h4, h5, h6 {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
   </style>
 
 <body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo">
@@ -159,7 +163,7 @@
       <ul class="page-sidebar-menu   " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
         @for(node <- nodes.value){
           <li class="heading">
-            <h3 class="uppercase">@(node("text").as[String])</h3>
+            <h3>@(node("text").as[String])</h3>
           </li>
           @for(n <- (node \ "children").as[JsArray].value){
             @renderNode(n)
@@ -181,9 +185,9 @@
           <!-- BEGIN SAMPLE FORM PORTLET-->
           <div class="portlet light bordered">
             <div class="portlet-title">
-              <div class="caption font-green-haze">
-                <i class="icon-book-open font-green-haze"></i>
-                <span class="caption-subject bold uppercase"> @docOpt.map(_.title).getOrElse("尚未完成")</span>
+              <div class="caption font-blue">
+                <i class="icon-book-open font-blue"></i>
+                <span class="caption-subject bold"> @docOpt.map(_.title).getOrElse("尚未完成")</span>
                 <span class="caption-helper">@docOpt.map(d => utils.DateTimeUtil.toPrettyString(d.timeStat.updateTime) + "更新").getOrElse("")</span>
               </div>
               <div class="actions">
