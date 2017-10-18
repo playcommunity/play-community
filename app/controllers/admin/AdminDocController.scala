@@ -34,7 +34,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
     val cPage = if(page < 1){1}else{page}
     for {
       docCol <- docColFuture
-      docs <- docCol.find(Json.obj()).sort(Json.obj("title" -> 1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Doc]().collect[List](15)
+      docs <- docCol.find(Json.obj()).sort(Json.obj("timeStat.updateTime" -> -1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Doc]().collect[List](15)
       total <- docCol.count(None)
     } yield {
       Ok(views.html.admin.doc.index(docs, cPage, total))
@@ -60,9 +60,8 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
         val (_idOpt, title, content, catalogId) = tuple
-        for {
-          docCol <- docColFuture
-          _ <-  _idOpt match {
+        docColFuture.flatMap{ docCol =>
+          _idOpt match {
             case Some(_id) =>
               eventService.updateResource(RequestHelper.getAuthor, _id, "doc", title)
               docCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
@@ -73,15 +72,17 @@ class AdminDocController @Inject()(cc: ControllerComponents, reactiveMongoApi: R
                 "author.headImg" -> request.session("headImg"),
                 "timeStat.updateTime" -> DateTimeUtil.now(),
                 "catalogId" -> catalogId
-              )))
+              ))).map{ wr =>
+                Ok(Json.obj("status" -> 0, "action" -> "update"))
+              }
             case None =>
               val _id = RequestHelper.generateId
               eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
               userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.docCount" -> 1))))
-              docCol.insert(Doc(_id, title, content, "", RequestHelper.getAuthor, List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), catalogId))
+              docCol.insert(Doc(_id, title, content, "", RequestHelper.getAuthor, List.empty[Reply], ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DocTimeStat(DateTimeUtil.now, DateTimeUtil.now), catalogId)).map{ wr =>
+                Ok(Json.obj("status" -> 0, "action" -> "create", "_id" -> _id))
+              }
           }
-        } yield {
-          Ok(Json.obj("status" -> 0))
         }
       }
     )

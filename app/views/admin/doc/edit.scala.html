@@ -128,8 +128,10 @@ $('#submit-btn').click(function(){
     }
     url: '/admin/doc/add?csrfToken=' + token,
     success: function(res){
-      if(res.status === 0) {
+      if(res.status === 0 && res.action === "update") {
         layer.msg("保存成功！");
+      } else if(res.status === 0 && res.action === "create"){
+        window.location.href = "/admin/doc/edit?_id=" + res._id;
       } else {
         layer.msg(res.msg||res.code);
       }
