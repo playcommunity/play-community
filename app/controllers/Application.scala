@@ -155,7 +155,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
                   val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                   for {
                     uid <- counterService.getNextSequence("user-sequence")
-                    wr <- userCol.insert(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, "register", request.remoteAddress, None, Some(activeCode)))
+                    wr <- userCol.insert(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode)))
                   } yield {
                     if (wr.ok && wr.n == 1) {
                       // 发送激活码
@@ -213,7 +213,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
         for{
           userCol <- userColFuture
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()), 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, None))
+          _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
           Redirect(routes.Application.index(1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER)

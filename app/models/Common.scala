@@ -6,6 +6,7 @@ import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
 import models.JsonFormats.authorFormat
 
+case class Channel(id: String, name: String, url: String)
 case class User(
   _id: String,
   role: String,
@@ -18,6 +19,7 @@ case class User(
   from: String,
   ip: String,
   ipLocation: Option[IPLocation],
+  channels: List[Channel],
   activeCode: Option[String]
 )
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
@@ -122,15 +124,15 @@ case class Tweet(_id: String, author: Author, title: String, content: String, im
   * @param action view/vote/reply/comment
   */
 case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)
-
 case class IPLocation(country: String, province: String, city: String)
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
+object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()) }
+case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
-case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class DocTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime)
 case class QATimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)

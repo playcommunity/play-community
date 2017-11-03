@@ -1,4 +1,4 @@
-@(u: User)(implicit request: RequestHeader)
+@(u: User, focus: String = "info")(implicit request: RequestHeader)
 @import helper._
 @main("账户设置") {
 <div class="main fly-user-main layui-clear">
@@ -12,13 +12,13 @@
   <div class="fly-panel fly-panel-user" pad20>
     <div class="layui-tab layui-tab-brief" lay-filter="user">
       <ul class="layui-tab-title" id="LAY_mine">
-        <li class="layui-this" lay-id="info">我的资料</li>
-        <li lay-id="avatar">头像</li>
-        <!--<li lay-id="pass">密码</li>-->
+        <li @if(focus == "info"){class="layui-this"} lay-id="info">我的资料</li>
+        <li @if(focus == "avatar"){class="layui-this"} lay-id="avatar">头像</li>
+        <li @if(focus == "pass"){class="layui-this"} lay-id="pass">密码</li>
         <!--<li lay-id="bind">帐号绑定</li>-->
       </ul>
       <div class="layui-tab-content" style="padding: 20px 0;">
-        <div class="layui-form layui-form-pane layui-tab-item layui-show">
+        <div class="layui-form layui-form-pane layui-tab-item @if(focus == "info"){layui-show}">
           <form action="/user/setting" method="post">
             <div class="layui-form-item">
               <label for="L_email" class="layui-form-label">邮箱</label>
@@ -57,7 +57,7 @@
             </div>
           </form>
         </div>
-        <div class="layui-form layui-form-pane layui-tab-item">
+        <div class="layui-form layui-form-pane layui-tab-item @if(focus == "avatar"){layui-show}">
           <div class="layui-form-item">
             <div class="avatar-add">
               <p>建议尺寸168*168，支持jpg、png、gif，最大不能超过30KB</p>
@@ -69,14 +69,16 @@
             </div>
           </div>
         </div>
-        <div class="layui-form layui-form-pane layui-tab-item">
+        <div class="layui-form layui-form-pane layui-tab-item @if(focus == "pass"){layui-show}">
           <form action="/user/password" method="post">
+            @if(u.password != ""){
             <div class="layui-form-item">
               <label for="L_nowpass" class="layui-form-label">当前密码</label>
               <div class="layui-input-inline">
                 <input type="password" id="L_nowpass" name="password" required lay-verify="required" autocomplete="off" class="layui-input">
               </div>
             </div>
+            }
             <div class="layui-form-item">
               <label for="L_pass" class="layui-form-label">新密码</label>
               <div class="layui-input-inline">

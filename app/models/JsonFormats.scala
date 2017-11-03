@@ -12,6 +12,7 @@ object JsonFormats {
   implicit val qaTimeStatFormat = Json.format[QATimeStat]
   implicit val articleTimeStatFormat = Json.format[ArticleTimeStat]
   implicit val docTimeStatFormat = Json.format[DocTimeStat]
+  implicit val channelFormat = Json.format[Channel]
   implicit val userStatFormat = Json.format[UserStat]
   implicit val userSettingFormat = Json.format[UserSetting]
   implicit val categoryFormat = Json.format[Category]

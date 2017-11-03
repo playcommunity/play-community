@@ -12,7 +12,6 @@ GET     /admin/category                          controllers.admin.AdminControll
 POST    /admin/category                          controllers.admin.AdminController.doAddCategory
 POST    /admin/category/remove                   controllers.admin.AdminController.doRemoveCategory
 
-
 # Admin Doc
 GET     /admin/docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
 GET     /admin/doc/catalog                        controllers.admin.AdminDocController.catalog
@@ -95,7 +94,7 @@ GET     /user/message/count                       controllers.UserController.mes
 GET     /user/message/read                        controllers.UserController.readMessage()
 POST    /user/message/clear                       controllers.UserController.clearMessage
 GET     /user/activate                            controllers.UserController.activate
-GET     /user/setting                             controllers.UserController.setting
+GET     /user/setting                             controllers.UserController.setting(focus: String ?= "info")
 POST    /user/setting                             controllers.UserController.doSetting
 POST    /user/password                            controllers.UserController.doSetPassword
 POST    /user/head                                controllers.UserController.doSetHeadImg()
@@ -113,3 +112,6 @@ POST    /res/push                                 controllers.UserController.doP
 GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
 GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
 GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
+
+# API Sub Routes
+->  /api  api.Routes

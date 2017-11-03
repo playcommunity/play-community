@@ -122,8 +122,8 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
     Ok(views.html.user.activate(request.user))
   }
 
-  def setting() = (checkLogin andThen userAction) { implicit request =>
-    Ok(views.html.user.setting(request.user))
+  def setting(focus: String) = (checkLogin andThen userAction) { implicit request =>
+    Ok(views.html.user.setting(request.user, focus))
   }
 
   def doSetting() = checkLogin.async { implicit request: Request[AnyContent] =>
@@ -167,11 +167,11 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
   }
 
   def doSetPassword() = (checkLogin andThen userAction) { implicit request =>
-    Form(tuple("password" -> nonEmptyText, "password1" -> nonEmptyText, "password2" -> nonEmptyText).verifying("两次输入不一致！", t => t._2 == t._3)).bindFromRequest().fold(
+    Form(tuple("password" -> optional(text), "password1" -> nonEmptyText, "password2" -> nonEmptyText).verifying("两次输入不一致！", t => t._2 == t._3)).bindFromRequest().fold(
       errForm => Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors.map(_.message).mkString("|"))),
       tuple => {
         val (password, password1, _) = tuple
-        if (HashUtil.sha256(password) == request.user.password) {
+        if (password.isEmpty && request.user.password == "" || HashUtil.sha256(password.get) == request.user.password) {
           userColFuture.flatMap(_.update(
             Json.obj("_id" -> request.session("uid")),
             Json.obj(

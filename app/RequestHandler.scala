@@ -21,14 +21,15 @@ import reactivemongo.play.json._
   */
 class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters, val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) with Rendering with AcceptExtractors {
   val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo|/baidu_verify_5vujE3CYCX.html|/socket.io/.*|/temp/.*")
+  val apiPathPattern = Pattern.compile("/api/.*")
   val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*|/tweet.*")
   def statTrafficColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-traffic"))
   def statIPColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-ip"))
   def statVisitorColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("stat-visitor"))
 
   override def routeRequest(request: RequestHeader) = {
-    // 忽略非PV请求
-    if (assetsPathPattern.matcher(request.path).matches()) {
+    // 忽略非PV和Api请求
+    if (assetsPathPattern.matcher(request.path).matches() || apiPathPattern.matcher(request.path).matches()) {
       super.routeRequest(request)
     } else {
       val ip = request.remoteAddress
@@ -101,13 +102,16 @@ class RequestHandler @Inject() (router: Router, errorHandler: HttpErrorHandler, 
                   Some(Action(Redirect(request.path, request.queryString, 302).withSession("visitor" -> visitorId)))
                 }
               } else {
-                //Some(Action(Forbidden))
-                Some(Action(
+                /**
+                  *  views.html.message模板不能使用当前的request，否则会报错：
+                  *  [RuntimeException: No CSRF token was generated for this request! Is the CSRF filter installed?]
+                  */
+                Some(Action{ implicit request =>
                   render {
-                    case Accepts.Html() => Results.Ok(views.html.message("系统提示", "您尚未登录，无权执行该操作！")(request))
+                    case Accepts.Html() => Results.Ok(views.html.message("系统提示", "您尚未登录，无权执行该操作！"))
                     case Accepts.Json() => Results.Ok(Json.obj("status" -> 1, "msg" -> "您尚未登录，无权执行该操作！"))
                   }(request)
-                ))
+                })
               }
           }
       }
