@@ -207,7 +207,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
       case Some(u) =>
         Future.successful {
           Redirect(routes.Application.index(1))
-            .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
+            .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
         }
       case None =>
         for{
@@ -216,7 +216,7 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
           _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
           Redirect(routes.Application.index(1))
-            .addingToSession("uid" -> uid.toString, "role" -> Role.USER)
+            .addingToSession("uid" -> uid.toString, "role" -> Role.USER, "active" -> "1")
         }
     }
   }

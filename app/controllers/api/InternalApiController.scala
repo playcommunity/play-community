@@ -9,7 +9,7 @@ import controllers.routes
 import models.JsonFormats._
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
@@ -35,6 +35,9 @@ class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMong
   private val githubClientId = config.getOptional[String]("oauth.github.clientId").getOrElse("")
   private val githubClientSecret = config.getOptional[String]("oauth.github.clientSecret").getOrElse("")
 
+  /**
+    * 如果GitHub用户未公开邮箱，则无法获取邮箱信息
+    */
   def githubOauthCallback(code: String, state: String) = Action.async { implicit request =>
     if (githubClientId != "" && githubClientSecret != "") {
       ws.url("https://github.com/login/oauth/access_token")
@@ -46,13 +49,15 @@ class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMong
             .withHttpHeaders("Accept" -> "application/json")
             .get().map(_.json)
         }.flatMap { js =>
-          val email = js("email").as[String]
-          val name = js("name").as[String]
+          val login = js("login").as[String]
+          val email = js("email").asOpt[String].getOrElse(login)
+          val name = js("name").asOpt[String].getOrElse(login)
           val headImg = js("avatar_url").as[String]
-          val location = js("location").as[String]
-          val bio = js("bio").as[String]
+          val location = js("location").asOpt[String].getOrElse("")
+          val bio = js("bio").asOpt[String].getOrElse("")
           val githubUrl = js("html_url").as[String]
-          userColFuture.flatMap(_.find(Json.obj("login" -> email)).one[User]).flatMap {
+
+          userColFuture.flatMap(_.find(Json.obj("$or" -> Json.arr(Json.obj("login" -> email), Json.obj("login" -> login)))).one[User]).flatMap {
             case Some(u) => Future.successful(u)
             case None => for {
               userCol <- userColFuture
@@ -61,12 +66,12 @@ class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMong
               wr <- userCol.insert(u)
             } yield u
           }.map { u =>
-            if (u.password == "") {
+            if (u.password == "" && email.contains("@")) {
               Redirect(controllers.routes.UserController.setting("pass"))
-                .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
+                .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
             } else {
               Redirect(controllers.routes.Application.index(1))
-                .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role)
+                .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
             }
           }
         }
