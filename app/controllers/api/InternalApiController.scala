@@ -79,9 +79,4 @@ class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMong
       Future.successful(Ok(views.html.message("系统提示", "系统暂不支持GitHub登录！")))
     }
   }
-
-  def test = Action { implicit request =>
-    Ok("Test")
-  }
-
 }
