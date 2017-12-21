@@ -31,7 +31,7 @@ class TweetController @Inject()(cc: ControllerComponents, val reactiveMongoApi: 
     val sort = if (nav == "0") { Json.obj("createTime" -> -1) } else { Json.obj("voteStat.count" -> -1) }
     for {
       tweetCol <- tweetColFuture
-      tweets <- tweetCol.find(Json.obj()).sort(sort).cursor[Tweet]().collect[List](15)
+      tweets <- tweetCol.find(Json.obj()).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Tweet]().collect[List](15)
       hotTweets <- tweetCol.find(Json.obj()).sort(Json.obj("voteStat.count" -> -1)).cursor[Tweet]().collect[List](15)
       total <- tweetCol.count(None)
     } yield {
