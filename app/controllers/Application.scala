@@ -5,6 +5,7 @@ import javax.inject._
 
 import akka.stream.Materializer
 import akka.util.ByteString
+import cn.playscala.mongo.Mongo
 import models._
 import models.JsonFormats._
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -26,7 +27,7 @@ import scala.util.Random
 import scala.collection.JavaConverters._
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
   def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
   def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
   def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
@@ -39,16 +40,13 @@ class Application @Inject()(cc: ControllerComponents, val reactiveMongoApi: Reac
   def index(page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     for {
-      userCol <- userColFuture
-      newsCol <- newsColFuture
-      docCol <- docColFuture
-      articleCol <- articleColFuture
-      news <- newsCol.find(Json.obj()).sort(Json.obj("createTime" -> -1)).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[News]().collect[List](15)
-      total <- newsCol.count(None)
-      activeUsers <- userCol.find(Json.obj()).sort(Json.obj("stat.resCount" -> -1)).cursor[User]().collect[List](12)
-      topViewDocs <- docCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Doc]().collect[List](10)
+      topNews <- mongo.find[News](Json.obj("top" -> true)).sort(Json.obj("createTime" -> -1)).limit(5).list()
+      news <- mongo.find[News]().sort(Json.obj("createTime" -> -1)).skip((cPage-1) * 15).limit(15).list()
+      total <- mongo.count[News]()
+      activeUsers <- mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(12).list()
+      topViewDocs <- mongo.find[Doc]().sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
     } yield {
-      Ok(views.html.index(news, activeUsers, topViewDocs, cPage, total))
+      Ok(views.html.index(topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
     }
   }
 

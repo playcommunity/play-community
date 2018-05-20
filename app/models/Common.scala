@@ -2,11 +2,30 @@ package models
 
 import java.time.OffsetDateTime
 
+import cn.playscala.mongo.annotations.Entity
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
 import models.JsonFormats.authorFormat
 
+case class TestUser3(
+                 _id: String,
+                 role: String,
+                 login: String,
+                 password: String,
+                 setting: UserSetting,
+                 stat: UserStat,
+                 score: Int,
+                 enabled: Boolean,
+                 from: String,
+                 ip: String,
+                 ipLocation: Option[IPLocation],
+                 channels: List[Channel],
+                 activeCode: Option[String]
+               )
+
 case class Channel(id: String, name: String, url: String)
+
+@Entity("common-user")
 case class User(
   _id: String,
   role: String,
@@ -25,16 +44,19 @@ case class User(
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
 
 // 新闻资讯
+@Entity("common-news")
 case class News(
   _id: String,
   title: String,
   url: String,
   author: Author,
   from: String,
+  top: Option[Boolean],
   createTime: OffsetDateTime
 )
 
 // 已整理文档
+@Entity("common-doc")
 case class Doc (
   _id: String,
   title: String,

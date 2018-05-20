@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
+import com.google.common.reflect.ClassPath
 import controllers.admin.routes
 import models._
 import play.api._
@@ -45,6 +46,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
 
   val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
+
 
   if (env.mode == Mode.Dev) {
     App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
@@ -83,6 +85,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     }
   }
 
+  /*
   if (!useExternalES) {
     Logger.info("Starting Embedded ElasticSearch ...")
     val es = EmbeddedElastic.builder()
@@ -172,6 +175,7 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
       }
     }
   }
+  */
 
   /**
     * 更新IP地理位置

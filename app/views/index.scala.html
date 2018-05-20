@@ -1,4 +1,4 @@
-@(news: List[News], activeUsers: List[User], topViewDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(topNews: List[News], news: List[News], activeUsers: List[User], topViewDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
@@ -15,7 +15,27 @@
         <i class="layui-icon fly-search">&#xe615;</i>
       </div>
 
+      @if(topNews.nonEmpty){
       <ul class="fly-panel fly-list fly-list-top">
+        @for(n <- topNews){
+        <li class="fly-list-li">
+          <a href="/user/home?uid=@{n.author._id}" class="fly-list-avatar">
+            <img src="@n.author.headImg" alt="">
+          </a>
+          <h2 class="fly-tip">
+            <a href="@n.url">@n.title</a>
+          </h2>
+          <p>
+            <span><a href="/user/home?uid=@{n.author._id}">@{n.author.name}</a></span>
+            <span>@utils.DateTimeUtil.toPrettyString(n.createTime)</span>
+            <span><a href="/@{n.from}s">@utils.AppUtil.prettyResource(n.from)</a></span>
+          </p>
+        </li>
+        }
+      </ul>
+      }
+
+      <ul class="fly-panel fly-list">
         @for(n <- news){
         <li class="fly-list-li">
           <a href="/user/home?uid=@{n.author._id}" class="fly-list-avatar">

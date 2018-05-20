@@ -61,6 +61,8 @@ GET      /ueditor                                controllers.ResourceController.
 + nocsrf
 POST     /ueditor                                controllers.ResourceController.ueditorPost(action: String)
 
+GET      /temp/mongo                             controllers.ResourceController.testMongo
+
 + nocsrf
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 + nocsrf

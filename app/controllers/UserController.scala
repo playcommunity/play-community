@@ -420,7 +420,7 @@ class UserController @Inject()(cc: ControllerComponents, reactiveMongoApi: React
           val resOwner = resObj("author").as[Author]
           val resTitle = resObj("title").as[String]
           commonService.getNextSequence("common-news").map{index =>
-            newsCol.insert(News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, DateTimeUtil.now()))
+            newsCol.insert(News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, Some(false), DateTimeUtil.now()))
           }
           Ok(Json.obj("status" -> 0))
         }
