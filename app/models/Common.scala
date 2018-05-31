@@ -1,29 +1,16 @@
 package models
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 import cn.playscala.mongo.annotations.Entity
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
 import models.JsonFormats.authorFormat
 
-case class TestUser3(
-                 _id: String,
-                 role: String,
-                 login: String,
-                 password: String,
-                 setting: UserSetting,
-                 stat: UserStat,
-                 score: Int,
-                 enabled: Boolean,
-                 from: String,
-                 ip: String,
-                 ipLocation: Option[IPLocation],
-                 channels: List[Channel],
-                 activeCode: Option[String]
-               )
-
 case class Channel(id: String, name: String, url: String)
+
+@Entity("test")
+case class Test(_id: String, time: Instant)
 
 @Entity("common-user")
 case class User(
@@ -41,6 +28,8 @@ case class User(
   channels: List[Channel],
   activeCode: Option[String]
 )
+
+@Entity("common-category")
 case class Category(_id: String, name: String, path: String, parentPath: String, index: Int, disabled: Boolean)
 
 // 新闻资讯
@@ -82,6 +71,7 @@ case class DocCatalog(
 )
 
 // 分享
+@Entity("common-article")
 case class Article(
   _id: String,
   title: String,
@@ -151,11 +141,11 @@ case class UserSetting(name: String, gender: String, introduction: String, headI
 object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()) }
 case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class Author(_id: String, login: String, name: String, headImg: String)
-case class ViewStat(count: Int, bitmap: String)
+case class ViewStat(count: BigDecimal, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
-case class ArticleTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
+case class ArticleTimeStat(createTime: Instant, updateTime: Instant, lastViewTime: Instant, lastVoteTime: Instant)
 case class DocTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime)
 case class QATimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])

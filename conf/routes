@@ -2,29 +2,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-# Admin
-GET     /admin                                    controllers.admin.AdminController.index
-GET     /admin/setting/base                       controllers.admin.AdminController.base
-POST    /admin/setting/base                       controllers.admin.AdminController.doBaseSetting
-
-# Admin Category
-GET     /admin/category                          controllers.admin.AdminController.category
-POST    /admin/category                          controllers.admin.AdminController.doAddCategory
-POST    /admin/category/remove                   controllers.admin.AdminController.doRemoveCategory
-
-# Admin Doc
-GET     /admin/docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
-GET     /admin/doc/catalog                        controllers.admin.AdminDocController.catalog
-POST    /admin/doc/catalog                        controllers.admin.AdminDocController.doSetCatalog
-GET     /admin/doc/add                            controllers.admin.AdminDocController.add
-GET     /admin/doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
-POST    /admin/doc/add                            controllers.admin.AdminDocController.doAdd
-POST    /admin/doc/remove                         controllers.admin.AdminDocController.doRemove
-GET     /admin/doc/setting                        controllers.admin.AdminDocController.docSetting
-POST    /admin/doc/setting                        controllers.admin.AdminDocController.doDocSetting
-GET     /admin/doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
-GET     /admin/doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
-GET     /todo                                     controllers.Default.todo
 
 # Doc
 GET     /docs                                     controllers.DocController.index
@@ -32,6 +9,7 @@ GET     /doc/view                                 controllers.DocController.view
 GET     /doc/catalog                              controllers.DocController.viewCatalog(_id: String)
 
 # Article
+GET     /article/test                             controllers.ArticleController.test
 GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
 GET     /article/add                              controllers.ArticleController.add
 POST    /article/add                              controllers.ArticleController.doAdd
@@ -115,5 +93,10 @@ GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/p
 GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
 GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
 
-# API Sub Routes
-->  /api  api.Routes
+GET     /todo                                     controllers.Default.todo
+
+# API Routes
+->  /api    api.Routes
+
+# Admin Routes
+->  /admin  admin.Routes

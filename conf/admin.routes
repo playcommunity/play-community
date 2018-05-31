@@ -1,0 +1,25 @@
+# Admin
+GET     /                                   controllers.admin.AdminController.index
+GET     /setting/base                       controllers.admin.AdminController.base
+POST    /setting/base                       controllers.admin.AdminController.doBaseSetting
+
+# Admin Category
+GET     /category                          controllers.admin.AdminController.category
+POST    /category                          controllers.admin.AdminController.doAddCategory
+POST    /category/remove                   controllers.admin.AdminController.doRemoveCategory
+
+# Admin Doc
+GET     /docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
+GET     /doc/catalog                        controllers.admin.AdminDocController.catalog
+POST    /doc/catalog                        controllers.admin.AdminDocController.doSetCatalog
+GET     /doc/add                            controllers.admin.AdminDocController.add
+GET     /doc/edit                           controllers.admin.AdminDocController.edit(_id: String)
+POST    /doc/add                            controllers.admin.AdminDocController.doAdd
+POST    /doc/remove                         controllers.admin.AdminDocController.doRemove
+GET     /doc/setting                        controllers.admin.AdminDocController.docSetting
+POST    /doc/setting                        controllers.admin.AdminDocController.doDocSetting
+GET     /doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
+GET     /doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
+
+# Update
+GET     /migrate/1.2.0                      controllers.admin.AdminController.migrateToOneDotTwo

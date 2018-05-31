@@ -1,5 +1,6 @@
 package controllers
 
+import java.time.Instant
 import javax.inject._
 
 import models._
@@ -13,20 +14,27 @@ import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import reactivemongo.api.QueryOpts
-import reactivemongo.bson.BSONObjectID
 
 import scala.concurrent.{ExecutionContext, Future}
-import java.time._
-
+import cn.playscala.mongo.Mongo
 import services.EventService
 
 @Singleton
-class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
-  def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-  def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
+class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+
+  def test = Action { implicit request: Request[AnyContent] =>
+    println(Json.obj("time" -> Instant.now()))
+    /*mongo.insertOne[Test](Test("1", Instant.now())).map(_ => println("inserted.")).recover{ case t: Throwable =>
+      println(t.getMessage)
+      t.printStackTrace()
+    }*/
+
+    mongo.updateOne[Test](Json.obj("_id" -> "0"), Json.obj("$set" -> Json.obj("time" -> Instant.now()))).map(_ => println("updated.")).recover{ case t: Throwable =>
+      println(t.getMessage)
+      t.printStackTrace()
+    }
+    Ok("Finish.")
+  }
 
   def index(nav: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
@@ -48,41 +56,41 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
       case _ =>
     }
     for {
-      articleCol <- articleColFuture
-      topArticles <- articleCol.find(Json.obj("$or" -> Json.arr(Json.obj("top" -> true), Json.obj("recommended" -> true)))).cursor[Article]().collect[List](5)
-      articles <- articleCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[Article]().collect[List](15)
-      topViewArticles <- articleCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[Article]().collect[List](10)
-      topReplyArticles <- articleCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[Article]().collect[List](10)
-      total <- articleCol.count(None)
+      topArticles <- mongo.find[Article](Json.obj("$or" -> Json.arr(Json.obj("top" -> true), Json.obj("recommended" -> true)))).limit(5).list()
+      articles <- mongo.find[Article](q).sort(sort).skip((cPage-1) * 15).limit(15).list()
+      topViewArticles <- mongo.find[Article]().sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
+      topReplyArticles <- mongo.find[Article]().sort(Json.obj("replyStat.count" -> -1)).limit(10).list()
+      total <- mongo.count[Article]()
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(routes.ArticleController.index(nav, path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.article.index(nav, path, topArticles, articles, topViewArticles, topReplyArticles, cPage, total))
+        Ok(views.html.article.index(nav, path, topArticles, articles, topViewArticles, topReplyArticles, cPage, total.toInt))
       }
     }
   }
 
   def add = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     for {
-      categoryCol <- categoryColFuture
-      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/", "disabled" -> false)).cursor[Category]().collect[List]()
+      categoryList <- mongo.find[Category](Json.obj("parentPath" -> "/", "disabled" -> false)).list()
     } yield {
       Ok(views.html.article.add(None, categoryList))
     }
   }
 
   def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
-    for {
-      articleCol <- articleColFuture
-      article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
-      categoryCol <- categoryColFuture
-      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
+    (for {
+      article <- mongo.find[Article](Json.obj("_id" -> _id)).first()
+      categoryList <- mongo.find[Category](Json.obj("parentPath" -> "/")).list()
     } yield {
       article match {
         case Some(a) => Ok(views.html.article.add(Some(a), categoryList))
         case None => Redirect(routes.Application.notFound)
       }
+    }).recover{ case t: Throwable =>
+      println(t.getMessage)
+      t.printStackTrace()
+      Ok(t.getMessage)
     }
   }
 
@@ -92,13 +100,11 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
       tuple => {
         val (_idOpt, title, content, keywords, categoryPath) = tuple
         for {
-          articleCol <- articleColFuture
-          categoryCol <- categoryColFuture
-          category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
+          category <- mongo.find[Category](Json.obj("path" -> categoryPath)).first()
           wr <-  _idOpt match {
                   case Some(_id) =>
                     eventService.updateResource(RequestHelper.getAuthor, _id, "article", title)
-                    articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
+                    mongo.updateOne[Article](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
                       "keywords" -> keywords,
@@ -106,13 +112,13 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
                       "categoryName" -> category.map(_.name).getOrElse[String]("-"),
                       "author.name" -> request.session("name"),
                       "author.headImg" -> request.session("headImg"),
-                      "timeStat.updateTime" -> DateTimeUtil.now()
+                      "timeStat.updateTime" -> Instant.now()
                     )))
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
-                    articleCol.insert(Article(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now), false, false))
-                    userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.articleCount" -> 1))))
+                    mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.articleCount" -> 1)))
+                    mongo.insertOne[Article](Article(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(Instant.now, Instant.now, Instant.now, Instant.now), false, false))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", categoryPath, 1))
@@ -131,8 +137,7 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
           case _ => Json.obj("$set" -> Json.obj("recommended" -> status))
         }
         for{
-          articleCol <- articleColFuture
-          wr <- articleCol.update(Json.obj("_id" -> _id), modifier)
+          wr <- mongo.updateOne[Article](Json.obj("_id" -> _id), modifier)
         } yield {
           Ok(Json.obj("status" -> 0))
         }
@@ -142,8 +147,7 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
 
   def view(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      articleCol <- articleColFuture
-      article <- articleCol.find(Json.obj("_id" -> _id)).one[Article]
+      article <- mongo.find[Article](Json.obj("_id" -> _id)).first()
     } yield {
       article match {
         case Some(a) =>
@@ -153,7 +157,7 @@ class ArticleController @Inject()(cc: ControllerComponents, reactiveMongoApi: Re
               val viewBitmap = BitmapUtil.fromBase64String(a.viewStat.bitmap)
               if (!viewBitmap.contains(uid)) {
                 viewBitmap.add(uid)
-                articleCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+                mongo.updateOne[Article](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
                 Ok(views.html.article.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
               } else {
                 Ok(views.html.article.detail(a))
