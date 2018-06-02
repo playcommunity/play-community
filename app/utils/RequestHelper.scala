@@ -1,8 +1,8 @@
 package utils
 
 import models.{Author, Role}
+import org.bson.types.ObjectId
 import play.api.mvc.RequestHeader
-import reactivemongo.bson.BSONObjectID
 
 /**
   * Created by joymufeng on 2017/7/17.
@@ -68,7 +68,7 @@ object RequestHelper {
   }
 
   def generateId(implicit request: RequestHeader): String = {
-    getUid + "-" + BSONObjectID.generate().stringify
+    getUid + "-" + ObjectId.get().toHexString
   }
 
 }

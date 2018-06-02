@@ -3,7 +3,6 @@ package controllers.admin
 import java.io.ByteArrayOutputStream
 import java.time.OffsetDateTime
 import javax.inject._
-
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
@@ -16,24 +15,16 @@ import play.api.data.Forms.{tuple, _}
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
 import models.JsonFormats.siteSettingFormat
-import reactivemongo.play.json._
-import reactivemongo.play.json.toBSON
-import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, ElasticService, MailerService}
 import utils.{DateTimeUtil, HashUtil}
-
 import scala.concurrent.{ExecutionContext, Future}
 import controllers.checkAdmin
+import play.api.libs.json.Json._
 
 @Singleton
-class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-  def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
-  def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
-  def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
-  def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
+class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+  val settingCol = mongo.getCollection("common-setting")
 
   def index = checkAdmin.async { implicit request: Request[AnyContent] =>
     Future.successful(Ok(views.html.admin.index()))
@@ -41,10 +32,9 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
 
   def base = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
-      settingCol <- settingColFuture
-      opt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
+      opt <- settingCol.findById("siteSetting")
     } yield {
-      Ok(views.html.admin.setting.base(opt.getOrElse(App.siteSetting)))
+      Ok(views.html.admin.setting.base(opt.map(_.as[SiteSetting]).getOrElse(App.siteSetting)))
     }
   }
 
@@ -54,7 +44,7 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
         obj.validate[SiteSetting] match {
           case JsSuccess(s, _) =>
             App.siteSetting = s
-            settingColFuture.flatMap(_.update(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj), upsert = true)).map{ wr =>
+            settingCol.updateOne(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj), upsert = true).map{ wr =>
               println(wr)
               Ok(Json.obj("status" -> 0))
             }
@@ -67,8 +57,7 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
 
   def category = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
-      categoryCol <- categoryColFuture
-      list <- categoryCol.find(Json.obj()).cursor[Category]().collect[List]()
+      list <- mongo.find[Category]().list
     } yield {
       Ok(views.html.admin.category(list))
     }
@@ -81,11 +70,10 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
       tuple => {
         val (_idOpt, name) = tuple
         for{
-          categoryCol <- categoryColFuture
-          opt <- categoryCol.find(Json.obj("name" -> name)).one[Category]
+          opt <- mongo.find[Category](Json.obj("name" -> name)).first
         } yield {
           val _id = _idOpt.getOrElse(HashUtil.md5(name.trim))
-          categoryCol.update(
+          mongo.updateOne[Category](
             Json.obj("_id" -> _id),
             Json.obj(
               "$set" -> Json.obj("name" -> name.trim),
@@ -107,7 +95,7 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       _id => {
-        categoryColFuture.flatMap(_.remove(Json.obj("_id" -> _id))).map{ wr =>
+        mongo.deleteById[Category](_id).map{ wr =>
           Ok(Json.obj("status" -> 0))
         }
       }
@@ -116,7 +104,6 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, reactive
 
   def migrateToOneDotTwo = checkAdmin.async {
     for {
-      articleCol <- articleColFuture
       articles <- mongo.getCollection[Article].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
     } yield {
       /*articles.foreach { a =>

@@ -1,19 +1,11 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
+import cn.playscala.mongo.Mongo
 import models.Category
-import models.JsonFormats.{categoryFormat}
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
-import scala.concurrent.Future
 
 @Singleton
-class CategoryService @Inject() (val reactiveMongoApi: ReactiveMongoApi) {
-  val robotColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-robot"))
+class CategoryService @Inject() (mongo: Mongo) {
 
   /***
     * 每个分类节点的id唯一
@@ -54,20 +46,6 @@ class CategoryService @Inject() (val reactiveMongoApi: ReactiveMongoApi) {
       }
 
     categoryList ++ newCreatedCategoryList
-  }
-
-  def getPathAndNameMap(robotId: String): Future[Map[String, String]] = {
-    for{
-      robotCol <- robotColFuture
-      robotOpt <- robotCol.find(Json.obj("_id" -> robotId), Json.obj("categories" -> 1)).one[JsObject]
-    } yield {
-      robotOpt match {
-        case Some(obj) =>
-          getIdPathToNamePathMap((obj \ "categories").as[List[Category]])
-        case None =>
-          Map.empty[String, String]
-      }
-    }
   }
 
   def getNamePathToIdPathMap(categoryList: List[Category]): Map[String, String] = {

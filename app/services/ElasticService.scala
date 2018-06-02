@@ -2,23 +2,17 @@ package services
 
 import models.JsonFormats.indexedDocumentFormat
 import javax.inject.{Inject, Singleton}
-
-import models.{IndexedDocument}
+import cn.playscala.mongo.Mongo
+import models.IndexedDocument
 import play.api.{Configuration, Environment}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsObject, JsString, Json}
 import play.api.libs.ws.WSClient
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
 @Singleton
-class ElasticService @Inject()(env: Environment, config: Configuration, val reactiveMongoApi: ReactiveMongoApi, ws: WSClient) {
-  def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-counter"))
-
+class ElasticService @Inject()(env: Environment, config: Configuration, mongo: Mongo, ws: WSClient) {
   private val esIndexName = config.getOptional[String]("es.esIndexName").getOrElse("community")
   private val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   private val esServer = if (useExternalES) { config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200") } else { "127.0.0.1:9200" }

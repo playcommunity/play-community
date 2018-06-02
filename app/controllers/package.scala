@@ -1,23 +1,19 @@
 import javax.inject.Inject
-
+import cn.playscala.mongo.Mongo
 import models.User
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json.collection.JSONCollection
 import utils.RequestHelper
 import scala.concurrent.{ExecutionContext, Future}
-import reactivemongo.play.json._
 import models.JsonFormats.userFormat
 
 package object controllers {
 
   class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
-  class UserAction @Inject()(val parser: BodyParsers.Default, reactiveMongoApi: ReactiveMongoApi)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
-    def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+  class UserAction @Inject()(val parser: BodyParsers.Default, mongo: Mongo)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
     def executionContext = ec
     def refine[A](input: Request[A]) = {
-      userColFuture.flatMap(_.find(Json.obj("_id" -> input.session("uid"))).one[User]).map{
+      mongo.findById[User](input.session("uid")).map{
         case Some(u) =>
           Right(new UserRequest(u, input))
         case None    =>

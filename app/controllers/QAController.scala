@@ -2,29 +2,22 @@ package controllers
 
 import javax.inject._
 
+import cn.playscala.mongo.Mongo
 import models.JsonFormats._
 import models._
+import org.bson.types.ObjectId
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.QueryOpts
-import reactivemongo.bson.BSONObjectID
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, EventService}
 import utils.{BitmapUtil, DateTimeUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.Json._
 
 @Singleton
-class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def qaColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-qa"))
-  def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-  def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
-  def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
+class QAController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def index(nav: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
@@ -46,24 +39,22 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
       case _ =>
     }
     for {
-      qaCol <- qaColFuture
-      qas <- qaCol.find(q).sort(sort).options(QueryOpts(skipN = (cPage-1) * 15, batchSizeN = 15)).cursor[QA]().collect[List](15)
-      topViewQAs <- qaCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[QA]().collect[List](10)
-      topReplyQAs <- qaCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[QA]().collect[List](10)
-      total <- qaCol.count(None)
+      qas <- mongo.find[QA](q).sort(sort).skip((cPage-1) * 15).limit(15).list()
+      topViewQAs <- mongo.find[QA]().sort(obj("viewStat.count" -> -1)).limit(10).list
+      topReplyQAs <- mongo.find[QA]().sort(Json.obj("replyStat.count" -> -1)).limit(10).list
+      total <- mongo.count[QA]()
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(routes.QAController.index(nav, path, math.ceil(total/15.0).toInt))
       } else {
-        Ok(views.html.qa.index(nav, path, qas, topViewQAs, topReplyQAs, cPage, total))
+        Ok(views.html.qa.index(nav, path, qas, topViewQAs, topReplyQAs, cPage, total.toInt))
       }
     }
   }
 
   def add = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     for {
-      categoryCol <- categoryColFuture
-      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
+      categoryList <- mongo.find[Category](obj("parentPath" -> "/")).list
     } yield {
       Ok(views.html.qa.add(None, categoryList))
     }
@@ -71,10 +62,8 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
 
   def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
     for {
-      qaCol <- qaColFuture
-      qa <- qaCol.find(Json.obj("_id" -> _id)).one[QA]
-      categoryCol <- categoryColFuture
-      categoryList <- categoryCol.find(Json.obj("parentPath" -> "/")).cursor[Category]().collect[List]()
+      qa <- mongo.find[QA](Json.obj("_id" -> _id)).first
+      categoryList <- mongo.find[Category](Json.obj("parentPath" -> "/")).list
     } yield {
       qa match {
         case Some(a) => Ok(views.html.qa.add(Some(a), categoryList))
@@ -89,13 +78,11 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
       tuple => {
         val (_idOpt, title, content, categoryPath, score) = tuple
         for {
-          qaCol <- qaColFuture
-          categoryCol <- categoryColFuture
-          category <- categoryCol.find(Json.obj("path" -> categoryPath)).one[Category]
+          category <- mongo.find[Category](Json.obj("path" -> categoryPath)).first
           _ <-  _idOpt match {
                   case Some(_id) =>
                     eventService.updateResource(RequestHelper.getAuthor, _id, "qa", title)
-                    qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
+                    mongo.updateOne[QA](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
                       "title" -> title,
                       "content" -> content,
                       "categoryPath" -> categoryPath,
@@ -108,8 +95,8 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "qa", title)
-                    qaCol.insert(QA(_id, title, content, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
-                    userColFuture.map(_.update(Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.qaCount" -> 1))))
+                    mongo.insertOne[QA](QA(_id, title, content, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
+                    mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.qaCount" -> 1)))
                 }
         } yield {
           Redirect(routes.QAController.index("0", categoryPath, 1))
@@ -124,19 +111,18 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
       tuple => {
         val (_id, rid) = tuple
         for {
-          qaCol <- qaColFuture
-          Some(qa) <- qaCol.find(Json.obj("_id" -> _id)).one[QA]
+          Some(qa) <- mongo.find[QA](Json.obj("_id" -> _id)).first
         } yield {
           if (qa.answer.isEmpty) {
             eventService.acceptReply(RequestHelper.getAuthor, _id, "qa", qa.title)
             qa.replies.find(_._id == rid) match {
               case Some(reply) =>
-                qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
-                userColFuture.map(_.update(Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> qa.score))))
-                userColFuture.map(_.update(Json.obj("_id" -> qa.author._id), Json.obj("$inc" -> Json.obj("score" -> -qa.score))))
+                mongo.updateOne[QA](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
+                mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> qa.score)))
+                mongo.updateOne[User](Json.obj("_id" -> qa.author._id), Json.obj("$inc" -> Json.obj("score" -> -qa.score)))
 
                 // 消息提醒
-                msgColFuture.map(_.insert(Message(BSONObjectID.generate().stringify, reply.author._id, "qa", qa._id, qa.title, RequestHelper.getAuthorOpt.get, "accept", "恭喜您，您的回复已被采纳！", DateTimeUtil.now(), false)))
+                mongo.insertOne[Message](Message(ObjectId.get.toHexString, reply.author._id, "qa", qa._id, qa.title, RequestHelper.getAuthorOpt.get, "accept", "恭喜您，您的回复已被采纳！", DateTimeUtil.now(), false))
 
                 Ok(Json.obj("status" -> 0))
               case None =>
@@ -153,10 +139,9 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
 
   def view(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      qaCol <- qaColFuture
-      qa <- qaCol.find(Json.obj("_id" -> _id)).one[QA]
-      topViewQAs <- qaCol.find(Json.obj()).sort(Json.obj("viewStat.count" -> -1)).cursor[QA]().collect[List](10)
-      topReplyQAs <- qaCol.find(Json.obj()).sort(Json.obj("replyStat.count" -> -1)).cursor[QA]().collect[List](10)
+      qa <- mongo.find[QA](Json.obj("_id" -> _id)).first
+      topViewQAs <- mongo.find[QA]().sort(Json.obj("viewStat.count" -> -1)).limit(10).list
+      topReplyQAs <- mongo.find[QA]().sort(Json.obj("replyStat.count" -> -1)).limit(10).list
     } yield {
       qa match {
         case Some(a) =>
@@ -166,7 +151,7 @@ class QAController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Rea
               val viewBitmap = BitmapUtil.fromBase64String(a.viewStat.bitmap)
               if (!viewBitmap.contains(uid)) {
                 viewBitmap.add(uid)
-                qaCol.update(Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+                mongo.updateOne[QA](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
                 Ok(views.html.qa.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
               } else {
                 Ok(views.html.qa.detail(a))

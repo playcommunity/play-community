@@ -1,11 +1,8 @@
 package controllers.api
 
-import java.io.{ByteArrayOutputStream, File}
 import javax.inject._
-
 import akka.stream.Materializer
-import akka.util.ByteString
-import controllers.routes
+import cn.playscala.mongo.Mongo
 import models.JsonFormats._
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
@@ -16,21 +13,15 @@ import play.api.libs.json.Json
 import play.api.libs.oauth.{ConsumerKey, OAuth, ServiceInfo}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.QueryOpts
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, ElasticService, MailerService}
 import utils.PDFUtil.getCatalogs
 import utils._
-
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 @Singleton
-class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, config: Configuration, ws: WSClient, counterService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
+class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, config: Configuration, ws: WSClient, counterService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   private val githubClientId = config.getOptional[String]("oauth.github.clientId").getOrElse("")
   private val githubClientSecret = config.getOptional[String]("oauth.github.clientSecret").getOrElse("")
@@ -57,13 +48,12 @@ class InternalApiController @Inject()(cc: ControllerComponents, val reactiveMong
           val bio = js("bio").asOpt[String].getOrElse("")
           val githubUrl = js("html_url").as[String]
 
-          userColFuture.flatMap(_.find(Json.obj("$or" -> Json.arr(Json.obj("login" -> email), Json.obj("login" -> login)))).one[User]).flatMap {
+          mongo.find[User](Json.obj("$or" -> Json.arr(Json.obj("login" -> email), Json.obj("login" -> login)))).first.flatMap {
             case Some(u) => Future.successful(u)
             case None => for {
-              userCol <- userColFuture
               uid <- counterService.getNextSequence("user-sequence")
               u = User(uid.toString, Role.USER, email, "", UserSetting(name, "", bio, headImg, location), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel("github", "GitHub", githubUrl)), None)
-              wr <- userCol.insert(u)
+              wr <- mongo.insertOne[User](u)
             } yield u
           }.map { u =>
             if (u.password == "" && email.contains("@")) {

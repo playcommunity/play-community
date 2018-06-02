@@ -1,30 +1,23 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
-import models.DocSetting
+import cn.playscala.mongo.Mongo
+import com.mongodb.client.model.FindOneAndUpdateOptions
 import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import reactivemongo.play.json._
 
 @Singleton
-class CommonService @Inject()(reactiveMongoApi: ReactiveMongoApi) {
-  private def counterColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-counter"))
+class CommonService @Inject()(mongo: Mongo) {
+  val counterCol = mongo.getCollection("common-counter")
 
   def getNextSequence(name: String): Future[Int] = {
-    counterColFuture.flatMap{ counterCol =>
-      counterCol.findAndModify(
-        Json.obj("_id" -> name),
-        counterCol.updateModifier(Json.obj("$inc" -> Json.obj("value" -> 1)), true, true)
-      ).map(_.result[JsObject]).map{
-        case Some(obj) => (obj \ "value").as[Int]
-        case None => 0
-      }
+    counterCol.findOneAndUpdate(
+      Json.obj("_id" -> name),
+      Json.obj("$inc" -> Json.obj("value" -> 1)),
+      new FindOneAndUpdateOptions().upsert(true)
+    ).map{ obj =>
+      (obj \ "value").as[Int]
     }
   }
-
 }

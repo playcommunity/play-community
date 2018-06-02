@@ -1,51 +1,29 @@
 package services
 
-import java.io.{File, FileInputStream}
 import javax.inject.{Inject, Singleton}
-
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
 import play.api.libs.json.{JsObject, Json}
-import play.modules.reactivemongo.{NamedDatabase, ReactiveMongoApi}
-import reactivemongo.api.QueryOpts
-import reactivemongo.bson.{BSONDocument, BSONTimestamp}
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.{Await, ExecutionContext, Future}
-import akka.stream.scaladsl.Source
-import pl.allegro.tech.embeddedelasticsearch.{EmbeddedElastic, IndexSettings, PopularProperties}
-import java.lang.ClassLoader._
-import java.net.URL
-import java.nio.file.{Files, Paths}
 import java.time.{Clock, LocalDateTime, OffsetDateTime}
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
-
 import akka.actor.ActorSystem
-import com.google.common.reflect.ClassPath
-import controllers.admin.routes
+import cn.playscala.mongo.Mongo
 import models._
 import play.api._
 import models.JsonFormats._
-import org.jsoup.Jsoup
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import utils.{DateTimeUtil, HashUtil, VersionComparator}
-
 import scala.concurrent.duration._
 
 /**
   * 执行系统初始化任务
   */
 @Singleton
-class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, reactiveMongoApi: ReactiveMongoApi, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
-  def oplogColFuture = reactiveMongoApi.connection.database("local").map(_.collection[JSONCollection]("oplog.rs"))
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-  def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
-
+class InitializeService @Inject()(mongo: Mongo, app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
+  val settingCol = mongo.getCollection("common-setting")
   val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
+
 
 
   if (env.mode == Mode.Dev) {
@@ -54,9 +32,8 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
 
   // 系统初始化
   for {
-    settingCol <- settingColFuture
-    versionOpt <- settingCol.find(Json.obj("_id" -> "version")).one[JsObject]
-    siteSettingOpt <- settingCol.find(Json.obj("_id" -> "siteSetting")).one[SiteSetting]
+    versionOpt <- settingCol.findById("version")
+    siteSettingOpt <- settingCol.findById("siteSetting")
   } yield {
     versionOpt match {
       case Some(js) =>
@@ -66,9 +43,9 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
         }
 
       case None =>
-        settingCol.update(Json.obj("_id" -> "version"), Json.obj("$set" -> Json.obj("value" -> App.version)), upsert = true)
+        settingCol.updateOne(Json.obj("_id" -> "version"), Json.obj("$set" -> Json.obj("value" -> App.version)), upsert = true)
     }
-    siteSettingOpt.foreach{ siteSetting =>
+    siteSettingOpt.map(_.as[SiteSetting]).foreach{ siteSetting =>
       App.siteSetting = siteSetting
       if (env.mode == Mode.Dev) {
         App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
@@ -77,10 +54,10 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
   }
 
   // 初始化管理员账户
-  userColFuture.flatMap(_.count(Some(Json.obj("role" -> Role.ADMIN)))).map{ count =>
+  mongo.count[User](Json.obj("role" -> Role.ADMIN)).map{ count =>
     if (count <= 0) {
       commonService.getNextSequence("user-sequence").map{ uid =>
-        userColFuture.map(_.insert(User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", "127.0.0.1", None, Nil, None)))
+        mongo.insertOne[User](User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", "127.0.0.1", None, Nil, None))
       }
     }
   }
@@ -182,14 +159,13 @@ class InitializeService @Inject()(app: Application, actorSystem: ActorSystem, en
     */
   actorSystem.scheduler.schedule(2 minutes, 2 minutes){
     for{
-      userCol <- userColFuture
-      jsOpt <- userCol.find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).one[JsObject]
+      jsOpt <- mongo.getCollection("common-user").find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).first
     } {
       jsOpt.foreach{ js =>
         val ip = js("ip").as[String]
         ipHelper.getLocation(ip).foreach{ locationOpt =>
           locationOpt.foreach{ location =>
-            userCol.update(Json.obj("ip" -> ip), Json.obj("$set" -> Json.obj("ipLocation" -> location)), multi = true)
+            mongo.updateMany[User](Json.obj("ip" -> ip), Json.obj("$set" -> Json.obj("ipLocation" -> location)))
           }
         }
       }

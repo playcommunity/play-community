@@ -2,40 +2,27 @@ package controllers
 
 import javax.inject._
 
+import cn.playscala.mongo.Mongo
 import models.JsonFormats._
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.QueryOpts
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, EventService}
 import utils.{BitmapUtil, RequestHelper}
-
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.Json._
 
 @Singleton
-class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: ReactiveMongoApi, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
-  def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
-  def categoryColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-category"))
-  def msgColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-message"))
-  def settingColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-setting"))
-  def getColFuture(name: String) = reactiveMongoApi.database.map(_.collection[JSONCollection](name))
-
+class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def index = Action.async { implicit request: Request[AnyContent] =>
     for{
-      docCol <- docColFuture
-      docCatalog <- docCatalogFuture
-      settingCol <- settingColFuture
-      catalogOpt <- docCatalog.find(Json.obj()).one[JsValue]
-      firstDocOpt <- docCol.find(Json.obj()).sort(Json.obj("timeStat.createTime" -> 1)).one[Doc]
-      defaultDocOpt <- settingCol.find(Json.obj("_id" -> "docSetting")).one[DocSetting].flatMap{
-        case Some(s) => docCol.find(Json.obj("catalogId" -> s.defaultCatalogId)).one[Doc]
+      catalogOpt <- mongo.getCollection("doc-catalog").find().first
+      firstDocOpt <- mongo.find[Doc]().sort(Json.obj("timeStat.createTime" -> 1)).first
+      defaultDocOpt <- mongo.find[DocSetting](obj("_id" -> "docSetting")).first.flatMap{
+        case Some(s) => mongo.find[Doc](obj("catalogId" -> s.defaultCatalogId)).first
         case None => Future.successful(None)
       }
     } yield {
@@ -54,10 +41,8 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
 
   def viewCatalog(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      docCol <- docColFuture
-      docCatalog <- docCatalogFuture
-      Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
-      docOpt <- docCol.find(Json.obj("catalogId" -> _id)).one[Doc]
+      Some(catalog) <- mongo.getCollection("doc-catalog").find().first
+      docOpt <- mongo.find[Doc](obj("catalogId" -> _id)).first
     } yield {
       docOpt match {
         case Some(doc) =>
@@ -67,7 +52,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
             val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
             if (!viewBitmap.contains(uid)) {
               viewBitmap.add(uid)
-              docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+              mongo.updateOne[Doc](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
           Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))
@@ -79,10 +64,8 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
 
   def viewDoc(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      docCol <- docColFuture
-      docCatalog <- docCatalogFuture
-      Some(catalog) <- docCatalog.find(Json.obj()).one[JsValue]
-      docOpt <- docCol.find(Json.obj("_id" -> _id)).one[Doc]
+      Some(catalog) <- mongo.getCollection("doc-catalog").find().first
+      docOpt <- mongo.find[Doc](Json.obj("_id" -> _id)).first
     } yield {
       docOpt match {
         case Some(doc) =>
@@ -92,7 +75,7 @@ class DocController @Inject()(cc: ControllerComponents, val reactiveMongoApi: Re
             val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
             if (!viewBitmap.contains(uid)) {
               viewBitmap.add(uid)
-              docCol.update(Json.obj("_id" -> doc._id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+              mongo.updateOne[Doc](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
           Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))

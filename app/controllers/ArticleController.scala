@@ -2,25 +2,21 @@ package controllers
 
 import java.time.Instant
 import javax.inject._
-
 import models._
 import models.JsonFormats._
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
+import play.api.libs.json.Json._
 import play.api.mvc._
-import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
-import reactivemongo.play.json.collection.JSONCollection
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
-import reactivemongo.play.json._
 import models.JsonFormats._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-
 import scala.concurrent.{ExecutionContext, Future}
 import cn.playscala.mongo.Mongo
 import services.EventService
 
 @Singleton
-class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, reactiveMongoApi: ReactiveMongoApi, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def test = Action { implicit request: Request[AnyContent] =>
     println(Json.obj("time" -> Instant.now()))
@@ -80,7 +76,7 @@ class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, reacti
 
   def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
     (for {
-      article <- mongo.find[Article](Json.obj("_id" -> _id)).first()
+      article <- mongo.find[Article](Json.obj("_id" -> _id)).first
       categoryList <- mongo.find[Category](Json.obj("parentPath" -> "/")).list()
     } yield {
       article match {
@@ -100,7 +96,7 @@ class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, reacti
       tuple => {
         val (_idOpt, title, content, keywords, categoryPath) = tuple
         for {
-          category <- mongo.find[Category](Json.obj("path" -> categoryPath)).first()
+          category <- mongo.find[Category](Json.obj("path" -> categoryPath)).first
           wr <-  _idOpt match {
                   case Some(_id) =>
                     eventService.updateResource(RequestHelper.getAuthor, _id, "article", title)
@@ -147,7 +143,7 @@ class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, reacti
 
   def view(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      article <- mongo.find[Article](Json.obj("_id" -> _id)).first()
+      article <- mongo.find[Article](Json.obj("_id" -> _id)).first
     } yield {
       article match {
         case Some(a) =>

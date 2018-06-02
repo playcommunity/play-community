@@ -2,7 +2,6 @@ package controllers
 
 import java.io.{ByteArrayOutputStream, File}
 import javax.inject._
-
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
@@ -10,28 +9,20 @@ import models._
 import models.JsonFormats._
 import org.apache.pdfbox.pdmodel.PDDocument
 import play.api.Configuration
-import reactivemongo.play.json._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.mvc._
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.api.QueryOpts
-import reactivemongo.play.json.collection.JSONCollection
 import services.{CommonService, ElasticService, MailerService}
 import utils.PDFUtil.{getCatalogs, getText}
 import utils._
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.collection.JavaConverters._
+import play.api.libs.json.Json._
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactiveMongoApi: ReactiveMongoApi, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
-  def userColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-user"))
-  def newsColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-news"))
-  def articleColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-article"))
-  def docColFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("common-doc"))
+class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
@@ -65,8 +56,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
         val (login, password, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
           for{
-            userCol <- userColFuture
-            userOpt <- userCol.find(Json.obj("login" -> login, "password" -> HashUtil.sha256(password))).one[User]
+            userOpt <- mongo.find[User](obj("login" -> login, "password" -> HashUtil.sha256(password))).first
           } yield {
             userOpt match {
               case Some(u) =>
@@ -142,8 +132,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
         val (login, name, password, repassword, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
           (for {
-            userCol <- userColFuture
-            userOpt <- userCol.find(Json.obj("login" -> login)).one[User]
+            userOpt <- mongo.find[User](obj("login" -> login)).first
           } yield {
             userOpt match {
               case Some(u) =>
@@ -153,16 +142,12 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
                   val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
                   for {
                     uid <- counterService.getNextSequence("user-sequence")
-                    wr <- userCol.insert(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode)))
+                    wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode)))
                   } yield {
-                    if (wr.ok && wr.n == 1) {
-                      // 发送激活码
-                      mailer.sendEmail(name, login, views.html.mail.activeMail(name, activeCode).body)
-                      Redirect("http://www.playscala.cn/user/activate")
-                        .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
-                    } else {
-                      Redirect(routes.Application.message("注册出错了", "很抱歉，似乎是发生了系统错误！"))
-                    }
+                    // 发送激活码
+                    mailer.sendEmail(name, login, views.html.mail.activeMail(name, activeCode).body)
+                    Redirect("http://www.playscala.cn/user/activate")
+                      .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                   }
                 } else {
                   Future.successful(Redirect(routes.Application.message("注册出错了", "您两次输入的密码不一致！")))
@@ -187,7 +172,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
       errForm => Redirect(routes.Application.message("系统提示", "您的填写有误！")),
       activeCode => {
         if (activeCode.trim == request.user.activeCode.getOrElse("")) {
-          userColFuture.map(_.update(Json.obj("_id" -> request.user._id), Json.obj("$unset" -> Json.obj("activeCode" -> 1))))
+          mongo.updateOne[User](obj("_id" -> request.user._id), obj("$unset" -> Json.obj("activeCode" -> 1)))
           Redirect(routes.UserController.activate())
             .addingToSession("active" -> "1")
         } else {
@@ -201,7 +186,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
     * 自动注册单点登录用户
     */
   def autoRegister = Action.async { implicit request: Request[AnyContent] =>
-    userColFuture.flatMap(_.find(Json.obj("login" -> RequestHelper.getLogin)).one[User]).flatMap {
+    mongo.find[User](Json.obj("login" -> RequestHelper.getLogin)).first.flatMap {
       case Some(u) =>
         Future.successful {
           Redirect(routes.Application.index(1))
@@ -209,9 +194,8 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, val reactive
         }
       case None =>
         for{
-          userCol <- userColFuture
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userCol.insert(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
+          _ <- mongo.insertOne[User](User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
           Redirect(routes.Application.index(1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER, "active" -> "1")

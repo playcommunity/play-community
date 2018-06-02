@@ -33,7 +33,7 @@ GET     /tweet/view                              controllers.TweetController.vie
 
 # Resource
 POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
-GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String)
+GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String, inline: String ?= "true")
 DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
 GET      /ueditor                                controllers.ResourceController.ueditorGet(action: String)
 + nocsrf

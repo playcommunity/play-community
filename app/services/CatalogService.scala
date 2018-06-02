@@ -1,21 +1,16 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-
+import cn.playscala.mongo.Mongo
 import models.Category
 import models.JsonFormats.categoryFormat
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
-import play.modules.reactivemongo.ReactiveMongoApi
-import reactivemongo.play.json._
-import reactivemongo.play.json.collection.JSONCollection
-
 import scala.concurrent.Future
 
 @Singleton
-class CatalogService @Inject() (val reactiveMongoApi: ReactiveMongoApi) {
-  private def docCatalogFuture = reactiveMongoApi.database.map(_.collection[JSONCollection]("doc-catalog"))
-
+class CatalogService @Inject() (mongo: Mongo) {
+  val docCatalogCol = mongo.getCollection("doc-catalog")
   /**
     * 根据catalogId获取目录名称
     * @param catalogId 目录节点id
@@ -23,8 +18,7 @@ class CatalogService @Inject() (val reactiveMongoApi: ReactiveMongoApi) {
     */
   def getCatalogName(catalogId: String): Future[String] = {
     for{
-      docCatalog <- docCatalogFuture
-      catalogOpt <- docCatalog.find(Json.obj()).one[JsObject]
+      catalogOpt <- docCatalogCol.find().first
     } yield {
       catalogOpt match {
         case Some(obj) =>

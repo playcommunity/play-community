@@ -62,6 +62,7 @@ case class Doc (
 )
 
 // 已整理文档目录
+@Entity("doc-catalog")
 case class DocCatalog(
   _id: String,
   nodes: JsArray,
@@ -94,6 +95,7 @@ case class Article(
 )
 
 // 问答
+@Entity("common-qa")
 case class QA(
   _id: String,
   title: String,
@@ -114,6 +116,7 @@ case class QA(
   timeStat: QATimeStat
 )
 
+@Entity("common-event")
 case class Event(
   _id: String,
   actor: Author,
@@ -124,6 +127,7 @@ case class Event(
   createTime: OffsetDateTime
 )
 
+@Entity("common-tweet")
 case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: OffsetDateTime, voteStat: VoteStat, replyStat: ReplyStat, replies: List[Reply]){
   def toJson: JsObject = {
     Json.obj("_id" -> _id, "author" -> author, "content" -> content, "images" -> images, "replyCount" -> replies.size, "voteCount" -> voteStat.count, "time" -> DateTimeUtil.toPrettyString(createTime))
@@ -135,13 +139,15 @@ case class Tweet(_id: String, author: Author, title: String, content: String, im
   * @param source system/article/qa
   * @param action view/vote/reply/comment
   */
+@Entity("common-message")
 case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)
+
 case class IPLocation(country: String, province: String, city: String)
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()) }
 case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
 case class Author(_id: String, login: String, name: String, headImg: String)
-case class ViewStat(count: BigDecimal, bitmap: String)
+case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
