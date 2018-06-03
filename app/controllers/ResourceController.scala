@@ -1,10 +1,13 @@
 package controllers
 
 import javax.inject._
+
 import akka.stream.Materializer
 import play.api.libs.json.Json
 import play.api.mvc._
 import cn.playscala.mongo.Mongo
+import models.{Article, User}
+
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json.Json._
 
@@ -12,7 +15,9 @@ import play.api.libs.json.Json._
 class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default)  extends AbstractController(cc) {
 
   def testMongo = Action.async {
-    Future.successful(Ok("Finish."))
+    mongo.findById[Article]("1-5b05bcb46700008800fc1f4c").map{ user =>
+      Ok(user.get.toString)
+    }
   }
 
   def saveResource(ownerId: String) = checkLogin.async { request =>

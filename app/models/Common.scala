@@ -1,7 +1,6 @@
 package models
 
-import java.time.{Instant, OffsetDateTime}
-
+import java.time.{Instant}
 import cn.playscala.mongo.annotations.Entity
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
@@ -41,7 +40,7 @@ case class News(
   author: Author,
   from: String,
   top: Option[Boolean],
-  createTime: OffsetDateTime
+  createTime: Instant
 )
 
 // 已整理文档
@@ -67,8 +66,8 @@ case class DocCatalog(
   _id: String,
   nodes: JsArray,
   isDefault: Boolean,
-  createTime: OffsetDateTime,
-  updateTime: OffsetDateTime
+  createTime: Instant,
+  updateTime: Instant
 )
 
 // 分享
@@ -93,6 +92,27 @@ case class Article(
   top: Boolean, // 置顶
   recommended: Boolean // 精华
 )
+
+@Entity("common-article")
+case class Article1(
+                    _id: String,
+                    title: String,
+                    content: String,
+                    keywords: String,
+                    editorType: String,
+                    author: Author,
+                    categoryPath: String,
+                    categoryName: String,
+                    tags: List[String],
+                    replies: List[Reply],
+                    lastReply: Option[Reply],
+                    viewStat: ViewStat,
+                    voteStat: VoteStat,
+                    replyStat: ReplyStat,
+                    collectStat: CollectStat,
+                    top: Boolean, // 置顶
+                    recommended: Boolean // 精华
+                  )
 
 // 问答
 @Entity("common-qa")
@@ -124,11 +144,11 @@ case class Event(
   resId: String,
   resType: String,
   resTitle: String,
-  createTime: OffsetDateTime
+  createTime: Instant
 )
 
 @Entity("common-tweet")
-case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: OffsetDateTime, voteStat: VoteStat, replyStat: ReplyStat, replies: List[Reply]){
+case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: Instant, voteStat: VoteStat, replyStat: ReplyStat, replies: List[Reply]){
   def toJson: JsObject = {
     Json.obj("_id" -> _id, "author" -> author, "content" -> content, "images" -> images, "replyCount" -> replies.size, "voteCount" -> voteStat.count, "time" -> DateTimeUtil.toPrettyString(createTime))
   }
@@ -140,20 +160,20 @@ case class Tweet(_id: String, author: Author, title: String, content: String, im
   * @param action view/vote/reply/comment
   */
 @Entity("common-message")
-case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: OffsetDateTime, read: Boolean)
+case class Message(_id: String, uid: String, source: String, sourceId: String, sourceTitle: String, actor: Author, action: String, content: String, createTime: Instant, read: Boolean)
 
 case class IPLocation(country: String, province: String, city: String)
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
 object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()) }
-case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: OffsetDateTime, updateTime: OffsetDateTime, lastLoginTime: OffsetDateTime, lastReplyTime: OffsetDateTime)
+case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: Instant, updateTime: Instant, lastLoginTime: Instant, lastReplyTime: Instant)
 case class Author(_id: String, login: String, name: String, headImg: String)
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
 case class ArticleTimeStat(createTime: Instant, updateTime: Instant, lastViewTime: Instant, lastVoteTime: Instant)
-case class DocTimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime)
-case class QATimeStat(createTime: OffsetDateTime, updateTime: OffsetDateTime, lastViewTime: OffsetDateTime, lastVoteTime: OffsetDateTime)
-case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: OffsetDateTime, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
-case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: OffsetDateTime)
+case class DocTimeStat(createTime: Instant, updateTime: Instant)
+case class QATimeStat(createTime: Instant, updateTime: Instant, lastViewTime: Instant, lastVoteTime: Instant)
+case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: Instant, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
+case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: Instant)
 

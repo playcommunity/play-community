@@ -3,12 +3,10 @@ package controllers
 import java.time.Instant
 import javax.inject._
 import models._
-import models.JsonFormats._
 import play.api.libs.json.Json
-import play.api.libs.json.Json._
 import play.api.mvc._
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
-import models.JsonFormats._
+import models.JsonFormats.viewStatFormat
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import scala.concurrent.{ExecutionContext, Future}
@@ -18,17 +16,12 @@ import services.EventService
 @Singleton
 class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def test = Action { implicit request: Request[AnyContent] =>
-    println(Json.obj("time" -> Instant.now()))
+  def test = Action { implicit request =>
     /*mongo.insertOne[Test](Test("1", Instant.now())).map(_ => println("inserted.")).recover{ case t: Throwable =>
       println(t.getMessage)
       t.printStackTrace()
     }*/
 
-    mongo.updateOne[Test](Json.obj("_id" -> "0"), Json.obj("$set" -> Json.obj("time" -> Instant.now()))).map(_ => println("updated.")).recover{ case t: Throwable =>
-      println(t.getMessage)
-      t.printStackTrace()
-    }
     Ok("Finish.")
   }
 

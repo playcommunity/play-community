@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 import javax.inject._
 
 import akka.stream.Materializer
@@ -14,6 +14,7 @@ import play.api.mvc.{Action, _}
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.{JsObject, Json}
 import services.{CommonService, EventService}
+
 import scala.concurrent.{ExecutionContext, Future}
 import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
 
@@ -177,14 +178,14 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
           val collectStat = resObj("collectStat").as[CollectStat]
           val resOwner = resObj("author").as[Author]
           val resTitle = resObj("title").as[String]
-          val resCreateTime = resObj("timeStat")("createTime").as[OffsetDateTime]
+          val resCreateTime = resObj("timeStat")("createTime").as[Long]
           val bitmap = BitmapUtil.fromBase64String(collectStat.bitmap)
           // 收藏
           if (!bitmap.contains(uid)) {
             eventService.collectResource(RequestHelper.getAuthor, resId, resType, resTitle)
             bitmap.add(uid)
             resCol.updateOne(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("collectStat" -> CollectStat(collectStat.count + 1, BitmapUtil.toBase64String(bitmap)))))
-            mongo.insertOne[StatCollect](StatCollect(ObjectId.get.toHexString, request.session("uid"), resType, resId, resOwner, resTitle, resCreateTime, DateTimeUtil.now()))
+            mongo.insertOne[StatCollect](StatCollect(ObjectId.get.toHexString, request.session("uid"), resType, resId, resOwner, resTitle, Instant.ofEpochMilli(resCreateTime), DateTimeUtil.now()))
             Ok(Json.obj("status" -> 0))
           }
           // 取消收藏

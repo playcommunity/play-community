@@ -1,13 +1,10 @@
 package controllers.admin
 
-import java.io.ByteArrayOutputStream
-import java.time.OffsetDateTime
 import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
 import com.hankcs.hanlp.HanLP
-import controllers.routes
 import models.JsonFormats._
 import models._
 import play.api.data.Form
@@ -17,7 +14,7 @@ import play.api.libs.json.Json._
 import play.api.mvc._
 import models.JsonFormats.siteSettingFormat
 import services.{CommonService, ElasticService, MailerService}
-import utils.{DateTimeUtil, HashUtil}
+import utils.{HashUtil}
 import scala.concurrent.{ExecutionContext, Future}
 import controllers.checkAdmin
 import play.api.libs.json.Json._
@@ -100,32 +97,6 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
         }
       }
     )
-  }
-
-  def migrateToOneDotTwo = checkAdmin.async {
-    for {
-      articles <- mongo.getCollection[Article].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
-    } yield {
-      /*articles.foreach { a =>
-        mongo.updateOne[Article](
-          obj("_id" -> (a \ "_id").as[String]),
-          obj("$set" ->
-            obj(
-              /*"replyStat.count" -> BigDecimal((a \ "replyStat" \ "count").as[Int]),
-              "replyStat.count" -> BigDecimal((a \ "replyStat" \ "count").as[Int]),
-              "voteStat.count" -> BigDecimal((a \ "voteStat" \ "count").as[Int]),*/
-              "timeStat.createTime" -> OffsetDateTime.parse((a \ "timeStat" \ "createTime").as[String]).toInstant,
-              "timeStat.updateTime" -> OffsetDateTime.parse((a \ "timeStat" \ "updateTime").as[String]).toInstant,
-              "timeStat.lastViewTime" -> OffsetDateTime.parse((a \ "timeStat" \ "lastViewTime").as[String]).toInstant,
-              "timeStat.lastVoteTime" -> OffsetDateTime.parse((a \ "timeStat" \ "lastVoteTime").as[String]).toInstant
-            )
-          )
-        )
-      }*/
-      mongo.updateOne[Article](obj("_id" -> "1-5b05bcb46700008800fc1f4c"), obj("$set" -> obj("viewStat.count" -> 111)))
-      //articleCol.update(obj("_id" -> "1-5b05bcb46700008800fc1f4c"), obj("$set" -> obj("viewStat.count" -> 11231.10)))
-      Ok("Finish.")
-    }
   }
 
 }

@@ -9,7 +9,7 @@ import java.time.{Duration, Instant, OffsetDateTime, ZoneOffset}
   */
 object DateTimeUtil {
   val datePattern = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneOffset.ofHours(8))
-  val timePattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.ofHours(8))
+  val dateTimePattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.ofHours(8))
 
   def toPrettyString(time: OffsetDateTime): String = {
     val d = Duration.between(time, now())
@@ -59,15 +59,20 @@ object DateTimeUtil {
   }
 
   def toString(time: OffsetDateTime): String = {
-    timePattern.format(time)
+    dateTimePattern.format(time)
+  }
+
+  def toString(time: Instant): String = {
+    dateTimePattern.format(time)
   }
 
   def toString(time: OffsetDateTime, format: String): String = {
     time.format(DateTimeFormatter.ofPattern(format))
   }
 
+  // Must format Instant with TimeZone.
   def toString(time: Instant, format: String): String = {
-    DateTimeFormatter.ofPattern(format).format(time)
+    DateTimeFormatter.ofPattern(format).withZone(ZoneOffset.ofHours(8)).format(time)
   }
 
   def toString(epochMillis: Long, format: String): String = {
@@ -75,8 +80,8 @@ object DateTimeUtil {
     toString(time, format)
   }
 
-  def now() : OffsetDateTime = {
-    OffsetDateTime.now(ZoneOffset.ofHours(8))
+  def now() : Instant = {
+    Instant.now()
   }
 
 

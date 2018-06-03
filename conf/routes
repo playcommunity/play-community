@@ -2,7 +2,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-
 # Doc
 GET     /docs                                     controllers.DocController.index
 GET     /doc/view                                 controllers.DocController.viewDoc(_id: String)
