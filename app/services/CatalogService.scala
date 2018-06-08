@@ -10,7 +10,7 @@ import scala.concurrent.Future
 
 @Singleton
 class CatalogService @Inject() (mongo: Mongo) {
-  val docCatalogCol = mongo.getCollection("doc-catalog")
+  val docCatalogCol = mongo.collection("doc-catalog")
   /**
     * 根据catalogId获取目录名称
     * @param catalogId 目录节点id

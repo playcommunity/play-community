@@ -20,11 +20,9 @@ import scala.concurrent.duration._
   */
 @Singleton
 class InitializeService @Inject()(mongo: Mongo, app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
-  val settingCol = mongo.getCollection("common-setting")
+  val settingCol = mongo.collection("common-setting")
   val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
   val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
-
-
 
   if (env.mode == Mode.Dev) {
     App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
@@ -159,7 +157,7 @@ class InitializeService @Inject()(mongo: Mongo, app: Application, actorSystem: A
     */
   actorSystem.scheduler.schedule(2 minutes, 2 minutes){
     for{
-      jsOpt <- mongo.getCollection("common-user").find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).first
+      jsOpt <- mongo.collection("common-user").find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).first
     } {
       jsOpt.foreach{ js =>
         val ip = js("ip").as[String]

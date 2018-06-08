@@ -9,7 +9,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 @Singleton
 class CommonService @Inject()(mongo: Mongo) {
-  val counterCol = mongo.getCollection("common-counter")
+  val counterCol = mongo.collection("common-counter")
 
   def getNextSequence(name: String): Future[Int] = {
     counterCol.findOneAndUpdate(

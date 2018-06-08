@@ -17,7 +17,21 @@ import services.EventService
 class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def test = Action { implicit request =>
+
+    mongo.find[Article].fetch[Author]("authorId").list().map{ _.map{ t =>
+        val (article, author) = t
+      }
+    }
     /*mongo.insertOne[Test](Test("1", Instant.now())).map(_ => println("inserted.")).recover{ case t: Throwable =>
+      println(t.getMessage)
+      t.printStackTrace()
+    }*/
+
+    //mongo.find()
+
+    /*try{
+      mongo.find()
+    } catch { case t: Throwable =>
       println(t.getMessage)
       t.printStackTrace()
     }*/

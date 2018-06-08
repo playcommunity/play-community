@@ -21,7 +21,7 @@ import play.api.libs.json.Json._
 
 @Singleton
 class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
-  val settingCol = mongo.getCollection("common-setting")
+  val settingCol = mongo.collection("common-setting")
 
   def index = checkAdmin.async { implicit request: Request[AnyContent] =>
     Future.successful(Ok(views.html.admin.index()))

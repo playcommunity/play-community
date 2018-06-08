@@ -171,9 +171,9 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       tuple => {
         val (resType, resId) = tuple
         val uid = request.session("uid").toInt
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for {
-          Some(resObj) <- mongo.getCollection("common-" + resType).find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1, "timeStat" -> 1, "collectStat" -> 1)).first
+          Some(resObj) <- mongo.collection("common-" + resType).find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1, "timeStat" -> 1, "collectStat" -> 1)).first
         } yield {
           val collectStat = resObj("collectStat").as[CollectStat]
           val resOwner = resObj("author").as[Author]
@@ -208,9 +208,9 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
         val (resId, resType, content, at) = tuple
         val reply = Reply(RequestHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
         val uid = request.session("uid").toInt
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
-          Some(resObj) <- mongo.getCollection("common-" + resType).find(Json.obj("_id" -> resId), Json.obj("replyStat" -> 1, "author" -> 1, "title" -> 1)).first
+          Some(resObj) <- mongo.collection("common-" + resType).find(Json.obj("_id" -> resId), Json.obj("replyStat" -> 1, "author" -> 1, "title" -> 1)).first
           resAuthor = (resObj \ "author").as[Author]
           resTitle = (resObj \ "title").as[String]
           replyStat = (resObj \ "replyStat").as[ReplyStat]
@@ -251,7 +251,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
 
   def editReply(aid: String, rid: String) = checkOwner("rid").async { implicit request: Request[AnyContent] =>
     for {
-      reply <- mongo.getCollection("common-article").find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get)("replies")(0).as[Reply])
+      reply <- mongo.collection("common-article").find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get)("replies")(0).as[Reply])
     } yield {
       Ok(Json.obj("status" -> 0, "rows" -> Json.obj("content" -> reply.content)))
     }
@@ -279,7 +279,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       tuple => {
         val (resType, resId, rid) = tuple
         val uid = request.session("uid").toInt
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
           answerObjOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("answer" -> 1)).first
         } yield {
@@ -301,7 +301,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
       tuple => {
         val (resType, resId, rid) = tuple
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
           reply <- resCol.find(Json.obj("_id" -> resId), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get \ "replies")(0).as[Reply])
         } yield {
@@ -333,7 +333,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "invalid args."))),
       tuple => {
         val (resType, resId) = tuple
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
           objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("voteStat" -> 1, "title" -> 1)).first
         } yield {
@@ -369,7 +369,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
         val (resType, resId) = tuple
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
           objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1)).first
           wr <- resCol.deleteOne(Json.obj("_id" -> resId))
@@ -389,7 +389,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
         val (resType, resId) = tuple
-        val resCol = mongo.getCollection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-${resType}")
         for{
           Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1)).first
         } yield {

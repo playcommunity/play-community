@@ -1,7 +1,8 @@
 import java.util.regex.Pattern
 import javax.inject.Inject
+
 import cn.playscala.mongo.Mongo
-import models.{StatTraffic, StatVisitor}
+import models.{StatIP, StatTraffic, StatVisitor}
 import org.bson.types.ObjectId
 import play.api.{Configuration, Environment}
 import play.api.http._
@@ -10,6 +11,7 @@ import play.api.mvc.Results._
 import play.api.mvc._
 import play.api.routing.Router
 import utils.DateTimeUtil
+
 import scala.concurrent.ExecutionContext
 
 /**
@@ -17,12 +19,12 @@ import scala.concurrent.ExecutionContext
   */
 class RequestHandler @Inject() (mongo: Mongo, router: Router, errorHandler: HttpErrorHandler, env: Environment, config: Configuration, configuration: HttpConfiguration, filters: HttpFilters)(implicit ec: ExecutionContext) extends DefaultHttpRequestHandler(router, errorHandler, configuration, filters) with Rendering with AcceptExtractors {
   val assetsPathPattern = Pattern.compile("/favicon[.]ico|/assets/.*|/resource/.*|/message|/404|/todo|/baidu_verify_5vujE3CYCX.html|/socket.io/.*|/temp/.*")
-  val apiPathPattern = Pattern.compile("/api/.*")
+  val publicPathPattern = Pattern.compile("/api/.+|/demo/.+")
   val trafficPathPattern = Pattern.compile("/|/verifyCode|/search|/register|/login|/logout|/forgetPassword|/resetPassword|/sendActiveMail|/user.*|/admin.*|/article.*|/doc.*|/qa.*|/tweet.*")
 
   override def routeRequest(request: RequestHeader) = {
     // 忽略非PV和Api请求
-    if (assetsPathPattern.matcher(request.path).matches() || apiPathPattern.matcher(request.path).matches()) {
+    if (assetsPathPattern.matcher(request.path).matches() || publicPathPattern.matcher(request.path).matches()) {
       super.routeRequest(request)
     } else {
       val ip = request.remoteAddress
@@ -41,7 +43,7 @@ class RequestHandler @Inject() (mongo: Mongo, router: Router, errorHandler: Http
       )
 
       // 统计ip流量
-      mongo.updateOne(
+      mongo.updateOne[StatIP](
         Json.obj("ip" -> ip, "hourStr" -> hourStr),
         Json.obj(
           "$inc" -> Json.obj("count" -> 1, "userCount" -> (if(hasLogin){1}else{0}), "visitorCount" -> (if(hasLogin){0}else{1})),

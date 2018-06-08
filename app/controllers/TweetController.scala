@@ -21,8 +21,8 @@ class TweetController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
     val cPage = if(page < 1){1}else{page}
     val sort = if (nav == "0") { Json.obj("createTime" -> -1) } else { Json.obj("voteStat.count" -> -1) }
     for {
-      tweets <- mongo.find[Tweet](Json.obj()).sort(sort).skip((cPage-1) * 15).limit(15).list
-      hotTweets <- mongo.find[Tweet](Json.obj()).sort(Json.obj("voteStat.count" -> -1)).limit(15).list
+      tweets <- mongo.find[Tweet]().sort(sort).skip((cPage-1) * 15).limit(15).list
+      hotTweets <- mongo.find[Tweet]().sort(Json.obj("voteStat.count" -> -1)).limit(15).list
       total <- mongo.count[Tweet]()
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {

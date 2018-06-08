@@ -95,7 +95,10 @@ GET     /assets/*file                             controllers.Assets.versioned(p
 GET     /todo                                     controllers.Default.todo
 
 # API Routes
-->  /api    api.Routes
+->  /api     api.Routes
+
+# Demo Routes
+->  /demo    demo.Routes
 
 # Admin Routes
-->  /admin  admin.Routes
+->  /admin   admin.Routes

@@ -93,27 +93,6 @@ case class Article(
   recommended: Boolean // 精华
 )
 
-@Entity("common-article")
-case class Article1(
-                    _id: String,
-                    title: String,
-                    content: String,
-                    keywords: String,
-                    editorType: String,
-                    author: Author,
-                    categoryPath: String,
-                    categoryName: String,
-                    tags: List[String],
-                    replies: List[Reply],
-                    lastReply: Option[Reply],
-                    viewStat: ViewStat,
-                    voteStat: VoteStat,
-                    replyStat: ReplyStat,
-                    collectStat: CollectStat,
-                    top: Boolean, // 置顶
-                    recommended: Boolean // 精华
-                  )
-
 // 问答
 @Entity("common-qa")
 case class QA(

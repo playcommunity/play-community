@@ -86,7 +86,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
 
   def chooseCatalog(selectOpt: Option[String]) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
-      catalogOpt <- mongo.getCollection("doc-catalog").find().first
+      catalogOpt <- mongo.collection("doc-catalog").find().first
     } yield {
       catalogOpt match {
         case Some(c) => Ok(views.html.admin.doc.chooseCatalog((c \ "nodes").as[JsArray], selectOpt))
@@ -105,7 +105,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
 
   def docSetting = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
-      opt <- mongo.getCollection("common-setting").findById("docSetting")
+      opt <- mongo.collection("common-setting").findById("docSetting")
     } yield {
       Ok(views.html.admin.doc.setting(opt.map(_.as[DocSetting]).getOrElse(DocSetting("docSetting", "", "未设置"))))
     }
@@ -116,7 +116,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
         val (defaultCatalogId, defaultCatalogName) = tuple
-        mongo.getCollection("common-setting").updateOne(Json.obj("_id" -> "docSetting"), Json.obj("$set" -> Json.obj("defaultCatalogId" -> defaultCatalogId, "defaultCatalogName" -> defaultCatalogName)), upsert = true).map{ _ =>
+        mongo.collection("common-setting").updateOne(Json.obj("_id" -> "docSetting"), Json.obj("$set" -> Json.obj("defaultCatalogId" -> defaultCatalogId, "defaultCatalogName" -> defaultCatalogName)), upsert = true).map{ _ =>
           Redirect(routes.AdminDocController.docSetting())
         }
       }
@@ -125,7 +125,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
 
   def catalog = checkAdmin.async { implicit request: Request[AnyContent] =>
     for{
-      catalogOpt <- mongo.getCollection("doc-catalog").find().first
+      catalogOpt <- mongo.collection("doc-catalog").find().first
     } yield {
       catalogOpt match {
         case Some(c) => Ok(views.html.admin.doc.catalog((c \ "nodes").as[JsArray]))

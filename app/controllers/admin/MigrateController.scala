@@ -21,19 +21,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MigrateController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, elasticService: ElasticService, mailer: MailerService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
-  val settingCol = mongo.getCollection("common-setting")
+  val settingCol = mongo.collection("common-setting")
 
   def migrateToOneDotTwo = checkAdmin.async {
     for {
-      users <- mongo.getCollection[User].find[JsObject](obj("stat.createTime" -> obj("$type" -> "string"))).list()
-      articles <- mongo.getCollection[Article].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
-      news <- mongo.getCollection[News].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
-      docs <- mongo.getCollection[Doc].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
-      docCatalogs <- mongo.getCollection[DocCatalog].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
-      qas <- mongo.getCollection[QA].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
-      events <- mongo.getCollection[Event].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
-      tweets <- mongo.getCollection[Tweet].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
-      messages <- mongo.getCollection[Message].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
+      users <- mongo.collection[User].find[JsObject](obj("stat.createTime" -> obj("$type" -> "string"))).list()
+      articles <- mongo.collection[Article].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
+      news <- mongo.collection[News].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
+      docs <- mongo.collection[Doc].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
+      docCatalogs <- mongo.collection[DocCatalog].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
+      qas <- mongo.collection[QA].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
+      events <- mongo.collection[Event].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
+      tweets <- mongo.collection[Tweet].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
+      messages <- mongo.collection[Message].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
     } yield {
       articles.foreach { a =>
         val replies = (a \ "replies").as[JsArray].value.map{ r =>
@@ -109,7 +109,7 @@ class MigrateController @Inject()(cc: ControllerComponents, mongo: Mongo, common
           obj("$set" ->
             obj(
               "createTime" -> OffsetDateTime.parse((a \ "createTime").as[String]).toInstant,
-              "updateTime" -> OffsetDateTime.parse((a \ "updateTime").as[String]).toInstant,
+              "updateTime" -> OffsetDateTime.parse((a \ "updateTime").as[String]).toInstant
             )
           )
         )
