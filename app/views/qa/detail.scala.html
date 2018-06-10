@@ -62,11 +62,11 @@
             <img src="@qa.author.headImg" alt="">
             <cite>
               @qa.author.name
-              <em>@utils.DateTimeUtil.toPrettyString(qa.timeStat.createTime)发布</em>
+              <em>@utils.DateTimeUtil.toPrettyString(qa.createTime)发布</em>
             </cite>
           </a>
           <div class="detail-hits" data-id="@qa._id">
-            <span style="color:#FF7200">悬赏：@{qa.score}飞吻</span>
+            <span style="color:#FF7200">悬赏：0 飞吻</span>
             @if(RequestHelper.isLogin && qa.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-mini jie-admin" type="edit"><a href="/qa/edit?_id=@{qa._id}">编辑此贴</a></span>
             }
@@ -104,7 +104,7 @@
                 </cite>
               </a>
               <div class="detail-hits">
-                <span>@utils.DateTimeUtil.toPrettyString(r.replyTime)</span>
+                <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
               </div>
               @if(qa.answer.map(_._id).getOrElse("") == r._id){
               <i class="iconfont icon-caina" title="最佳答案"></i>

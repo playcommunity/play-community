@@ -2,16 +2,10 @@ package models
 
 import play.api.libs.json.Json
 
-/**
-  * Created by Le'novo on 2017/7/2.
-  */
 object JsonFormats {
 
   // Common
   implicit val linkFormat = Json.format[Link]
-  implicit val qaTimeStatFormat = Json.format[QATimeStat]
-  implicit val articleTimeStatFormat = Json.format[ArticleTimeStat]
-  implicit val docTimeStatFormat = Json.format[DocTimeStat]
   implicit val channelFormat = Json.format[Channel]
   implicit val userStatFormat = Json.format[UserStat]
   implicit val userSettingFormat = Json.format[UserSetting]
@@ -29,7 +23,6 @@ object JsonFormats {
   implicit val ipLocationFormat = Json.format[IPLocation]
   implicit val userFormat = Json.format[User]
   implicit val messageFormat = Json.format[Message]
-  implicit val newsFormat = Json.format[News]
   implicit val tweetFormat = Json.format[Tweet]
 
   // Stat

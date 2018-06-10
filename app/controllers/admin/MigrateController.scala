@@ -27,7 +27,6 @@ class MigrateController @Inject()(cc: ControllerComponents, mongo: Mongo, common
     for {
       users <- mongo.collection[User].find[JsObject](obj("stat.createTime" -> obj("$type" -> "string"))).list()
       articles <- mongo.collection[Article].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
-      news <- mongo.collection[News].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
       docs <- mongo.collection[Doc].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
       docCatalogs <- mongo.collection[DocCatalog].find[JsObject](obj("createTime" -> obj("$type" -> "string"))).list()
       qas <- mongo.collection[QA].find[JsObject](obj("timeStat.createTime" -> obj("$type" -> "string"))).list()
@@ -67,17 +66,6 @@ class MigrateController @Inject()(cc: ControllerComponents, mongo: Mongo, common
               "stat.updateTime" -> OffsetDateTime.parse((a \ "stat" \ "updateTime").as[String]).toInstant,
               "stat.lastLoginTime" -> OffsetDateTime.parse((a \ "stat" \ "lastLoginTime").as[String]).toInstant,
               "stat.lastReplyTime" -> OffsetDateTime.parse((a \ "stat" \ "lastReplyTime").as[String]).toInstant
-            )
-          )
-        )
-      }
-
-      news.foreach { a =>
-        mongo.updateOne[News](
-          obj("_id" -> (a \ "_id").as[String]),
-          obj("$set" ->
-            obj(
-              "createTime" -> OffsetDateTime.parse((a \ "createTime").as[String]).toInstant
             )
           )
         )

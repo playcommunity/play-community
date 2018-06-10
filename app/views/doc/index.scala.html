@@ -192,7 +192,7 @@
               <div class="caption font-blue">
                 <i class="icon-book-open font-blue"></i>
                 <span class="caption-subject bold"> @docOpt.map(_.title).getOrElse("尚未完成")</span>
-                <span class="caption-helper">@docOpt.map(d => utils.DateTimeUtil.toPrettyString(d.timeStat.updateTime) + "更新").getOrElse("")</span>
+                <span class="caption-helper">@docOpt.map(d => utils.DateTimeUtil.toPrettyString(d.updateTime) + "更新").getOrElse("")</span>
               </div>
               <div class="actions">
                 <a class="btn btn-circle btn-icon-only btn-outline btn-default fullscreen" href="javascript:;" data-original-title="" title=""> </a>

@@ -36,7 +36,7 @@
           </h2>
           <p>
             <span><a href="user/home.html">@a.author.name</a></span>
-            <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
+            <span>@utils.DateTimeUtil.toPrettyString(a.createTime)</span>
             <span>@a.categoryName</span>
             <span class="fly-list-hint">
               <i class="iconfont" title="回答">&#xe60c;</i> @a.replies.size
@@ -59,7 +59,7 @@
           </h2>
           <p>
             <span><a href="/user/home?uid=@{a.author._id}">@a.author.name</a></span>
-            <span>@utils.DateTimeUtil.toPrettyString(a.timeStat.createTime)</span>
+            <span>@utils.DateTimeUtil.toPrettyString(a.createTime)</span>
             <span><a href="/articles?path=@{a.categoryPath}&page=@page">@a.categoryName</a></span>
             <span class="fly-list-hint">
               <i class="layui-icon" title="收藏">&#xe600;</i> @a.collectStat.count

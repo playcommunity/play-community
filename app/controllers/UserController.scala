@@ -206,7 +206,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (resId, resType, content, at) = tuple
-        val reply = Reply(RequestHelper.generateId, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val reply = Reply(RequestHelper.generateId, content, "lay-editor", RequestHelper.getAuthor, Nil, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
         val uid = request.session("uid").toInt
         val resCol = mongo.collection(s"common-${resType}")
         for{
@@ -262,7 +262,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Future.successful(Ok("err")),
       tuple => {
         val (aid, rid, content) = tuple
-        val reply = Reply(ObjectId.get().toHexString, content, "lay-editor", Author(request.session("uid"), request.session("login"), request.session("name"), request.session("headImg")), DateTimeUtil.now(), ViewStat(0, ""), VoteStat(0, ""), List.empty[Comment])
+        val reply = Reply(ObjectId.get().toHexString, content, "lay-editor", RequestHelper.getAuthor, Nil, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
         val uid = request.session("uid").toInt
         for{
           wr <- mongo.updateOne[Article](Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
@@ -396,7 +396,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
           val resOwner = resObj("author").as[Author]
           val resTitle = resObj("title").as[String]
           commonService.getNextSequence("common-news").map{index =>
-            mongo.insertOne[News](News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, Some(false), DateTimeUtil.now()))
+            //mongo.insertOne[News](News(index.toString, resTitle, s"/${resType}/view?_id=${resId}", resOwner, resType, Some(false), DateTimeUtil.now()))
           }
           Ok(Json.obj("status" -> 0))
         }

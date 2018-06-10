@@ -55,9 +55,6 @@
                   <div class="layui-input-block">
                     <select name="score">
                       <option value="5" @if(qaOpt.isEmpty){selected}>5</option>
-                      <option value="20" @if(qaOpt.map(_.score).getOrElse(0) == 20){selected}>20</option>
-                      <option value="50" @if(qaOpt.map(_.score).getOrElse(0) == 50){selected}>50</option>
-                      <option value="100" @if(qaOpt.map(_.score).getOrElse(0) == 100){selected}>100</option>
                     </select>
                   </div>
                 </div>

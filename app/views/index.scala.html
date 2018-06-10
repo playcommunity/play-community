@@ -1,190 +1,261 @@
-@(topNews: List[News], news: List[News], activeUsers: List[User], topViewDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
+@(topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewDocs: List[Doc], page: Int, total: Int)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
-@main(s"${App.siteSetting.indexTitle}") {
-<div class="main layui-clear">
-  <div class="wrap">
-    <div class="content">
-      <div class="fly-tab">
-        <div class="layui-tab layui-tab-brief">
-          <ul class="layui-tab-title">
-            <li> <a href="javascript:void(0);" class="layui-this">综合资讯</a> </li>
-          </ul>
+@main(s"${App.siteSetting.indexTitle}", "community", "index") {
+<div class="layui-container">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md8">
+      <div class="fly-panel">
+        <div class="fly-panel-title fly-filter">
+          <a>置顶</a>
+          <a href="#signin" class="layui-hide-sm layui-show-xs-block fly-right" id="LAY_goSignin" style="color: #FF5722;">去签到</a>
         </div>
-        <i class="layui-icon fly-search">&#xe615;</i>
-      </div>
+        <ul class="fly-list">
+          <li>
+            <a href="user/home.html" class="fly-avatar">
+              <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" alt="贤心">
+            </a>
+            <h2>
+              <a class="layui-badge">动态</a>
+              <a href="jie/detail.html">基于 layui 的极简社区页面模版</a>
+            </h2>
+            <div class="fly-list-info">
+              <a href="user/home.html" link>
+                <cite>贤心</cite>
+                <i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
+                <i class="layui-badge fly-badge-vip">VIP3</i>
+              </a>
+              <span>刚刚</span>
 
-      @if(topNews.nonEmpty){
-      <ul class="fly-panel fly-list fly-list-top">
-        @for(n <- topNews){
-        <li class="fly-list-li">
-          <a href="/user/home?uid=@{n.author._id}" class="fly-list-avatar">
-            <img src="@n.author.headImg" alt="">
-          </a>
-          <h2 class="fly-tip">
-            <a href="@n.url">@n.title</a>
-          </h2>
-          <p>
-            <span><a href="/user/home?uid=@{n.author._id}">@{n.author.name}</a></span>
-            <span>@utils.DateTimeUtil.toPrettyString(n.createTime)</span>
-            <span><a href="/@{n.from}s">@utils.AppUtil.prettyResource(n.from)</a></span>
-          </p>
-        </li>
-        }
-      </ul>
-      }
-
-      <ul class="fly-panel fly-list">
-        @for(n <- news){
-        <li class="fly-list-li">
-          <a href="/user/home?uid=@{n.author._id}" class="fly-list-avatar">
-            <img src="@n.author.headImg" alt="">
-          </a>
-          <h2 class="fly-tip">
-            <a href="@n.url">@n.title</a>
-          </h2>
-          <p>
-            <span><a href="/user/home?uid=@{n.author._id}">@{n.author.name}</a></span>
-            <span>@utils.DateTimeUtil.toPrettyString(n.createTime)</span>
-            <span><a href="/@{n.from}s">@utils.AppUtil.prettyResource(n.from)</a></span>
-          </p>
-        </li>
-        }
-      </ul>
-
-      <div style="text-align: center">
-        <div class="laypage-main">
-          <a href="/?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?page=@{page+1}" class="laypage-next">下一页</a></div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="edge">
-    <div class="fly-panel leifeng-rank">
-      <h3 class="fly-panel-title">在线阅读</h3>
-      <dl>
-        <dd style="width:130px;height:200px; margin: 10px 20px 0px 12px;">
-          <a target="_blank" href="http://www.playscala.cn/book/p-i-s-3/index.html">
-            <img src="http://www.playscala.cn/resource/acd7825c-dd17-4e2a-80f2-ac744d0530f7" style="width:130px;height:180px;">
-            <cite>2016.04</cite>
-            <i>Programming in Scala 3rd</i>
-          </a>
-        </dd>
-        <dd style="width:130px;height:200px;">
-          <a target="_blank" href="http://www.playscala.cn/book/scala-in-depth/index.html">
-            <img src="http://www.playscala.cn/resource/8ec9b6ac-a77a-494e-9a05-a2ae08e8dc14" style="width:130px;height:180px;">
-            <cite>2012.05</cite>
-            <i>Scala In Depth</i>
-          </a>
-        </dd>
-      </dl>
-    </div>
-
-    <div class="fly-panel">
-      <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0px;">
-        <ul class="layui-tab-title fly-panel-title">
-          <li class="layui-this">最新说说</li>
-          <li>热门说说</li>
+              <span class="fly-list-kiss layui-hide-xs" title="悬赏飞吻"><i class="iconfont icon-kiss"></i> 60</span>
+              <span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>
+              <span class="fly-list-nums">
+                              <i class="iconfont icon-pinglun1" title="回答"></i> 66
+                            </span>
+            </div>
+            <div class="fly-list-badge">
+              <!--
+              <span class="layui-badge layui-bg-black">置顶</span>
+              <span class="layui-badge layui-bg-red">精帖</span>
+              -->
+            </div>
+          </li>
         </ul>
-        <div id="app" class="layui-tab-content" style="padding: 0px;">
-          <div class="layui-tab-item layui-show">
-            <ul class="fly-panel fly-list">
-              <template v-for="(t, index) in tweets">
-                <li class="fly-list-li" style="padding: 2px 10px 2px 50px;height: auto;border-bottom: 0px;">
-                  <a :href="'/user/home?uid=' + t.author._id" class="fly-list-avatar" style="top: 0px;">
-                    <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
-                  </a>
-                  <span><a :href="'/user/home?uid=' + t.author._id">{{ t.author.name }}：</a> {{ t.content }}</span>
-                  <p>
-                    <span>{{ t.time }}</span>
-                    <span class="fly-list-hint">
-                    <a :href="'/tweet/view?_id=' + t._id"><i class="iconfont" title="回答">&#xe60c;</i></a> {{ t.replyCount }}
-                    <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
-                  </span>
-                  </p>
-                </li>
-              </template>
-            </ul>
-          </div>
-          <div class="layui-tab-item">
-            <ul class="fly-panel fly-list">
-            <template v-for="(t, index) in hotTweets">
-              <li class="fly-list-li" style="padding: 2px 10px 2px 50px;height: auto;border-bottom: 0px;">
-                <a href="/" class="fly-list-avatar" style="top: 0px;">
-                  <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
-                </a>
-                <span><a href="/user/home?uid=">{{ t.author.name }}：</a> {{ t.content }}</span>
-                <p>
-                  <span>{{ t.time }}</span>
-                  <span class="fly-list-hint">
-                    <a :href="'/tweet/view?_id=' + t._id"><i class="iconfont" title="回答">&#xe60c;</i></a> {{ t.replyCount }}
-                    <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
-                  </span>
-                </p>
-              </li>
-            </template>
-            </ul>
-          </div>
+      </div>
+
+      <div class="fly-panel" style="margin-bottom: 0;">
+        <div class="fly-panel-title fly-filter">
+          <a>综合</a>
+        </div>
+
+        <ul class="fly-list">
+          <li>
+            <a href="user/home.html" class="fly-avatar">
+              <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" alt="贤心">
+            </a>
+            <h2>
+              <a class="layui-badge">分享</a>
+              <a href="jie/detail.html">基于 layui 的极简社区页面模版</a>
+            </h2>
+            <div class="fly-list-info">
+              <a href="user/home.html" link>
+                <cite>贤心</cite>
+                <!--
+                <i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
+                <i class="layui-badge fly-badge-vip">VIP3</i>
+                -->
+              </a>
+              <span>刚刚</span>
+
+              <span class="fly-list-kiss layui-hide-xs" title="悬赏飞吻"><i class="iconfont icon-kiss"></i> 60</span>
+              <!--<span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>-->
+              <span class="fly-list-nums">
+                              <i class="iconfont icon-pinglun1" title="回答"></i> 66
+                            </span>
+            </div>
+            <div class="fly-list-badge">
+              <!--<span class="layui-badge layui-bg-red">精帖</span>-->
+            </div>
+          </li>
+          <li>
+            <a href="user/home.html" class="fly-avatar">
+              <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg" alt="贤心">
+            </a>
+            <h2>
+              <a class="layui-badge">动态</a>
+              <a href="jie/detail.html">基于 layui 的极简社区页面模版</a>
+            </h2>
+            <div class="fly-list-info">
+              <a href="user/home.html" link>
+                <cite>贤心</cite>
+                <!--<i class="iconfont icon-renzheng" title="认证信息：XXX"></i>-->
+                <i class="layui-badge fly-badge-vip">VIP3</i>
+              </a>
+              <span>刚刚</span>
+
+              <span class="fly-list-kiss layui-hide-xs" title="悬赏飞吻"><i class="iconfont icon-kiss"></i> 60</span>
+              <span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>
+              <span class="fly-list-nums">
+                <i class="iconfont icon-pinglun1" title="回答"></i> 66
+              </span>
+            </div>
+            <div class="fly-list-badge">
+              <span class="layui-badge layui-bg-red">精帖</span>
+            </div>
+          </li>
+        </ul>
+        <div style="text-align: center">
+          <div class="laypage-main">
+            <a href="/?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?page=@{page+1}" class="laypage-next">下一页</a></div>
         </div>
       </div>
     </div>
-    <div class="jie-add">
-      <form id="tweet-form" class="layui-form">
-        <div class="layui-form-item layui-form-text" style="margin-bottom: 0px;">
-          <div class="layui-input-block" style="margin-left: 0px;">
-            <textarea id="tweet" placeholder="发表说说" class="layui-textarea" rows="2" style="min-height:20px;"></textarea>
-          </div>
-        </div>
-        <div class="layui-form-item">
-          <div class="layui-input-block" style="margin-left: 0px;">
-            <button class="layui-btn layui-btn-small" style="width: 100%; font-size: 15px;">发表说说</button>
-          </div>
-        </div>
-      </form>
-    </div>
+    <div class="layui-col-md4">
+      <div class="fly-panel fly-rank fly-rank-reply">
+        <h3 class="fly-panel-title">在线阅读</h3>
+        <dl>
+          <!--<i class="layui-icon fly-loading">&#xe63d;</i>-->
+          <dd style="width:130px;height:180px;">
+            <a href="user/home.html">
+              <img src="http://www.playscala.cn/resource/acd7825c-dd17-4e2a-80f2-ac744d0530f7" style="width:130px;height:180px;"><cite>2016.04</cite><i title="Programming in Scala 3rd">Programming in Scala 3rd</i>
+            </a>
+          </dd>
+          <dd style="width:130px;height:180px;">
+            <a href="user/home.html">
+              <img src="http://www.playscala.cn/resource/8ec9b6ac-a77a-494e-9a05-a2ae08e8dc14" style="width:130px;height:180px;"><cite>2012.05</cite><i>Scala In Depth</i>
+            </a>
+          </dd>
+        </dl>
+      </div>
+      <div class="fly-panel">
+        <h3 class="fly-panel-title">温馨通道</h3>
+        <ul class="fly-panel-main fly-list-static">
+          <li>
+            <a href="/docs" target="_blank">Play For Scala 开发指南</a>
+          </li>
+          <li>
+            <a href="https://github.com/playcommunity/play-community" target="_blank">
+              PlayScala 社区源码
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play-Mongo 开源项目源码</a>
+          </li>
+        </ul>
+      </div>
 
-    @*
-    <div class="fly-panel leifeng-rank">
-      <h3 class="fly-panel-title">活跃用户</h3>
-      <dl>
-        @for(u <- activeUsers){
+      <div class="fly-panel">
+        <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0px;">
+          <ul class="layui-tab-title fly-panel-title">
+            <li class="layui-this">最新说说</li>
+            <li>热门说说</li>
+          </ul>
+          <div id="app" class="layui-tab-content" style="padding-left: 0px; padding-right: 0px;">
+            <div class="layui-tab-item layui-show">
+              <ul class="fly-panel fly-list">
+                <template v-for="(t, index) in tweets">
+                  <li style="padding: 3px 10px 2px 50px; height: auto; border: 0px;">
+                    <a :href="'/user/home?uid=' + t.author._id" class="fly-avatar" style="top: 0px;">
+                      <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
+                    </a>
+                    <span><a :href="'/user/home?uid=' + t.author._id">{{ t.author.name }}：</a> {{ t.content }}</span>
+                    <div class="fly-list-info">
+                      <a :href="'/tweet/view?_id=' + t._id" link>
+                        <cite>查看</cite>
+                      </a>
+                      <span>{{ t.time }}</span>
+                      <span class="fly-list-nums">
+                        <i class="iconfont icon-pinglun1" title="回答"></i> {{ t.replyCount }}
+                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                      </span>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+            <div class="layui-tab-item">
+              <ul class="fly-panel fly-list">
+                <template v-for="(t, index) in hotTweets">
+                  <li style="padding: 3px 10px 2px 50px; height: auto; border: 0px;">
+                    <a :href="'/user/home?uid=' + t.author._id" class="fly-avatar" style="top: 0px;">
+                      <img :src="t.author.headImg" alt="" style="width:30px;height:30px;">
+                    </a>
+                    <span><a :href="'/user/home?uid=' + t.author._id">{{ t.author.name }}：</a> {{ t.content }}</span>
+                    <div class="fly-list-info">
+                      <a :href="'/tweet/view?_id=' + t._id" link>
+                        <cite>查看</cite>
+                      </a>
+                      <span>{{ t.time }}</span>
+                      <span class="fly-list-nums">
+                        <i class="iconfont icon-pinglun1" title="回答"></i> {{ t.replyCount }}
+                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                      </span>
+                    </div>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="jie-add">
+        <form id="tweet-form" class="layui-form">
+          <div class="layui-form-item layui-form-text" style="margin-bottom: 0px;">
+            <div class="layui-input-block" style="margin-left: 0px;">
+              <textarea id="tweet" placeholder="发表说说" class="layui-textarea" rows="2" style="min-height:20px;"></textarea>
+            </div>
+          </div>
+          <div class="layui-form-item">
+            <div class="layui-input-block" style="margin-left: 0px;">
+              <button class="layui-btn layui-btn-small" style="width: 100%; font-size: 15px;">发表说说</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!--<div class="fly-panel fly-rank fly-rank-reply" id="LAY_replyRank">
+          <h3 class="fly-panel-title">回贴周榜</h3>
+          <dl>
+              &lt;!&ndash;<i class="layui-icon fly-loading">&#xe63d;</i>&ndash;&gt;
+              <dd>
+                  <a href="user/home.html">
+                      <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"><cite>贤心</cite><i>106次回答</i>
+                  </a>
+              </dd>
+          </dl>
+      </div>-->
+
+      <dl class="fly-panel fly-list-one">
+        <dt class="fly-panel-title">热门文档</dt>
+        @for(a <- topViewDocs){
         <dd>
-          <a href="/user/home?uid=@u._id">
-            <img src="@{u.setting.headImg}">
-            <cite>@{u.setting.name}</cite>
-            <i>贡献@{u.stat.resCount}次</i>
-          </a>
+          <a href="/doc/view?_id=@{a._id}">@a.title</a>
+          <span><i class="iconfont icon-pinglun1"></i> @a.viewStat.count</span>
         </dd>
         }
       </dl>
+
+      <!--<div class="fly-panel">
+          <div class="fly-panel-title">
+              这里可作为广告区域
+          </div>
+          <div class="fly-panel-main">
+              <a href="http://layim.layui.com/?from=fly" target="_blank" class="fly-zanzhu" time-limit="2017.09.25-2099.01.01" style="background-color: #5FB878;">LayIM 3.0 - layui 旗舰之作</a>
+          </div>
+      </div>-->
+
+      <!--<div class="fly-panel fly-link">
+          <h3 class="fly-panel-title">友情链接</h3>
+          <dl class="fly-panel-main">
+              <dd><a href="http://www.layui.com/" target="_blank">layui</a><dd>
+              <dd><a href="http://layim.layui.com/" target="_blank">WebIM</a><dd>
+              <dd><a href="http://layer.layui.com/" target="_blank">layer</a><dd>
+              <dd><a href="http://www.layui.com/laydate/" target="_blank">layDate</a><dd>
+          </dl>
+      </div>-->
+
     </div>
-    *@
-
-    <dl class="fly-panel fly-list-one">
-      <dt class="fly-panel-title">热门文档</dt>
-      @for(a <- topViewDocs){
-      <dd>
-        <a href="/doc/view?_id=@{a._id}">@a.title</a>
-        <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
-      </dd>
-      }
-    </dl>
-
-    @*
-    <div class="fly-panel fly-link">
-      <h3 class="fly-panel-title">友情链接</h3>
-      <dl>
-        @for(l <- App.siteSetting.links){
-        <dd>
-          <a href="@l.url" target="@l.target">@l.title</a>
-        </dd>
-        }
-      </dl>
-    </div>
-    *@
-
   </div>
 </div>
 }

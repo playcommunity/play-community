@@ -79,7 +79,7 @@
             <img src="@article.author.headImg" alt="">
             <cite>
               @article.author.name
-              <em>@utils.DateTimeUtil.toPrettyString(article.timeStat.createTime)发布</em>
+              <em>@utils.DateTimeUtil.toPrettyString(article.createTime)发布</em>
             </cite>
           </a>
           <div class="detail-hits" data-id="@article._id">
@@ -122,7 +122,7 @@
                 </cite>
               </a>
               <div class="detail-hits">
-                <span>@utils.DateTimeUtil.toPrettyString(r.replyTime)</span>
+                <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
               </div>
             </div>
             <div class="detail-body jieda-body">

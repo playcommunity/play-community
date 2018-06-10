@@ -95,7 +95,7 @@ class QAController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServi
                   case None =>
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "qa", title)
-                    mongo.insertOne[QA](QA(_id, title, content, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), score, List.empty[String], List.empty[Reply], None, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), QATimeStat(DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now)))
+                    mongo.insertOne[QA](QA(_id, title, "", content, "quill", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DateTimeUtil.now, DateTimeUtil.now, false, false, false, Resource.QA, categoryPath, category.map(_.name).getOrElse("-"), None))
                     mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.qaCount" -> 1)))
                 }
         } yield {
@@ -118,8 +118,7 @@ class QAController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServi
             qa.replies.find(_._id == rid) match {
               case Some(reply) =>
                 mongo.updateOne[QA](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
-                mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> qa.score)))
-                mongo.updateOne[User](Json.obj("_id" -> qa.author._id), Json.obj("$inc" -> Json.obj("score" -> -qa.score)))
+                mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> 10)))
 
                 // 消息提醒
                 mongo.insertOne[Message](Message(ObjectId.get.toHexString, reply.author._id, "qa", qa._id, qa.title, RequestHelper.getAuthorOpt.get, "accept", "恭喜您，您的回复已被采纳！", DateTimeUtil.now(), false))

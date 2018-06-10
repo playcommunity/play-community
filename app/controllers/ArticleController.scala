@@ -121,7 +121,7 @@ class ArticleController @Inject()(cc: ControllerComponents, mongo: Mongo, eventS
                     val _id = RequestHelper.generateId
                     eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
                     mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.articleCount" -> 1)))
-                    mongo.insertOne[Article](Article(_id, title, content, keywords, "quill", RequestHelper.getAuthor, categoryPath, category.map(_.name).getOrElse("-"), List.empty[String], List.empty[Reply], None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), ArticleTimeStat(Instant.now, Instant.now, Instant.now, Instant.now), false, false))
+                    mongo.insertOne[Article](Article(_id, title, content, keywords, "quill", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), Instant.now, Instant.now, false, false, false, Resource.Article, categoryPath, category.map(_.name).getOrElse("-")))
                 }
         } yield {
           Redirect(routes.ArticleController.index("0", categoryPath, 1))

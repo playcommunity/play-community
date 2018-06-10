@@ -1,111 +1,126 @@
-@(title: String, activeNav: String = "", keywords: String = App.siteSetting.seoKeyword, description: String = App.siteSetting.seoDescription)(content: Html)(implicit request: RequestHeader)
+@(title: String, nav1: String = "community", nav2: String = "", keywords: String = "", description: String = "")(content: Html)(implicit request: RequestHeader)
 
-@import helper._
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <title>@title</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta property="og:site_name" content="@App.siteSetting.name"/>
     <meta property="og:description" content="@App.siteSetting.seoDescription"/>
     <meta name="keywords" content="@keywords">
     <meta name="description" content="@description">
-    <link rel="stylesheet" href="//at.alicdn.com/t/font_mqhl04idhqx8byb9.css">
-    <link rel="stylesheet" href="/assets/layui/css/layui.css">
-    <link rel="stylesheet" href="/assets/css/global.css">
-    <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="/assets/fly3/res/layui/css/layui.css">
+    <link rel="stylesheet" href="/assets/fly3/res/css/global.css">
 </head>
 <body>
 
-<div class="header">
-    <div class="main">
-        <a class="logo" href="@App.siteSetting.url" title="Fly" style="width:220px;height:40px;background: url(@App.siteSetting.logo) no-repeat;">@App.siteSetting.name</a>
-        <div class="nav">
-            <a class='@if(activeNav == "doc"){nav-this}' href="/docs">
-                <i class="iconfont icon-iconmingxinganli" style="top: 2px;"></i>学习
-            </a>
-            <a class='@if(activeNav == "article"){nav-this}' href="/articles">
-                <i class="iconfont icon-logo" style="top: 2px;"></i>分享
-            </a>
-            <a class='@if(activeNav == "qa"){nav-this}' href="/qas">
-                <i class="iconfont icon-wenda" style="top: 2px;"></i>问答
-            </a>
-            <a class='@if(activeNav == "tweet"){nav-this}' href="/tweets">
-                <i class="layui-icon" style="top: 2px;">&#xe60c;</i>说说
-            </a>
-            <a class='@if(activeNav == "search"){nav-this}' href="/search">
-                <i class="layui-icon" style="top: 2px;">&#xe615;</i>搜索
-            </a>
-            <a href="https://github.com/playcommunity/play-community" target="_blank">
-                <i class="iconfont icon-daima" style="top: 2px;"></i>源码
-            </a>
+<div class="fly-header layui-bg-black">
+    <div class="layui-container">
+        <a class="fly-logo" href="/">
+            <!--<img src="@App.siteSetting.logo" alt="PlayScala社区">-->
+            <img src="/assets/images/logo.png" alt="PlayScala社区">
+        </a>
+        <ul class="layui-nav fly-nav layui-hide-xs" style="padding-left: 30px;">
+            <li class='layui-nav-item @if(nav1 == "community"){layui-this}'>
+                <a href="/"><i class="iconfont icon-jiaoliu"></i>交流</a>
+            </li>
+            <li class='layui-nav-item @if(nav1 == "learn"){nav-this}'>
+                <a href="/docs"><i class="iconfont icon-iconmingxinganli"></i>学习</a>
+            </li>
+            <li class='layui-nav-item'>
+                <a href="https://github.com/playcommunity/play-community" target="_blank"><i class="iconfont icon-daima"></i>源码</a>
+            </li>
+        </ul>
+
+        <ul class="layui-nav fly-nav-user">
+
+            <!-- 未登入的状态 -->
+            <li class="layui-nav-item">
+                <a class="iconfont icon-touxiang layui-hide-xs" href="https://secure.playscala.cn/login"></a>
+            </li>
+            <li class="layui-nav-item">
+                <a href="https://secure.playscala.cn/login">登入</a>
+            </li>
+            <li class="layui-nav-item">
+                <a href="https://secure.playscala.cn/register">注册</a>
+            </li>
+
+            <!-- 登入后的状态 -->
+            <!--
+            <li class="layui-nav-item">
+              <a class="fly-nav-avatar" href="javascript:;">
+                <cite class="layui-hide-xs">贤心</cite>
+                <i class="iconfont icon-renzheng layui-hide-xs" title="认证信息：layui 作者"></i>
+                <i class="layui-badge fly-badge-vip layui-hide-xs">VIP3</i>
+                <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg">
+              </a>
+              <dl class="layui-nav-child">
+                <dd><a href="user/set.html"><i class="layui-icon">&#xe620;</i>基本设置</a></dd>
+                <dd><a href="user/message.html"><i class="iconfont icon-tongzhi" style="top: 4px;"></i>我的消息</a></dd>
+                <dd><a href="user/home.html"><i class="layui-icon" style="margin-left: 2px; font-size: 22px;">&#xe68e;</i>我的主页</a></dd>
+                <hr style="margin: 5px 0;">
+                <dd><a href="/user/logout/" style="text-align: center;">退出</a></dd>
+              </dl>
+            </li>
+            -->
+        </ul>
+    </div>
+</div>
+
+<div class="fly-panel fly-column">
+    <div class="layui-container">
+        <ul class="layui-clear">
+            <li class='layui-hide-xs @if(nav2 == "index"){layui-this}'><a href="/">首页</a></li>
+            <li><a href="/qas" class='@if(nav2 == "qa"){layui-this}'>提问</a></li>
+            <li><a href="/articles" class='@if(nav2 == "article"){layui-this}'>分享</a></li>
+            <li><a href="/tweets" class='@if(nav2 == "tweet"){layui-this}'>说说</a></li>
+            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><span class="fly-mid"></span></li>
+
+            <!-- 用户登入后显示 -->
+            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="user/index.html">我发表的贴</a></li>
+            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="user/index.html#collection">我收藏的贴</a></li>
+        </ul>
+
+        <div class="fly-column-right layui-hide-xs">
+            <span class="fly-search"><i class="layui-icon"></i></span>
+            <a href="jie/add.html" class="layui-btn">发表新帖</a>
         </div>
-
-        <div class="nav-user">
-
-            @request.session.get("name") match {
-                case Some(name) => {
-                    <!-- 登入后的状态 -->
-                    <a class="avatar" href="/user/home">
-                        <img src="@request.session("headImg")">
-                        <cite>@name</cite>
-                        <!--<i>VIP2</i>-->
-                    </a>
-                    <div class="nav">
-                        <a href="/user/setting"><i class="iconfont icon-shezhi"></i>设置</a>
-                        <!--<a href="/user/message"><i class="iconfont icon-xiaoxi"></i>消息</a>-->
-                        <a href="/logout"><i class="iconfont icon-tuichu" style="top: 0; font-size: 22px;"></i>退了</a>
-                    </div>
-                }
-                case None => {
-                    <!-- 未登入状态 -->
-                    <a class="unlogin" href="javascript:void(0);"><i class="iconfont icon-touxiang"></i></a>
-                    <span><a href="https://secure.playscala.cn/login">登入</a><a href="https://secure.playscala.cn/register">注册</a></span>
-                    <!--<span><a href="https://cloud.chatbot.cn/cloud/login">公有云登入</a><a href="https://vip.chatbot.cn/cloud/login">企业云登入</a></span>-->
-                    <!--<p class="out-login">
-                        <a href="" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-qq" title="QQ登入"></a>
-                        <a href="" onclick="layer.msg('正在通过微博登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-weibo" title="微博登入"></a>
-                    </p>-->
-                }
-            }
+        <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
+            <a href="jie/add.html" class="layui-btn">发表新帖</a>
         </div>
     </div>
 </div>
+
 @content
-<div class="footer">
-    <p><a href="@App.siteSetting.url">@App.siteSetting.name</a> 2017 &copy; <a href="http://www.playscala.cn">PlayScala社区</a></p>
-    <!--<p>
-        <a href="https://www.chatbot.cn/demo.html" target="_blank">产品演示</a>
-        <a href="https://cloud.smartnlp.cn/cloud/register" target="_blank">产品体验</a>
-        <a href="javascript:void(0);" target="_blank">微信公众号</a>
-    </p>-->
+
+<div class="fly-footer">
+    <p>2018 &copy; <a href="http://www.playscala.cn/" target="_blank">PlayScala 社区</a></p>
+    <p>
+        <a href="https://github.com/playcommunity/play-community" target="_blank">社区源码</a>
+        <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play-Mongo</a>
+        <a href="" target="_blank">微信公众号</a>
+    </p>
 </div>
+
 <script src="/assets/js/jquery.js"></script>
-<script src="/assets/layui/layui.js"></script>
+<script src="/assets/fly3/res/layui/layui.js"></script>
 <script src="/assets/js/vue.js"></script>
 <script>
-var activeNav = "doc";
-var isDoc = true;
-var token = '@CSRF.getToken.value';
-
+layui.cache.page = '';
 layui.cache.user = {
-  username: '@request.session.get("name").getOrElse("游客")'
-  ,uid: @request.session.get("uid").getOrElse("-1").toInt
-  ,avatar: '@request.session.get("headImg").getOrElse("/assets/images/head.png")'
-  ,experience: 0
+  username: '游客'
+  ,uid: -1
+  ,avatar: '/assets/fly3/res/images/avatar/00.jpg'
+  ,experience: 83
   ,sex: '男'
 };
 layui.config({
-  version: "2.0.0"
-  ,base: '/assets/mods/'
+  version: "3.0.0"
+  ,base: '/assets/fly3/res/mods/' //这里实际使用时，建议改成绝对路径
 }).extend({
   fly: 'index'
-}).use('fly', function(){
-  var $ = layui.jquery;
-  var fly = layui.fly;
-});
-
+}).use('fly');
 </script>
 </body>
 </html>

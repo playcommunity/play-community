@@ -27,7 +27,7 @@
             @for(a <- articles){
             <li>
               <a class="jie-title" href="/article/view?_id=@a._id" target="_blank">@a.title</a>
-              <i>@utils.DateTimeUtil.toString(a.timeStat.createTime, "yyyy/MM/dd HH:mm")</i>
+              <i>@utils.DateTimeUtil.toString(a.createTime, "yyyy/MM/dd HH:mm")</i>
               <a class="mine-edit" href="/article/edit?_id=@a._id">编辑</a>
               <em>@{a.viewStat.count}阅/@{a.replyStat.count}答</em>
             </li>
@@ -39,7 +39,7 @@
             @for(a <- qas){
             <li>
               <a class="jie-title" href="/qa/view?_id=@a._id" target="_blank">@a.title</a>
-              <i>@utils.DateTimeUtil.toString(a.timeStat.createTime, "yyyy/MM/dd HH:mm")</i>
+              <i>@utils.DateTimeUtil.toString(a.createTime, "yyyy/MM/dd HH:mm")</i>
               <a class="mine-edit" href="/article/edit?_id=@a._id">编辑</a>
               <em>@{a.viewStat.count}阅/@{a.replyStat.count}答</em>
             </li>
