@@ -1,4 +1,4 @@
-@(isChinese: Boolean, list: List[Corporation])(implicit request: RequestHeader)
+@(sortBy: String, list: List[Corporation])(implicit request: RequestHeader)
 
 @import utils._
 <!DOCTYPE html>
@@ -49,19 +49,17 @@
 </div>
 
 <div class="fly-main" style="overflow: hidden;">
-
-    <div class="fly-tab-border fly-case-tab" style="padding-top: 20px;">
-    <span>
-      <a href="/corportation/cn" @if(isChinese){class="tab-this"}>国内公司</a>
-      <a href="/corportation/non-cn" @if(!isChinese){class="tab-this"}>国外公司</a>
-    </span>
+    <div class="layui-tab layui-tab-brief">
+        <ul class="layui-tab-title">
+            <li @if(sortBy == "vote"){class="layui-this"}><a href="/corporations?sortBy=vote">按点赞排行</a></li>
+            <li @if(sortBy == "time"){class="layui-this"}><a href="/corporations?sortBy=time">按提交时间</a></li>
+        </ul>
     </div>
-
     <ul class="fly-case-list" style="padding-top: 30px;">
         @for(c <- list){
         <li data-id="@c._id">
             <a class="fly-case-img" href="@c.url" target="_blank" >
-                <img src="@c.logo" alt="@c.title">
+                <img src="/assets/images/corporation.jpg" alt="@c.title">
                 <cite class="layui-btn layui-btn-primary layui-btn-small">去围观</cite>
             </a>
             <h2><a href="@c.url" target="_blank">@c.title</a></h2>
@@ -82,7 +80,7 @@
         }
         <li data-id="123">
             <a class="fly-case-img" href="http://fly.layui.com/" target="_blank" >
-                <img src="../../res/images/fly.jpg" alt="Fly社区">
+                <img src="/assets/images/corporation.jpg" alt="Fly社区">
                 <cite class="layui-btn layui-btn-primary layui-btn-small">去围观</cite>
             </a>
             <h2><a href="http://fly.layui.com/" target="_blank">Fly社区</a></h2>

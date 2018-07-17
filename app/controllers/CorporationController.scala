@@ -19,9 +19,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class CorporationController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def index(isChinese: Boolean) = Action.async { implicit request: Request[AnyContent] =>
-    mongo.find[Corporation](obj("isChinese" -> isChinese)).list().map{ list =>
-      Ok(views.html.corporation.index(isChinese, list))
+  def index(sortBy: String) = Action.async { implicit request: Request[AnyContent] =>
+    val sort = sortBy match {
+      case "time" => obj("createTime" -> -1)
+      case _ => obj("voteStat.count" -> -1)
+    }
+    mongo.find[Corporation](obj("active" -> true)).sort(sort).list().map{ list =>
+      Ok(views.html.corporation.index(sortBy, list))
     }
   }
 

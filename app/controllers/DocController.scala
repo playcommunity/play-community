@@ -19,9 +19,9 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
   def index = Action.async { implicit request: Request[AnyContent] =>
     for{
       catalogOpt <- mongo.collection("doc-catalog").find().first
-      firstDocOpt <- mongo.find[Doc]().sort(Json.obj("timeStat.createTime" -> 1)).first
+      firstDocOpt <- mongo.find[Resource]().sort(Json.obj("timeStat.createTime" -> 1)).first
       defaultDocOpt <- mongo.find[DocSetting](obj("_id" -> "docSetting")).first.flatMap{
-        case Some(s) => mongo.find[Doc](obj("catalogId" -> s.defaultCatalogId)).first
+        case Some(s) => mongo.find[Resource](obj("catalogId" -> s.defaultCatalogId)).first
         case None => Future.successful(None)
       }
     } yield {
@@ -41,7 +41,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
   def viewCatalog(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
       Some(catalog) <- mongo.collection("doc-catalog").find().first
-      docOpt <- mongo.find[Doc](obj("catalogId" -> _id)).first
+      docOpt <- mongo.find[Resource](obj("catalogId" -> _id)).first
     } yield {
       docOpt match {
         case Some(doc) =>
@@ -64,7 +64,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
   def viewDoc(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
       Some(catalog) <- mongo.collection("doc-catalog").find().first
-      docOpt <- mongo.find[Doc](Json.obj("_id" -> _id)).first
+      docOpt <- mongo.find[Resource](Json.obj("_id" -> _id)).first
     } yield {
       docOpt match {
         case Some(doc) =>

@@ -3,8 +3,7 @@
 # ~~~~
 
 # Cases
-GET     /corporation/cn                           controllers.CorporationController.index(isChinese: Boolean = true)
-GET     /corporation/non-cn                       controllers.CorporationController.index(isChinese: Boolean = false)
+GET     /corporations                             controllers.CorporationController.index(sortBy: String ?= "vote")
 POST    /corporation/add                          controllers.CorporationController.doAdd
 POST    /corporation/vote                         controllers.CorporationController.doVote
 
