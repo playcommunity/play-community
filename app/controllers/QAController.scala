@@ -3,7 +3,6 @@ package controllers
 import javax.inject._
 
 import cn.playscala.mongo.Mongo
-import models.JsonFormats._
 import models._
 import org.bson.types.ObjectId
 import play.api.data.Form

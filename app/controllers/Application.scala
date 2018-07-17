@@ -6,7 +6,6 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
 import models._
-import models.JsonFormats._
 import org.apache.pdfbox.pdmodel.PDDocument
 import play.api.Configuration
 import play.api.data.Form

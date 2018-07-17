@@ -2,7 +2,6 @@
 @import helper._
 @import utils.RequestHelper
 @import play.api.libs.json.Json
-@import models.JsonFormats.tweetFormat
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main(s"${App.siteSetting.name} - ${tweet.title}", "tweet", "说说", tweet.title) {

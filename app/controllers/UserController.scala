@@ -6,7 +6,6 @@ import javax.inject._
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
 import models._
-import models.JsonFormats._
 import org.bson.types.ObjectId
 import play.api._
 import play.api.data.Form

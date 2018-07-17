@@ -9,7 +9,6 @@ import akka.actor.ActorSystem
 import cn.playscala.mongo.Mongo
 import models._
 import play.api._
-import models.JsonFormats._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import utils.{DateTimeUtil, HashUtil, VersionComparator}

@@ -4,7 +4,6 @@ import java.time.{Instant}
 import cn.playscala.mongo.annotations.Entity
 import play.api.libs.json.{JsArray, JsObject, Json}
 import utils.DateTimeUtil
-import models.JsonFormats.authorFormat
 
 case class Channel(id: String, name: String, url: String)
 
@@ -155,4 +154,3 @@ case class DocTimeStat(createTime: Instant, updateTime: Instant)
 case class QATimeStat(createTime: Instant, updateTime: Instant, lastViewTime: Instant, lastVoteTime: Instant)
 case class Reply(_id: String, content: String, editorType: String, author: Author, replyTime: Instant, viewStat: ViewStat, voteStat: VoteStat, comments: List[Comment])
 case class Comment(_id: String, content: String, editorType: String, commentator: Author, commentTime: Instant)
-

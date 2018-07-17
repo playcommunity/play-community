@@ -1,13 +1,11 @@
 package controllers
 
 import javax.inject._
-
 import akka.stream.Materializer
 import play.api.libs.json.Json
 import play.api.mvc._
 import cn.playscala.mongo.Mongo
 import models.{Article, User}
-
 import scala.concurrent.{ExecutionContext, Future}
 import play.api.libs.json.Json._
 

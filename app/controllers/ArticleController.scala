@@ -5,8 +5,7 @@ import javax.inject._
 import models._
 import play.api.libs.json.Json
 import play.api.mvc._
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
-import models.JsonFormats.viewStatFormat
+import utils.{BitmapUtil, RequestHelper}
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import scala.concurrent.{ExecutionContext, Future}
