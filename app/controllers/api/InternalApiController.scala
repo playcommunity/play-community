@@ -3,7 +3,6 @@ package controllers.api
 import javax.inject._
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import models.JsonFormats._
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import play.api.{Configuration, Logger}

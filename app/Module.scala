@@ -6,7 +6,6 @@ import cn.playscala.mongo.codecs.Macros._
 import org.bson.codecs.configuration.CodecRegistries.{fromProviders}
 
 class Module extends AbstractModule {
-
   override def configure() = {
 
     Mongo.setModelsPackage("models")
@@ -14,5 +13,4 @@ class Module extends AbstractModule {
     bind(classOf[InitializeService]).asEagerSingleton
 
   }
-
 }

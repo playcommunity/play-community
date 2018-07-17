@@ -5,14 +5,12 @@ import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
 import com.hankcs.hanlp.HanLP
-import models.JsonFormats._
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json._
 import play.api.libs.json.Json._
 import play.api.mvc._
-import models.JsonFormats.siteSettingFormat
 import services.{CommonService, ElasticService, MailerService}
 import utils.{HashUtil}
 import scala.concurrent.{ExecutionContext, Future}

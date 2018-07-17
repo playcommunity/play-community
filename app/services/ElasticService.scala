@@ -1,6 +1,5 @@
 package services
 
-import models.JsonFormats.indexedDocumentFormat
 import javax.inject.{Inject, Singleton}
 import cn.playscala.mongo.Mongo
 import models.IndexedDocument

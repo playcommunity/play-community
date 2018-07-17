@@ -2,8 +2,6 @@ package services
 
 import javax.inject.{Inject, Singleton}
 import cn.playscala.mongo.Mongo
-import models.Category
-import models.JsonFormats.categoryFormat
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsArray, JsObject, JsValue, Json}
 import scala.concurrent.Future

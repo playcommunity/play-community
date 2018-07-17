@@ -5,7 +5,6 @@ import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import utils.RequestHelper
 import scala.concurrent.{ExecutionContext, Future}
-import models.JsonFormats.userFormat
 
 package object controllers {
 

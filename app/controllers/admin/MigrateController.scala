@@ -7,7 +7,6 @@ import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
 import com.hankcs.hanlp.HanLP
 import controllers.checkAdmin
-import models.JsonFormats.siteSettingFormat
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}

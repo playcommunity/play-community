@@ -6,7 +6,6 @@ import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
 import controllers.checkAdmin
 import models._
-import models.JsonFormats._
 import play.api.data.Form
 import play.api.data.Forms.{optional, text, tuple, _}
 import play.api.libs.json._
