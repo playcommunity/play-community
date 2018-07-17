@@ -18,7 +18,7 @@
 }
 
 @main("欢迎来到社区！") {
-<div class="fly-home" style="background-image: url();">
+<div class="fly-home fly-panel" style="background-image: url();">
   <img src="@headImg">
   <h1>
     @name
@@ -39,44 +39,45 @@
   <p class="fly-home-sign">@{userOpt.map(_.setting.introduction).getOrElse("")}</p>
 </div>
 
-<div class="main fly-home-main">
-  <div class="layui-inline fly-home-jie">
-    <div class="fly-panel">
-      <h3 class="fly-panel-title">@name 最近的贡献</h3>
-      <ul class="jie-row">
-        @for(e <- createEvents){
-        <li>
-          <a href="/@{e.resType}/view?_id=@e.resId" class="jie-title">@e.resTitle</a>
-          <i>@utils.DateTimeUtil.toPrettyString(e.createTime)</i>
-          <em>@utils.AppUtil.prettyResource(e.resType)</em>
-        </li>
-        }
-      </ul>
-      @if(createEvents.isEmpty){
-      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><i style="font-size:14px;">没有做出任何贡献</i></div>
-      }
+<div class="layui-container">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md6 fly-home-jie">
+      <div class="fly-panel">
+        <h3 class="fly-panel-title">@name 最近的贡献</h3>
+        <ul class="jie-row">
+          @for(e <- createEvents){
+          <li>
+            <a href="/@{e.resType}/view?_id=@e.resId" class="jie-title">@e.resTitle</a>
+            <i>@utils.DateTimeUtil.toPrettyString(e.createTime)</i>
+            <em>@utils.AppUtil.prettyResource(e.resType)</em>
+          </li>
+          }
+          @if(createEvents.isEmpty){
+          <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有做出任何贡献</span></div>
+          }
+        </ul>
+      </div>
+    </div>
+
+    <div class="layui-col-md6 fly-home-da">
+      <div class="fly-panel">
+        <h3 class="fly-panel-title">@name 最近的动态</h3>
+        <ul class="home-jieda">
+          @for(e <- events){
+          <li>
+            <p>
+              <span>@utils.DateTimeUtil.toPrettyString(e.createTime)</span>
+              @utils.AppUtil.prettyAction(e.action)@utils.AppUtil.prettyResource(e.resType) <a href="/@{e.resType}/view?_id=@e.resId" target="_blank">@{e.resTitle}</a>
+            </p>
+          </li>
+          }
+          @if(events.isEmpty){
+          <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有任何动态</span></div>
+          }
+        </ul>
+      </div>
     </div>
   </div>
-
-  <div class="layui-inline fly-home-da">
-    <div class="fly-panel">
-      <h3 class="fly-panel-title">@name 最近的动态</h3>
-      <ul class="home-jieda">
-        @for(e <- events){
-        <li>
-          <p>
-            <span>@utils.DateTimeUtil.toPrettyString(e.createTime)</span>
-            @utils.AppUtil.prettyAction(e.action)@utils.AppUtil.prettyResource(e.resType) <a href="/@{e.resType}/view?_id=@e.resId" target="_blank">@{e.resTitle}</a>
-          </p>
-        </li>
-        }
-      </ul>
-      @if(events.isEmpty){
-      <div class="fly-none" style="min-height: 50px; padding:30px 0; height:auto;"><span>没有任何动态</span></div>
-      }
-    </div>
-  </div>
-
 </div>
 }
 

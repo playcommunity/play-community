@@ -2,10 +2,8 @@ package controllers
 
 import java.time.Instant
 import javax.inject._
-
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import models.JsonFormats._
 import models._
 import org.bson.types.ObjectId
 import play.api.Logger
@@ -16,7 +14,6 @@ import play.api.libs.json.Json._
 import play.api.mvc._
 import services.{CommonService, EventService}
 import utils._
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
@@ -186,7 +183,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
             "$set" -> Json.obj("lastReply" -> reply),
             "$inc" -> obj("replyCount" -> 1)
           )
-        ).map{ res =>
+        ).map{ case Some(res) =>
           // 记录回复事件
           eventService.replyResource(RequestHelper.getAuthor, resId, resType, res.title)
 
