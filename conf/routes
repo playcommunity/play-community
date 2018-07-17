@@ -2,43 +2,55 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+# Cases
+GET     /corporation/cn                           controllers.CorporationController.index(isChinese: Boolean = true)
+GET     /corporation/non-cn                       controllers.CorporationController.index(isChinese: Boolean = false)
+POST    /corporation/add                          controllers.CorporationController.doAdd
+POST    /corporation/vote                         controllers.CorporationController.doVote
+
+# Resource
+GET     /articles                                 controllers.ResourceController.index(resType: String = "article", filter: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /article/add                              controllers.ResourceController.add(resType: String = "article")
+GET     /article/edit                             controllers.ResourceController.edit(_id: String)
+GET     /article/view                             controllers.ResourceController.view(_id: String)
+
+GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", filter: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
+GET     /qa/edit                                  controllers.ResourceController.edit(_id: String)
+GET     /qa/view                                  controllers.ResourceController.view(_id: String)
+
+
+POST    /resource/add                             controllers.ResourceController.doAdd()
+POST    /resource/collect                         controllers.ResourceController.doCollect()
+POST    /resource/reply                           controllers.ResourceController.doReply
+POST    /resource/vote                            controllers.ResourceController.doVote
+POST    /resource/reply/vote                      controllers.ResourceController.doVoteReply
+GET     /resource/reply/edit                      controllers.ResourceController.editReply(aid: String, rid: String)
+POST    /resource/reply/edit                      controllers.ResourceController.doEditReply
+POST    /resource/reply/delete                    controllers.ResourceController.doRemoveReply
+POST    /resource/remove                          controllers.ResourceController.doRemove
+POST    /resource/push                            controllers.ResourceController.doPush
+POST    /resource/status                          controllers.ResourceController.doSetStatus
+
 # Doc
 GET     /docs                                     controllers.DocController.index
 GET     /doc/view                                 controllers.DocController.viewDoc(_id: String)
 GET     /doc/catalog                              controllers.DocController.viewCatalog(_id: String)
 
-# Article
-GET     /article/test                             controllers.ArticleController.test
-GET     /articles                                 controllers.ArticleController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
-GET     /article/add                              controllers.ArticleController.add
-POST    /article/add                              controllers.ArticleController.doAdd
-GET     /article/edit                             controllers.ArticleController.edit(_id: String)
-GET     /article/view                             controllers.ArticleController.view(_id: String)
-POST    /article/top                              controllers.ArticleController.doSetTop
 
 # QA
-GET     /qas                                     controllers.QAController.index(nav: String ?= "0", path: String ?= "/", page: Int ?= 1)
-GET     /qa/add                                  controllers.QAController.add
-POST    /qa/add                                  controllers.QAController.doAdd
-GET     /qa/edit                                 controllers.QAController.edit(_id: String)
-GET     /qa/view                                 controllers.QAController.view(_id: String)
-POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
+#GET     /qas                                     controllers.QAController.index(filter: String ?= "0", path: String ?= "/", page: Int ?= 1)
+#GET     /qa/add                                  controllers.QAController.add
+#POST    /qa/add                                  controllers.QAController.doAdd
+#GET     /qa/edit                                 controllers.QAController.edit(_id: String)
+#GET     /qa/view                                 controllers.QAController.view(_id: String)
+#POST    /qa/reply/accept                         controllers.QAController.doAcceptReply
 
 # Tweet
 GET     /tweets                                  controllers.TweetController.index(nav: String ?= "0", page: Int ?= 1)
 GET     /tweet/json                              controllers.TweetController.getLatestAndHot(count: Int ?= 15)
 POST    /tweet/add                               controllers.TweetController.doAdd
 GET     /tweet/view                              controllers.TweetController.view(_id: String)
-
-# Resource
-POST     /resource/owner/:ownerId                controllers.ResourceController.saveResource(ownerId: String)
-GET      /resource/:rid                          controllers.ResourceController.getResource(rid: String, inline: String ?= "true")
-DELETE   /resource/:rid                          controllers.ResourceController.removeResource(rid: String)
-GET      /ueditor                                controllers.ResourceController.ueditorGet(action: String)
-+ nocsrf
-POST     /ueditor                                controllers.ResourceController.ueditorPost(action: String)
-
-GET      /temp/mongo                             controllers.ResourceController.testMongo
 
 + nocsrf
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
@@ -77,20 +89,6 @@ GET     /user/setting                             controllers.UserController.set
 POST    /user/setting                             controllers.UserController.doSetting
 POST    /user/password                            controllers.UserController.doSetPassword
 POST    /user/head                                controllers.UserController.doSetHeadImg()
-POST    /user/collect                             controllers.UserController.doCollect()
-POST    /res/reply                                controllers.UserController.doReply
-POST    /res/vote                                 controllers.UserController.doVote
-POST    /res/reply/vote                           controllers.UserController.doVoteReply
-GET     /res/reply/edit                           controllers.UserController.editReply(aid: String, rid: String)
-POST    /res/reply/edit                           controllers.UserController.doEditReply
-POST    /res/reply/remove                         controllers.UserController.doRemoveReply
-POST    /res/remove                               controllers.UserController.doRemove
-POST    /res/push                                 controllers.UserController.doPush
-
-# Map static resources from the /public folder to the /assets URL path
-GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
-GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
-GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)
 
 GET     /todo                                     controllers.Default.todo
 
@@ -102,3 +100,15 @@ GET     /todo                                     controllers.Default.todo
 
 # Admin Routes
 ->  /admin   admin.Routes
+
+# Resource
+POST     /resource/owner/:ownerId                controllers.GridFSController.saveResource(ownerId: String)
+GET      /resource/:rid                          controllers.GridFSController.getResource(rid: String, inline: String ?= "true")
+DELETE   /resource/:rid                          controllers.GridFSController.removeResource(rid: String)
+GET      /ueditor                                controllers.GridFSController.ueditorGet(action: String)
+POST     /ueditor                                controllers.GridFSController.ueditorPost(action: String)
+
+# Assets
+GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
+GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")
+GET     /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)

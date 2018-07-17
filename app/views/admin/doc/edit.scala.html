@@ -76,7 +76,7 @@
                         <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>
                     </div>
                     <div class="form-actions noborder">
-                        @CSRF.formField
+
                         @if(docOpt.nonEmpty){
                         <input name="_id" type="hidden" value="@docOpt.get._id" />
                         }
@@ -95,7 +95,7 @@
 <script type="text/javascript" src="/assets/plugins/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" src="/assets/plugins/ueditor/ueditor.all.min.js"></script>
 <script type="text/javascript">
-var token = '@CSRF.getToken.value';
+var token = '';
 var ue = UE.getEditor('container', {
     scaleEnabled: true,
     allowDivTransToP: false

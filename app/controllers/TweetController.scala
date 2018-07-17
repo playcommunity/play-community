@@ -51,7 +51,7 @@ class TweetController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
         val (content, images) = tuple
         val _id = RequestHelper.generateId
         eventService.createResource(RequestHelper.getAuthor, _id, "tweet", content)
-        val tweet = Tweet(_id, RequestHelper.getAuthor, content, content, images, DateTimeUtil.now(), VoteStat(0, ""), ReplyStat(0, 0, ""), List.empty[Reply])
+        val tweet = Tweet(_id, RequestHelper.getAuthor, content, content, images, DateTimeUtil.now(), VoteStat(0, ""), 0, List.empty[Reply])
         mongo.insertOne(tweet).map{ _ =>
           Ok(Json.obj("status" -> 0, "tweet" -> tweet.toJson))
         }

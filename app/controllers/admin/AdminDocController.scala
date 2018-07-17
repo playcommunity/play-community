@@ -65,7 +65,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
             val _id = RequestHelper.generateId
             eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
             mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.docCount" -> 1)))
-            mongo.insertOne[Doc](Doc(_id, title, "", content, "", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), ReplyStat(0, 0, ""),  CollectStat(0, ""), DateTimeUtil.now, DateTimeUtil.now, false, false, false, Resource.Doc, catalogId)).map{ wr =>
+            mongo.insertOne[Doc](Doc(_id, title, "", content, "", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), DateTimeUtil.now, DateTimeUtil.now, false, false, false, Resource.Doc, catalogId)).map{ wr =>
               Ok(Json.obj("status" -> 0, "action" -> "create", "_id" -> _id))
             }
         }

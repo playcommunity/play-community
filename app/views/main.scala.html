@@ -28,6 +28,9 @@
             <li class='layui-nav-item @if(nav1 == "learn"){nav-this}'>
                 <a href="/docs"><i class="iconfont icon-iconmingxinganli"></i>学习</a>
             </li>
+            <li class='layui-nav-item @if(nav1 == "learn"){layui-this}'>
+                <a href="/corporation/cn"><i class="iconfont icon-logo"></i>圈子</a>
+            </li>
             <li class='layui-nav-item'>
                 <a href="https://github.com/playcommunity/play-community" target="_blank"><i class="iconfont icon-daima"></i>源码</a>
             </li>
@@ -35,6 +38,7 @@
 
         <ul class="layui-nav fly-nav-user">
 
+            @if(!utils.RequestHelper.isLogin){
             <!-- 未登入的状态 -->
             <li class="layui-nav-item">
                 <a class="iconfont icon-touxiang layui-hide-xs" href="https://secure.playscala.cn/login"></a>
@@ -45,25 +49,23 @@
             <li class="layui-nav-item">
                 <a href="https://secure.playscala.cn/register">注册</a>
             </li>
-
-            <!-- 登入后的状态 -->
-            <!--
+            }else{
             <li class="layui-nav-item">
-              <a class="fly-nav-avatar" href="javascript:;">
-                <cite class="layui-hide-xs">贤心</cite>
-                <i class="iconfont icon-renzheng layui-hide-xs" title="认证信息：layui 作者"></i>
-                <i class="layui-badge fly-badge-vip layui-hide-xs">VIP3</i>
-                <img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg">
-              </a>
-              <dl class="layui-nav-child">
-                <dd><a href="user/set.html"><i class="layui-icon">&#xe620;</i>基本设置</a></dd>
-                <dd><a href="user/message.html"><i class="iconfont icon-tongzhi" style="top: 4px;"></i>我的消息</a></dd>
-                <dd><a href="user/home.html"><i class="layui-icon" style="margin-left: 2px; font-size: 22px;">&#xe68e;</i>我的主页</a></dd>
-                <hr style="margin: 5px 0;">
-                <dd><a href="/user/logout/" style="text-align: center;">退出</a></dd>
-              </dl>
+                <a class="fly-nav-avatar" href="javascript:;">
+                    <cite class="layui-hide-xs">@request.session("name")</cite>
+                    <!--<i class="iconfont icon-renzheng layui-hide-xs" title=""></i>
+                    <i class="layui-badge fly-badge-vip layui-hide-xs">VIP3</i>-->
+                    <img src="@request.session("headImg")">
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="/user/setting"><i class="layui-icon">&#xe620;</i>基本设置</a></dd>
+                    <dd><a href="/user/message"><i class="iconfont icon-tongzhi" style="top: 4px;"></i>我的消息</a></dd>
+                    <dd><a href="/user/home"><i class="layui-icon" style="margin-left: 2px; font-size: 22px;">&#xe68e;</i>我的主页</a></dd>
+                    <hr style="margin: 5px 0;">
+                    <dd><a href="/logout" style="text-align: center;">退出</a></dd>
+                </dl>
             </li>
-            -->
+            }
         </ul>
     </div>
 </div>
@@ -72,22 +74,21 @@
     <div class="layui-container">
         <ul class="layui-clear">
             <li class='layui-hide-xs @if(nav2 == "index"){layui-this}'><a href="/">首页</a></li>
-            <li><a href="/qas" class='@if(nav2 == "qa"){layui-this}'>提问</a></li>
-            <li><a href="/articles" class='@if(nav2 == "article"){layui-this}'>分享</a></li>
-            <li><a href="/tweets" class='@if(nav2 == "tweet"){layui-this}'>说说</a></li>
+            <li class='@if(nav2 == "qa"){layui-this}'><a href="/qas">提问</a></li>
+            <li class='@if(nav2 == "article"){layui-this}'><a href="/articles">分享</a></li>
+            <li class='@if(nav2 == "tweet"){layui-this}'><a href="/tweets">说说</a></li>
             <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><span class="fly-mid"></span></li>
 
             <!-- 用户登入后显示 -->
-            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="user/index.html">我发表的贴</a></li>
-            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="user/index.html#collection">我收藏的贴</a></li>
+            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="/user#article">提供新闻线索</a></li>
         </ul>
 
         <div class="fly-column-right layui-hide-xs">
             <span class="fly-search"><i class="layui-icon"></i></span>
-            <a href="jie/add.html" class="layui-btn">发表新帖</a>
+            <a href='@{if(nav2 == "tweet"){"/tweet/add"}else if(nav2 == "article"){"/article/add"}else{"/qa/add"}}' class="layui-btn">发表新帖</a>
         </div>
         <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
-            <a href="jie/add.html" class="layui-btn">发表新帖</a>
+            <a href='@{if(nav2 == "tweet"){"/tweet/add"}else if(nav2 == "article"){"/article/add"}else{"/qa/add"}}' class="layui-btn">发表新帖</a>
         </div>
     </div>
 </div>
@@ -96,11 +97,10 @@
 
 <div class="fly-footer">
     <p>2018 &copy; <a href="http://www.playscala.cn/" target="_blank">PlayScala 社区</a></p>
-    <p>
+    <!--<p>
         <a href="https://github.com/playcommunity/play-community" target="_blank">社区源码</a>
-        <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play-Mongo</a>
         <a href="" target="_blank">微信公众号</a>
-    </p>
+    </p>-->
 </div>
 
 <script src="/assets/js/jquery.js"></script>

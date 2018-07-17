@@ -11,8 +11,7 @@ object JsonFormats {
   implicit val userSettingFormat = Json.format[UserSetting]
   implicit val categoryFormat = Json.format[Category]
   implicit val viewStatFormat = Json.format[ViewStat]
-  implicit val voteStatFormat = Json.format[VoteStat]
-  implicit val replyStatFormat = Json.format[ReplyStat]
+
   implicit val collectStatFormat = Json.format[CollectStat]
   implicit val authorFormat = Json.format[Author]
   implicit val commentFormat = Json.format[Comment]

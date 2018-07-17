@@ -55,7 +55,7 @@
                     <div class="form-actions">
                         <div class="row">
                             <div class="col-md-10">
-                                @CSRF.formField
+
                                 <button type="submit" class="btn blue">保存设置</button>
                             </div>
                         </div>
@@ -71,7 +71,7 @@
 
 <script src="/assets/plugins/layer/layer.js"></script>
 <script type="text/javascript">
-var token = '@CSRF.getToken.value';
+var token = '';
 
 $('.choose-catalog').click(function(){
   layer.open({

@@ -100,14 +100,14 @@
         @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
-          <form id="form" action="/res/reply" method="post">
+          <form id="form" action="/resource/reply" method="post">
             <div class="layui-form-item">
-              @CSRF.formField
+
               <input type="hidden" name="resId" value="@tweet._id">
               <input type="hidden" name="resType" value="tweet">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
-              <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">
+              <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
               <button class="layui-btn" lay-submit>提交回答</button>
             </div>
           </form>
@@ -122,7 +122,7 @@
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
 layui.cache.page = 'jie';
-var token = '@CSRF.getToken.value';
+var token = '';
 var app = new Vue({
   el: '#app',
   data: { tweet: @Html(tweet.toJson.toString) }
@@ -130,7 +130,7 @@ var app = new Vue({
 
 $(document).on('click', 'i.zan-resource', function(){
   var othis = $(this), resId = othis.attr('data-id'), resType = othis.attr('data-type');
-  layui.fly.json('/res/vote', {
+  layui.fly.json('/resource/vote', {
     resId: resId
     ,resType: resType
     ,csrfToken: token

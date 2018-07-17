@@ -24,46 +24,30 @@ layui.define(['laypage', 'fly'], function(exports){
       layer.open({
         type: 1
         ,id: 'LAY_pushcase'
-        ,title: '提交案例'
+        ,title: '提交公司'
         ,area: (device.ios || device.android) ? ($(window).width() + 'px') : '660px'
         ,content: ['<ul class="layui-form" style="margin: 20px;">'
           ,'<li class="layui-form-item">'
-            ,'<label class="layui-form-label">案例名称</label>'
+            ,'<label class="layui-form-label">公司名称</label>'
             ,'<div class="layui-input-block">'
-              ,'<input required name="title" lay-verify="required" placeholder="一般为网站名称" value="" class="layui-input">'
+              ,'<input required name="title" lay-verify="required" placeholder="公司名称" value="" class="layui-input">'
             ,'</div>'
           ,'</li>'
           ,'<li class="layui-form-item">'
-            ,'<label class="layui-form-label">案例网址</label>'
+            ,'<label class="layui-form-label">公司网址</label>'
             ,'<div class="layui-input-block">'
-              ,'<input required name="link" lay-verify="url" placeholder="必须是自己或自己参与过的项目" value="" class="layui-input">'
+              ,'<input required name="link" lay-verify="url" placeholder="公司网址" value="" class="layui-input">'
             ,'</div>'
           ,'</li>'
           ,'<li class="layui-form-item layui-form-text">'
-            ,'<label class="layui-form-label">案例描述</label>'
+            ,'<label class="layui-form-label">技术栈描述</label>'
             ,'<div class="layui-input-block layui-form-text">'
-              ,'<textarea required name="desc" lay-verify="required" autocomplete="off" placeholder="大致介绍你的项目，也可以阐述你在该项目中使用 layui 的感受\n10-60个字" class="layui-textarea"></textarea>'
-            ,'</div>'
-          ,'</li>'
-          ,'<li class="layui-form-item">'
-            ,'<label class="layui-form-label">案例封面</label>'
-            ,'<div class="layui-input-inline" style="width:auto;">'
-              ,'<input type="hidden" name="cover" lay-verify="required" class="layui-input fly-case-image">'
-              ,'<button type="button" class="layui-btn layui-btn-primary" id="caseUpload">'
-                ,'<i class="layui-icon">&#xe67c;</i>上传图片'
-              ,'</button>'
-            ,'</div>'
-            ,'<div class="layui-form-mid layui-word-aux" id="preview">推荐尺寸：478*300，大小不能超过 30kb</div>'
-          ,'</li>'
-          ,'<li class="layui-form-item">'
-            ,'<label class="layui-form-label"> </label>'
-            ,'<div class="layui-input-block">'
-              ,'<input type="checkbox" name="agree" id="agree" title="我同意（如果你进行了刷赞行为，你的案例将被立马剔除）" lay-skin="primary">'
+              ,'<textarea required name="desc" lay-verify="required" autocomplete="off" placeholder="技术栈描述" class="layui-textarea"></textarea>'
             ,'</div>'
           ,'</li>'
           ,'<li class="layui-form-item">'
             ,'<div class="layui-input-block">'
-              ,'<button type="button" lay-submit lay-filter="pushCase" class="layui-btn">提交案例</button>'
+              ,'<button type="button" lay-submit lay-filter="pushCase" class="layui-btn">提交公司</button>'
            ,'</div>'
           ,'</li>'
         ,'</ul>'].join('')
@@ -71,26 +55,8 @@ layui.define(['laypage', 'fly'], function(exports){
           var image = layero.find('.fly-case-image')
           ,preview = $('#preview');
  
-          upload.render({
-            url: '/api/upload/case/'
-            ,elem: '#caseUpload'
-            ,size: 30
-            ,done: function(res){
-              if(res.status == 0){
-                image.val(res.url);
-                preview.html('<a href="'+ res.url +'" target="_blank" style="color: #5FB878;">封面已上传，点击可预览</a>');
-              } else {
-                layer.msg(res.msg, {icon: 5});
-              }
-            }
-          });
-
           form.render('checkbox').on('submit(pushCase)', function(data){
-            if(!data.field.agree){
-              return layer.tips('你需要同意才能提交', $('#agree').next(), {tips: 1});
-            }
-
-            fly.json('/case/push/', data.field, function(res){
+            fly.json('/corporation/add', data.field, function(res){
               layer.close(index);
               layer.alert(res.msg, {
                 icon: 1
@@ -108,7 +74,7 @@ layui.define(['laypage', 'fly'], function(exports){
       ,unpraise = !othis.hasClass(PRIMARY)
       ,numElem = li.find('.fly-case-nums')
 
-      fly.json('/case/praise/', {
+      fly.json('/corporation/vote', {
         id: li.data('id')
         ,unpraise: unpraise ? true : null
       }, function(res){

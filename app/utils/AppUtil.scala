@@ -3,6 +3,8 @@ package utils
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, Instant, OffsetDateTime, ZoneOffset}
 
+import models.VoteStat
+
 
 /**
   * Created by joymufeng on 2017/7/6.
@@ -28,6 +30,18 @@ object AppUtil {
       case "collect" => "收藏"
       case "accept" => "采纳回复"
       case _ => "其它"
+    }
+  }
+
+  def toggleVote(voteStat: VoteStat, uid: Int): VoteStat = {
+    val bitmap = BitmapUtil.fromBase64String(voteStat.bitmap)
+    // 投票
+    if (!bitmap.contains(uid)) {
+      bitmap.add(uid)
+      VoteStat(voteStat.count + 1, BitmapUtil.toBase64String(bitmap))
+    } else {
+      bitmap.remove(uid)
+      VoteStat(voteStat.count - 1, BitmapUtil.toBase64String(bitmap))
     }
   }
 }

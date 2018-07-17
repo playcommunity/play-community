@@ -91,7 +91,7 @@ layui.define('fly', function(exports){
     //设置置顶、状态
     ,set: function(div){
       var othis = $(this);
-      fly.json('/api/jie-set/', {
+      fly.json('/resource/status', {
         id: div.data('id')
         ,rank: othis.attr('rank')
         ,field: othis.attr('field')
@@ -104,14 +104,19 @@ layui.define('fly', function(exports){
 
     //收藏
     ,collect: function(div){
-      var othis = $(this), type = othis.data('type');
-      fly.json('/collection/'+ type +'/', {
-        cid: div.data('id')
+      var othis = $(this), type = othis.data('type'), resType = othis.data('resource');
+      fly.json('/resource/collect', {
+        resType: resType
+        ,resId: div.data('id')
+        ,csrfToken: token
       }, function(res){
+        var count = $('#collect-count').html()|0;
         if(type === 'add'){
           othis.data('type', 'remove').html('取消收藏').addClass('layui-btn-danger');
+          $('#collect-count').html(++count);
         } else if(type === 'remove'){
           othis.data('type', 'add').html('收藏').removeClass('layui-btn-danger');
+          $('#collect-count').html(--count);
         }
       });
     }
@@ -139,9 +144,10 @@ layui.define('fly', function(exports){
   gather.jiedaActive = {
     zan: function(li){ //赞
       var othis = $(this), ok = othis.hasClass('zanok');
-      fly.json('/api/jieda-zan/', {
+      fly.json('/resource/reply/vote', {
         ok: ok
-        ,id: li.data('id')
+        ,resId: li.data('id')
+        ,replyId: li.data('rid')
       }, function(res){
         if(res.status === 0){
           var zans = othis.find('em').html()|0;
@@ -153,11 +159,20 @@ layui.define('fly', function(exports){
       });
     }
     ,reply: function(li){ //回复
-      var val = dom.content.val();
       var aite = '@'+ li.find('.fly-detail-user cite').text().replace(/\s/g, '');
-      dom.content.focus()
-      if(val.indexOf(aite) !== -1) return;
-      dom.content.val(aite +' ' + val);
+      var uid = li.data('uid');
+      var Delta = Quill.import('delta');
+      var range = quill.getSelection(true);
+      quill.updateContents(
+          new Delta().retain(range.index).insert(aite),
+          'user'
+      );
+      var atInput = $('#at-input');
+      if(atInput.val() == ''){
+        atInput.val(uid);
+      }else if(atInput.val().indexOf(uid) < 0){
+        atInput.val(atInput.val() + ',' + uid);
+      }
     }
     ,accept: function(li){ //采纳
       var othis = $(this);
@@ -177,8 +192,9 @@ layui.define('fly', function(exports){
       });
     }
     ,edit: function(li){ //编辑
-      fly.json('/jie/getDa/', {
+      fly.json('/resource/reply/edit', {
         id: li.data('id')
+        ,rid: li.data('rid')
       }, function(res){
         var data = res.rows;
         layer.prompt({
@@ -206,8 +222,9 @@ layui.define('fly', function(exports){
     ,del: function(li){ //删除
       layer.confirm('确认删除该回答么？', function(index){
         layer.close(index);
-        fly.json('/api/jieda-delete/', {
+        fly.json('/resource/reply/delete', {
           id: li.data('id')
+          ,rid: li.data('rid')
         }, function(res){
           if(res.status === 0){
             var count = dom.jiedaCount.text()|0;
@@ -236,6 +253,26 @@ layui.define('fly', function(exports){
     var replyTop = $('#flyReply').offset().top - 80;
     $('html,body').scrollTop(replyTop);
   }
+
+    $(document).on('click', 'span.zan-resource', function(){
+      var othis = $(this), zan = othis.data('zan');
+      fly.json('/resource/vote', {
+        resId: othis.data('id')
+        ,resType: othis.data('type')
+        ,csrfToken: token
+      }, function(res){
+        console.log(zan);
+        if(zan == '0'){
+          othis.data('zan', '1').html('取消点赞').addClass('layui-btn-danger');
+          var zans = $('#vote-count').html()|0;
+          $('#vote-count').html(++zans);
+        } else{
+          othis.data('zan', '0').html('点赞').removeClass('layui-btn-danger');
+          var zans = $('#vote-count').html()|0;
+          $('#vote-count').html(--zans);
+        }
+      });
+    });
 
   exports('jie', null);
 });

@@ -66,7 +66,7 @@
                         <div class="form-group form-md-line-input">
                             <label class="col-md-2 control-label" for="file1">网站LOGO</label>
                             <div class="col-md-10">
-                                <input id="file1" type="file" name="file" data-url="/resource/owner/logo?csrfToken=@CSRF.getToken.value" style="display:none;">
+                                <input id="file1" type="file" name="file" data-url="/resource/owner/logo?csrfToken=" style="display:none;">
                                 <button type="button" class="btn btn-default" onclick="$('#file1').click();"><i class="fa fa-cloud-upload"></i> 选择图片</button>
                                 <div class="form-control-focus"><img id="img1" :src="logo"></div>
                                 <span class="help-block"></span>
@@ -75,7 +75,7 @@
                         <div class="form-group form-md-line-input" style="margin-top: 80px;">
                             <label class="col-md-2 control-label" for="file2">网站图标(32*32 ico)</label>
                             <div class="col-md-10">
-                                <input id="file2" type="file" name="file" data-url="/resource/owner/favicon?csrfToken=@CSRF.getToken.value" style="display:none;">
+                                <input id="file2" type="file" name="file" data-url="/resource/owner/favicon?csrfToken=" style="display:none;">
                                 <button type="button" class="btn btn-default" onclick="$('#file2').click();"><i class="fa fa-cloud-upload"></i> 选择图片</button>
                                 <div class="form-control-focus"><img id="img2" :src="favicon"></div>
                                 <span class="help-block"></span>
@@ -142,7 +142,7 @@
                     <div class="form-actions">
                         <div class="row">
                             <div class="col-md-offset-2 col-md-10">
-                                @CSRF.formField
+
                                 <button id="save-btn" type="button" class="btn blue">保存设置</button>
                             </div>
                         </div>
@@ -164,7 +164,7 @@
 <script src="/assets/js/vue.js"></script>
 <script src="/assets/plugins/layer/layer.js"></script>
 <script>
-var token = '@CSRF.getToken.value';
+var token = '';
 
 $(function () {
   $('#file1').fileupload({

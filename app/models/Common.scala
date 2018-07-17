@@ -16,7 +16,7 @@ trait BaseResource {
   val lastReply: Option[Reply]
   val viewStat: ViewStat
   val voteStat: VoteStat
-  val replyStat: ReplyStat
+  val replyCount: Int
   val collectStat: CollectStat
   val createTime: Instant
   val updateTime: Instant
@@ -39,15 +39,19 @@ case class Resource (
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
-  replyStat: ReplyStat,
+  replyCount: Int,
   collectStat: CollectStat,
   createTime: Instant,
   updateTime: Instant,
   top: Boolean, // 置顶
   recommended: Boolean, // 精华
   closed: Boolean, // 是否关闭
-  resType: String  // 资源类型
-) extends BaseResource
+  resType: String, // 资源类型
+  categoryPath: String,
+  categoryName: String,
+  catalogId: Option[String], // 文档目录
+  answer: Option[Reply] // 最佳回复
+)
 
 object Resource {
   val QA = "qa"
@@ -67,14 +71,14 @@ case class Doc (
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
-  replyStat: ReplyStat,
+  replyCount: Int,
   collectStat: CollectStat,
   createTime: Instant,
   updateTime: Instant,
   top: Boolean, // 置顶
   recommended: Boolean, // 精华
   closed: Boolean, // 是否关闭
-  resType: String,  // 资源类型
+  resType: String, // 资源类型
   catalogId: String // 文档目录
 ) extends BaseResource
 
@@ -91,14 +95,14 @@ case class Article(
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
-  replyStat: ReplyStat,
+  replyCount: Int,
   collectStat: CollectStat,
   createTime: Instant,
   updateTime: Instant,
   top: Boolean, // 置顶
   recommended: Boolean, // 精华
   closed: Boolean, // 是否关闭
-  resType: String,  // 资源类型
+  resType: String, // 资源类型
   categoryPath: String,
   categoryName: String
 ) extends BaseResource
@@ -116,14 +120,14 @@ case class QA (
   lastReply: Option[Reply],
   viewStat: ViewStat,
   voteStat: VoteStat,
-  replyStat: ReplyStat,
+  replyCount: Int,
   collectStat: CollectStat,
   createTime: Instant,
   updateTime: Instant,
   top: Boolean, // 置顶
   recommended: Boolean, // 精华
   closed: Boolean, // 是否关闭
-  resType: String,  // 资源类型
+  resType: String, // 资源类型
   categoryPath: String,
   categoryName: String,
   answer: Option[Reply] // 答案
@@ -173,11 +177,14 @@ case class Event(
 )
 
 @Entity("common-tweet")
-case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: Instant, voteStat: VoteStat, replyStat: ReplyStat, replies: List[Reply]){
+case class Tweet(_id: String, author: Author, title: String, content: String, images: List[String], createTime: Instant, voteStat: VoteStat, replyCount: Int, replies: List[Reply]){
   def toJson: JsObject = {
     Json.obj("_id" -> _id, "author" -> author, "content" -> content, "images" -> images, "replyCount" -> replies.size, "voteCount" -> voteStat.count, "time" -> DateTimeUtil.toPrettyString(createTime))
   }
 }
+
+@Entity("common-corporation")
+case class Corporation(_id: String, title: String, url: String, logo: String, description: String, author: Author, isChinese: Boolean, voteStat: VoteStat, viewStat: ViewStat, active: Boolean, createTime: Instant, updateTime: Instant)
 
 /**
   * 消息提醒
@@ -198,5 +205,4 @@ object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil
 case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: Instant, updateTime: Instant, lastLoginTime: Instant, lastReplyTime: Instant)
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
-case class ReplyStat(count: Int, userCount: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)

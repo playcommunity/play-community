@@ -52,7 +52,7 @@
               </div>
             </div>
             <div class="layui-form-item">
-              @CSRF.formField
+
               <button class="layui-btn" key="set-mine" lay-submit>确认修改</button>
             </div>
           </form>
@@ -62,7 +62,7 @@
             <div class="avatar-add">
               <p>建议尺寸168*168，支持jpg、png、gif，最大不能超过30KB</p>
               <div class="upload-img">
-                <input type="file" name="file" id="LAY-file" lay-title="上传头像" data-token="@CSRF.getToken.value">
+                <input type="file" name="file" id="LAY-file" lay-title="上传头像" data-token="">
               </div>
               <img src="@u.setting.headImg">
               <span class="loading"></span>
@@ -93,7 +93,7 @@
               </div>
             </div>
             <div class="layui-form-item">
-              @CSRF.formField
+
               <button class="layui-btn" key="set-mine" lay-submit>确认修改</button>
             </div>
           </form>

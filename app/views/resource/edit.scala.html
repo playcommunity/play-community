@@ -1,6 +1,6 @@
-@(qaOpt: Option[QA], categoryList: List[Category])(implicit request: RequestHeader)
+@(resType: String, resourceOpt: Option[Resource], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
-@main(s"${App.siteSetting.name} - 创建问答", "qa") {
+@main(s"${App.siteSetting.name} - 创建分享", "community", resType) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <style>
 /* Set default font-family */
@@ -20,7 +20,7 @@
   <div class="fly-panel" pad20 style="padding-top: 5px;">
     <div class="layui-tab layui-tab-brief" lay-filter="user">
       <ul class="layui-tab-title">
-        <li class="layui-this">@qaOpt.map(_ => "编辑帖子").getOrElse("发表新帖")</li>
+        <li class="layui-this">@resourceOpt.map(_ => "编辑帖子").getOrElse("发表新帖")</li>
       </ul>
       <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
         <div class="layui-tab-item layui-show">
@@ -28,40 +28,37 @@
             <div class="layui-form-item">
               <label for="L_title" class="layui-form-label">标题</label>
               <div class="layui-input-block">
-                <input id="L_title" type="text" value="@qaOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
+                <input id="L_title" type="text" value="@resourceOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
             </div>
           </div>
-          <div id="quill-container">@Html(qaOpt.map(_.content).getOrElse(""))</div>
+          <div id="quill-container">@Html(resourceOpt.map(_.content).getOrElse(""))</div>
           <div class="layui-form layui-form-pane" style="margin-top: 15px;">
-            <form id="form" action="/qa/add" method="post">
-              @if(qaOpt.nonEmpty){
-              <input type="hidden" name="_id" value="@qaOpt.get._id"/>
+            <form id="form" action="/resource/add" method="post">
+              @if(resourceOpt.nonEmpty){
+              <input type="hidden" name="_id" value="@resourceOpt.get._id"/>
               }
-              <input id="L_title_hidden" type="hidden" name="title" value="@qaOpt.map(_.title).getOrElse("")"/>
+              <input id="L_title_hidden" type="hidden" name="title" value="@resourceOpt.map(_.title).getOrElse("")"/>
               <input id="L_content" type="hidden" name="content"/>
+              <div class="layui-form-item">
+                <label for="L_title" class="layui-form-label">关键词</label>
+                <div class="layui-input-block">
+                  <input name="keywords" value="@resourceOpt.map(_.keywords).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input" placeholder="关键词之间以英文逗号分隔"> </div>
+              </div>
               <div class="layui-form-item">
                 <div class="layui-inline">
                   <label class="layui-form-label">所在类别</label>
                   <div class="layui-input-block">
                     <select lay-verify="required" name="categoryPath">
                       @for(c <- categoryList){
-                      <option value="@c.path" @if(qaOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
+                      <option value="@c.path" @if(resourceOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
                       }
-                    </select>
-                  </div>
-                </div>
-                <div class="layui-inline">
-                  <label class="layui-form-label">悬赏飞吻</label>
-                  <div class="layui-input-block">
-                    <select name="score">
-                      <option value="5" @if(qaOpt.isEmpty){selected}>5</option>
                     </select>
                   </div>
                 </div>
               </div>
               <div class="layui-form-item">
-                @CSRF.formField
-                <input type="file" name="file" id="LAY-upload-image" data-token="@CSRF.getToken.value" class="layui-upload-file">
+                <input type="hidden" name="resType" value="@resType">
+                <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
                 <button class="layui-btn" lay-submit>立即发布</button>
               </div>
             </form>
@@ -76,7 +73,7 @@
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script>
 layui.cache.page = 'jie';
-var token = '@CSRF.getToken.value';
+var token = '';
 
 var quill = new Quill('#quill-container', {
   theme: 'snow',
@@ -91,7 +88,7 @@ var quill = new Quill('#quill-container', {
         ['blockquote', 'code-block' ],
         [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
         [ 'direction', { 'align': [] }],
-        [ 'link', 'image' ],
+        [ 'link', 'image', 'video' ],
         [ 'clean' ]
       ],
       handlers: {

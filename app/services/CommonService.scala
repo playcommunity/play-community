@@ -17,7 +17,7 @@ class CommonService @Inject()(mongo: Mongo) {
       Json.obj("$inc" -> Json.obj("value" -> 1)),
       new FindOneAndUpdateOptions().upsert(true)
     ).map{ obj =>
-      (obj \ "value").as[Int]
+      if (obj == null) { 1 } else { (obj \ "value").as[Int] }
     }
   }
 }

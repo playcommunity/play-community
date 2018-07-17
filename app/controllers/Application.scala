@@ -35,7 +35,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       news <- mongo.find[Resource]().sort(Json.obj("createTime" -> -1)).skip((cPage-1) * 15).limit(15).list()
       total <- mongo.count[Resource]()
       activeUsers <- mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(12).list()
-      topViewDocs <- mongo.find[Doc](obj("resType" -> Resource.Doc)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
+      topViewDocs <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
     } yield {
       Ok(views.html.index(topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
     }

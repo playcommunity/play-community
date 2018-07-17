@@ -12,6 +12,7 @@ class Module extends AbstractModule {
     Mongo.setModelsPackage("models")
 
     bind(classOf[InitializeService]).asEagerSingleton
+
   }
 
 }

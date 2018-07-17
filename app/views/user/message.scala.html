@@ -11,14 +11,14 @@
 
   <div class="fly-panel fly-panel-user" pad20>
     <div class="layui-tab layui-tab-brief" lay-filter="user" id="LAY_msg" style="margin-top: 15px;">
-      <button class="layui-btn layui-btn-danger" id="LAY_delallmsg" data-token="@CSRF.getToken.value">清空全部消息</button>
+      <button class="layui-btn layui-btn-danger" id="LAY_delallmsg" data-token="">清空全部消息</button>
       <div  id="LAY_minemsg" style="margin-top: 10px;">
         @if(messages.isEmpty){
         <div class="fly-none">您暂时没有最新消息</div>
         }
         <ul class="mine-msg">
           @for(m <- messages){
-          <li data-id="@m._id" data-token="@CSRF.getToken.value">
+          <li data-id="@m._id" data-token="">
             <blockquote class="layui-elem-quote">
               @if(m.action == "reply"){
               <a href="/user/home?uid=@{m.actor._id}" target="_blank"><cite>@{m.actor.name}</cite></a>回复了您的@utils.AppUtil.prettyResource(m.source)<a target="_blank" href="/@{m.source}/view?_id=@{m.sourceId}"><cite>@{m.sourceTitle}</cite></a>
