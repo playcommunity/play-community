@@ -1,4 +1,4 @@
-@(resType: String, filter: String, path: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(resType: String, status: String, path: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${App.siteSetting.name} - 社区分享", "community", resType) {
@@ -8,13 +8,13 @@
       <div class="fly-panel" style="margin-bottom: 0;">
 
         <div class="fly-panel-title fly-filter">
-          <a href="" class="layui-this">综合</a>
+          <a href="/@{resType}s" @if(status == "0"){class="layui-this"}>所有</a>
           <span class="fly-mid"></span>
-          <a href="">未结</a>
+          <a @if(status == "1"){class="layui-this"} href="/@{resType}s?status=1">未结</a>
           <span class="fly-mid"></span>
-          <a href="">已结</a>
+          <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">已结</a>
           <span class="fly-mid"></span>
-          <a href="">精华</a>
+          <a @if(status == "3"){class="layui-this"} href="/@{resType}s?status=3">精华</a>
         </div>
 
         <ul class="fly-list">

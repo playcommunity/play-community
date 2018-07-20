@@ -54,9 +54,12 @@ case class Resource (
 )
 
 object Resource {
+  val Resource = "resource"
   val QA = "qa"
   val Doc = "doc"
   val Article = "article"
+  val Tweet = "tweet"
+  val Corporation = "corporation"
 }
 
 @Entity("common-resource")

@@ -20,35 +20,30 @@ import scala.util.control.NonFatal
 @Singleton
 class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def index(resType: String, filter: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(resType: String, status: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${path}"))
-    var sort = Json.obj("timeStat.createTime" -> -1)
-    filter match {
+    val sort = Json.obj("timeStat.createTime" -> -1)
+    status match {
+      case "0" =>
       case "1" =>
-        q ++= Json.obj()
-        sort = Json.obj("lastReply.replyTime" -> -1)
+        q ++= Json.obj("closed" -> false)
       case "2" =>
-        q ++= Json.obj()
-        sort = Json.obj("timeStat.createTime" -> -1)
+        q ++= Json.obj("closed" -> true)
       case "3" =>
-        q ++= Json.obj("replies.0" -> Json.obj("$exists" -> false))
-        sort = Json.obj("timeStat.createTime" -> -1)
-      case "4" =>
         q ++= Json.obj("recommended" -> true)
-        sort = Json.obj("timeStat.lastReplyTime" -> -1)
       case _ =>
     }
     for {
       resources <- mongo.find[Resource](q).sort(sort).skip((cPage-1) * 15).limit(15).list()
       topViewResources <- mongo.find[Resource]().sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
       topReplyResources <- mongo.find[Resource]().sort(Json.obj("replyCount" -> -1)).limit(10).list()
-      total <- mongo.count[Resource]()
+      total <- mongo.count[Resource](q)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(s"/${resType}s")
       } else {
-        Ok(views.html.resource.index(resType, filter, path, resources, topViewResources, topReplyResources, cPage, total.toInt))
+        Ok(views.html.resource.index(resType, status, path, resources, topViewResources, topReplyResources, cPage, total.toInt))
       }
     }
   }
@@ -163,140 +158,6 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
             mongo.deleteMany[StatCollect](Json.obj("uid" -> request.session("uid"), "resId" -> resId, "resType" -> resType))
             Ok(Json.obj("status" -> 0))
           }
-        }
-      }
-    )
-  }
-
-
-  def doReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
-    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "content" -> nonEmptyText, "at" -> text)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
-      tuple => {
-        val (resId, resType, content, at) = tuple
-        val atIds = at.split(",").filter(_.trim != "").toList
-        val reply = Reply(RequestHelper.generateId, content, "lay-editor", RequestHelper.getAuthor, atIds, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
-        mongo.findOneAndUpdate[Resource](
-          obj("_id" -> resId),
-          obj(
-            "$push" -> Json.obj("replies" -> reply),
-            "$set" -> Json.obj("lastReply" -> reply),
-            "$inc" -> obj("replyCount" -> 1)
-          )
-        ).map{ case Some(res) =>
-          // 记录回复事件
-          eventService.replyResource(RequestHelper.getAuthor, resId, resType, res.title)
-
-          // 通知楼主
-          if (!RequestHelper.getUidOpt.exists(_ == res.author._id)) {
-            mongo.insertOne[Message](Message(ObjectId.get().toHexString, res.author._id, resType, resId, res.title, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), false))
-          }
-
-          // 通知被@用户
-          atIds.foreach{ uid =>
-            mongo.insertOne[Message](Message(ObjectId.get().toHexString, uid, resType, resId, res.title, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false))
-          }
-
-          // 用户统计
-          mongo.updateOne[User](Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> 1), "$set" -> Json.obj("stat.lastReplyTime" -> DateTimeUtil.now())))
-
-          Redirect(s"/${resType}/view?_id=${resId}")
-        }
-      }
-    )
-  }
-
-
-  def editReply(aid: String, rid: String) = checkOwner("rid").async { implicit request: Request[AnyContent] =>
-    for {
-      reply <- mongo.collection("common-article").find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get)("replies")(0).as[Reply])
-    } yield {
-      Ok(Json.obj("status" -> 0, "rows" -> Json.obj("content" -> reply.content)))
-    }
-  }
-
-  def doEditReply = checkOwner("rid").async { implicit request: Request[AnyContent] =>
-    Form(tuple("aid" -> nonEmptyText, "rid" ->nonEmptyText, "content" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
-      tuple => {
-        val (aid, rid, content) = tuple
-        val reply = Reply(ObjectId.get().toHexString, content, "lay-editor", RequestHelper.getAuthor, Nil, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
-        val uid = request.session("uid").toInt
-        for{
-          wr <- mongo.updateOne[Article](Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
-        } yield {
-          Ok(Json.obj("status" -> 0))
-        }
-      }
-    )
-  }
-
-  def doRemoveReply = checkAdminOrOwner("rid").async { implicit request: Request[AnyContent] =>
-    Form(tuple("id" -> nonEmptyText, "rid" ->nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok("err")),
-      tuple => {
-        val (resId, rid) = tuple
-        val uid = request.session("uid").toInt
-        val resCol = mongo.collection[Resource]
-        for{
-          answerObjOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("answer" -> 1)).first
-        } yield {
-          val answerId = answerObjOpt.flatMap(obj => (obj \ "answer" \ "_id").asOpt[String]).getOrElse("")
-          if (answerId != rid) {
-            resCol.updateOne(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyCount" -> -1)))
-            mongo.updateOne[User](Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> -1)))
-            Ok(Json.obj("status" -> 0))
-          } else {
-            Ok(Json.obj("status" -> 1, "msg" -> "已采纳回复不允许删除！"))
-          }
-        }
-      }
-    )
-  }
-
-  def doVoteReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
-    Form(tuple("resId" -> nonEmptyText, "replyId" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
-      tuple => {
-        val (resId, replyId) = tuple
-        val resCol = mongo.collection[Resource]
-        for{
-          reply <- resCol.find(Json.obj("_id" -> resId), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> replyId)))).first.map(objOpt => (objOpt.get \ "replies")(0).as[Reply])
-        } yield {
-          val uid = RequestHelper.getUid.toInt
-          val newVoteStat = AppUtil.toggleVote(reply.voteStat, uid)
-          val count = newVoteStat.count - reply.voteStat.count
-          resCol.updateOne(Json.obj("_id" -> resId, "replies._id" -> replyId), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> newVoteStat)))
-          mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> count)))
-          mongo.updateOne[User](Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> count)))
-          Ok(Json.obj("status" -> 0, "count" -> 1))
-        }
-      }
-    )
-  }
-
-  def doVote = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
-    Form(single("resId" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "invalid args."))),
-      resId => {
-        val resCol = mongo.collection[Resource]
-        for{
-          objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("voteStat" -> 1, "title" -> 1, "resType" -> 1)).first
-        } yield {
-          val voteStat = (objOpt.get \ "voteStat").as[VoteStat]
-          val resTitle = (objOpt.get \ "title").as[String]
-          val resType = (objOpt.get \ "resType").as[String]
-
-          val uid = RequestHelper.getUid.toInt
-          val newVoteStat = AppUtil.toggleVote(voteStat, uid)
-          val count = newVoteStat.count - voteStat.count
-          if (count > 0) {
-            eventService.voteResource(RequestHelper.getAuthor, resId, resType, resTitle)
-          }
-          resCol.updateOne(Json.obj("_id" -> resId), Json.obj("$set" -> Json.obj("voteStat" -> newVoteStat)))
-          mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.voteCount" -> count)))
-          mongo.updateOne[User](Json.obj("_id" -> resId.split("-")(0)), Json.obj("$inc" -> Json.obj("stat.votedCount" -> count)))
-          Ok(Json.obj("status" -> 0, "count" -> 1))
         }
       }
     )

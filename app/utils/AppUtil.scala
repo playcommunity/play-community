@@ -3,19 +3,32 @@ package utils
 import java.time.format.DateTimeFormatter
 import java.time.{Duration, Instant, OffsetDateTime, ZoneOffset}
 
-import models.VoteStat
+import models.{Resource, VoteStat}
 
 
 /**
   * Created by joymufeng on 2017/7/6.
   */
 object AppUtil {
+
+  def getCollectionName(resType: String): String = {
+    resType match {
+      case Resource.Resource => "common-resource"
+      case Resource.Doc => "common-resource"
+      case Resource.Article => "common-resource"
+      case Resource.QA => "common-resource"
+      case Resource.Tweet => "common-tweet"
+      case Resource.Corporation => "common-corporation"
+    }
+  }
+
   def prettyResource(resType: String): String = {
     resType match {
-      case "doc" => "文档"
-      case "article" => "分享"
-      case "qa" => "问答"
-      case "tweet" => "说说"
+      case Resource.Doc => "文档"
+      case Resource.Article => "分享"
+      case Resource.QA => "问答"
+      case Resource.Tweet => "说说"
+      case Resource.Corporation => "公司"
       case _ => "其它"
     }
   }
@@ -27,6 +40,7 @@ object AppUtil {
       case "reply" => "回复"
       case "remove" => "删除"
       case "vote" => "点赞"
+      case "unvote" => "取消点赞"
       case "collect" => "收藏"
       case "accept" => "采纳回复"
       case _ => "其它"

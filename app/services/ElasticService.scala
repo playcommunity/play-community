@@ -12,9 +12,9 @@ import scala.concurrent.Future
 
 @Singleton
 class ElasticService @Inject()(env: Environment, config: Configuration, mongo: Mongo, ws: WSClient) {
-  private val esIndexName = config.getOptional[String]("es.esIndexName").getOrElse("community")
-  private val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
-  private val esServer = if (useExternalES) { config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200") } else { "127.0.0.1:9200" }
+  private val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
+  private val esIndexName = config.getOptional[String]("es.index").getOrElse("community")
+  private val esServer = if (esEnabled) { config.getOptional[String]("es.host").getOrElse("127.0.0.1:9200") } else { "127.0.0.1:9200" }
 
   def search(q: String, page: Int): Future[(Int, List[IndexedDocument])] = {
     val query =

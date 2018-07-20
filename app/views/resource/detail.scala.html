@@ -82,8 +82,8 @@
           <div class="fly-detail-user">
             <a href="/user/home?uid=@{resource.author._id}" class="fly-link">
               <cite>@resource.author.name</cite>
-              <i class="iconfont icon-renzheng" title="认证信息：{{ rows.user.approve }}"></i>
-              <i class="layui-badge fly-badge-vip">VIP3</i>
+              <!--<i class="iconfont icon-renzheng" title="认证信息：{{ rows.user.approve }}"></i>
+              <i class="layui-badge fly-badge-vip">VIP3</i>-->
             </a>
             <span>@utils.DateTimeUtil.toPrettyString(resource.createTime)发布</span>
           </div>
@@ -98,9 +98,9 @@
             <span class="layui-btn layui-btn-xs jie-admin " type="collect" data-type="add" data-resource="resource">收藏</span>
             }
             @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(resource.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
-            <span class="layui-btn layui-btn-xs zan-resource layui-btn-danger" data-zan="1" data-id="@resource._id"  data-type="resource">取消点赞</span>
+            <span class="layui-btn layui-btn-xs zan-resource layui-btn-danger" data-zan="1" data-id="@resource._id"  data-type="resource" data-title="@resource.title">取消点赞</span>
             }else{
-            <span class="layui-btn layui-btn-xs zan-resource" data-zan="0" data-id="@resource._id"  data-type="resource">点赞</span>
+            <span class="layui-btn layui-btn-xs zan-resource" data-zan="0" data-id="@resource._id"  data-type="resource" data-title="@resource.title">点赞</span>
             }
           </div>
         </div>
@@ -117,20 +117,20 @@
         <ul class="jieda" id="jieda">
           @for(r <- resource.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-id="@{resource._id}" data-rid="@{r._id}" class="jieda-daan">
+          <li data-id="@{resource._id}" data-rid="@{r._id}" data-type="resource" data-title="@{resource.title} 中 @{r.author.name} 的回复" class="jieda-daan">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
               <a class="fly-avatar" href="/user/home?uid=@{r.author._id}">
                 <img src="@{r.author.headImg}" alt=" ">
               </a>
               <div class="fly-detail-user">
-                <a href="" class="fly-link">
+                <a href="/user/home?uid=@{r.author._id}" class="fly-link">
                   <cite>@{r.author.name}</cite>
-                  <i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
-                  <i class="layui-badge fly-badge-vip">VIP3</i>
+                  <!--<i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
+                  <i class="layui-badge fly-badge-vip">VIP3</i>-->
                 </a>
 
-                <span>(楼主)</span>
+                <!--<span>(楼主)</span>-->
                 <!--
                 <span style="color:#5FB878">(管理员)</span>
                 <span style="color:#FF9E3F">（社区之光）</span>
@@ -179,6 +179,7 @@
             <div class="layui-form-item">
               <input type="hidden" name="resId" value="@resource._id">
               <input type="hidden" name="resType" value="resource">
+              <input type="hidden" name="resTitle" value="@resource.title">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
               <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
@@ -194,7 +195,7 @@
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
-layui.cache.page = 'jie';
+layui.cache.page = 'resource';
 var token = '';
 
 @if(RequestHelper.isLogin){
@@ -223,12 +224,12 @@ $('#form').submit(function(){
 });
 
 layui.use('upload', function(upload){
-  var token = $('#LAY-upload-image').data('token');
-  layui.upload({
+  var upload = layui.upload;
+  upload.render({
     elem: '#LAY-upload-image'
     ,method: 'post'
-    ,url: '/resource/owner/editor?csrfToken=' + token
-    ,success: function(res){
+    ,url: '/resource/owner/editor'
+    ,done: function(res){
       var range = quill.getSelection(true);
       var Delta = Quill.import('delta');
       quill.updateContents(

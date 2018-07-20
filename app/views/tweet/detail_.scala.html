@@ -1,9 +1,10 @@
 @(tweet: Tweet)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
+@import play.api.libs.json.Json
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main(s"${App.siteSetting.name} - ${tweet.title}", "community", "tweet", "", "") {
+@main(s"${App.siteSetting.name} - ${tweet.title}", "tweet", "说说", tweet.title) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>
@@ -29,114 +30,80 @@
     margin-top: 15px;
 }
 </style>
-<div class="layui-container">
-  <div class="layui-row layui-col-space15">
-    <div class="layui-col-md12 content detail">
+<div class="main layui-clear">
+  <div class="wrap">
+    <div class="content detail" style="margin-right:0">
       <div class="fly-panel detail-box">
         <h1>@{tweet.author.name}的说说</h1>
-        <div class="fly-detail-info">
-          <div class="fly-admin-box"></div>
-          <span class="fly-list-nums">
-            <i class="iconfont icon-zan" title="点赞"></i> <em id="vote-count">@tweet.voteStat.count</em>
-            <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @tweet.replies.size</a>
-          </span>
-        </div>
         <div class="detail-about">
-          <a class="fly-avatar" href="/user/home?uid=@{tweet.author._id}">
+          <a class="jie-user" href="/user/home?uid=@{tweet.author._id}">
             <img src="@tweet.author.headImg" alt="">
+            <cite>
+              @tweet.author.name
+              <em>@utils.DateTimeUtil.toPrettyString(tweet.createTime)发布</em>
+            </cite>
           </a>
-          <div class="fly-detail-user">
-            <a href="/user/home?uid=@{tweet.author._id}" class="fly-link">
-              <cite>@tweet.author.name</cite>
-              <!--<i class="iconfont icon-renzheng" title="认证信息：{{ rows.user.approve }}"></i>
-              <i class="layui-badge fly-badge-vip">VIP3</i>-->
-            </a>
-            <span>@utils.DateTimeUtil.toPrettyString(tweet.createTime)发布</span>
-          </div>
-          <div class="detail-hits" id="LAY_jieAdmin" data-id="@tweet._id">
-            @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(tweet.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
-            <span class="layui-btn layui-btn-xs zan-resource layui-btn-danger" data-zan="1" data-id="@tweet._id" data-type="tweet" data-title="说说">取消点赞</span>
-            }else{
-            <span class="layui-btn layui-btn-xs zan-resource" data-zan="0" data-id="@tweet._id" data-type="tweet" data-title="说说">点赞</span>
-            }
+          <div id="app" class="detail-hits" data-id="@tweet._id">
+            <span><i class="iconfont" title="回答">&#xe60c;</i> {{ tweet.replyCount }}</span>
+            <span><i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="tweet._id"  data-type="tweet"></i> {{ tweet.voteCount }}</span>
           </div>
         </div>
-        <div class="detail-body photos">
-          @Html(tweet.content)
+        <div class="detail-body photos ql-snow" style="margin-bottom: 20px;">
+          <div class="ql-editor">
+            @Html(tweet.content)
+          </div>
         </div>
       </div>
 
-      <div class="fly-panel detail-box" id="flyReply">
-        <fieldset class="layui-elem-field layui-field-title" style="text-align: center;">
-          <legend>回帖</legend>
-        </fieldset>
-
-        <ul class="jieda" id="jieda">
+      <div class="fly-panel detail-box" style="padding-top: 0;">
+        <a name="comment"></a>
+        <ul class="jieda photos" id="jieda">
           @for(r <- tweet.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
-          <li data-id="@{tweet._id}" data-rid="@{r._id}" data-type="tweet" data-title="说说 中 @{r.author.name} 的回复" class="jieda-daan">
+          <li data-type="tweet" data-id="@{tweet._id}" data-rid="@{r._id}" data-uid="@{r.author._id}">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
-              <a class="fly-avatar" href="/user/home?uid=@{r.author._id}">
-                <img src="@{r.author.headImg}" alt=" ">
+              <a class="jie-user" href="/user/home?uid=@{r.author._id}">
+                <img src="@{r.author.headImg}" alt="">
+                <cite>
+                  <i>@{r.author.name}</i>
+                </cite>
               </a>
-              <div class="fly-detail-user">
-                <a href="" class="fly-link">
-                  <cite>@{r.author.name}</cite>
-                  <!--<i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
-                  <i class="layui-badge fly-badge-vip">VIP3</i>-->
-                </a>
-
-                <!--<span>(楼主)</span>-->
-                <!--
-                <span style="color:#5FB878">(管理员)</span>
-                <span style="color:#FF9E3F">（社区之光）</span>
-                <span style="color:#999">（该号已被封）</span>
-                -->
-              </div>
-
               <div class="detail-hits">
                 <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
               </div>
-
-              <!--<i class="iconfont icon-caina" title="最佳答案"></i>-->
             </div>
-            <div class="detail-body jieda-body photos">
+            <div class="detail-body jieda-body">
               @Html(r.content)
             </div>
+            @if(RequestHelper.isLogin){
             <div class="jieda-reply">
-              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan">
-                <i class="iconfont icon-zan"></i>
-                <em>@{r.voteStat.count}</em>
-              </span>
-              <span type="reply">
-                <i class="iconfont icon-svgmoban53"></i>
-                回复
-              </span>
-              @if(RequestHelper.isOwnerOf(r._id)){
+              <span class="jieda-zan @if(bitmap.contains(uid)){zanok}" type="zan"><i class="iconfont icon-zan"></i><em>@{r.voteStat.count}</em></span>
+              <span type="reply"><i class="iconfont icon-svgmoban53"></i>回复</span>
               <div class="jieda-admin">
                 <!--<span type="edit">编辑</span>-->
+                @if(RequestHelper.isOwnerOf(r._id)){
                 <span type="del">删除</span>
-                <!-- <span class="jieda-accept" type="accept">采纳</span> -->
+                }
+                <!--<span class="jieda-accept" type="accept">采纳</span>-->
               </div>
-              }
             </div>
+            }
           </li>
           }
           }
-
           @if(tweet.replies.isEmpty){
-          <li class="fly-none">消灭零回复</li>
+          <li class="fly-none">没有任何回答</li>
           }
         </ul>
-
+        @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/resource/reply" method="post">
             <div class="layui-form-item">
+
               <input type="hidden" name="resId" value="@tweet._id">
               <input type="hidden" name="resType" value="tweet">
-              <input type="hidden" name="resTitle" value="说说">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
               <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
@@ -144,6 +111,7 @@
             </div>
           </form>
         </div>
+        }
       </div>
     </div>
   </div>
@@ -152,19 +120,23 @@
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
-layui.cache.page = 'resource';
+layui.cache.page = 'jie';
 var token = '';
+var app = new Vue({
+  el: '#app',
+  data: { tweet: @Html(tweet.toJson.toString) }
+});
 
-/*
 $(document).on('click', 'i.zan-resource', function(){
-  var othis = $(this), resId = othis.attr('data-id');
+  var othis = $(this), resId = othis.attr('data-id'), resType = othis.attr('data-type');
   layui.fly.json('/resource/vote', {
     resId: resId
+    ,resType: resType
+    ,csrfToken: token
   }, function(res){
     app.tweet.voteCount += res.count;
   });
 });
-*/
 
 @if(RequestHelper.isLogin){
 var quill = new Quill('#quill-container', {
@@ -192,12 +164,12 @@ $('#form').submit(function(){
 });
 
 layui.use('upload', function(upload){
-  var upload = layui.upload;
-  upload.render({
+  var token = $('#LAY-upload-image').data('token');
+  layui.upload({
     elem: '#LAY-upload-image'
     ,method: 'post'
-    ,url: '/resource/owner/editor'
-    ,done: function(res){
+    ,url: '/resource/owner/editor?csrfToken=' + token
+    ,success: function(res){
       var range = quill.getSelection(true);
       var Delta = Quill.import('delta');
       quill.updateContents(

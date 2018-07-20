@@ -104,12 +104,12 @@ $('#form').submit(function(){
 });
 
 layui.use('upload', function(upload){
-  var token = $('#LAY-upload-image').data('token');
-  layui.upload({
+  var upload = layui.upload;
+  upload.render({
     elem: '#LAY-upload-image'
     ,method: 'post'
-    ,url: '/resource/owner/editor?csrfToken=' + token
-    ,success: function(res){
+    ,url: '/resource/owner/editor'
+    ,done: function(res){
       var range = quill.getSelection(true);
       var Delta = Quill.import('delta');
       quill.updateContents(

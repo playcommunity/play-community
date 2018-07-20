@@ -1,31 +1,38 @@
 package services
 
 import javax.inject.{Inject, Singleton}
-import akka.stream.Materializer
-import play.api.libs.json.{JsObject, Json}
-import scala.concurrent.{Await, ExecutionContext, Future}
-import java.time.{Clock, LocalDateTime, OffsetDateTime}
+
+import akka.stream.{Materializer, ThrottleMode}
+import play.api.libs.json.Json
+
+import scala.concurrent.{ExecutionContext, Future}
+import java.time.LocalDateTime
+
 import akka.actor.ActorSystem
 import cn.playscala.mongo.Mongo
+import com.mongodb.client.model.changestream.OperationType
 import models._
 import play.api._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
-import utils.{DateTimeUtil, HashUtil, VersionComparator}
+import utils.{HashUtil, VersionComparator}
+
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
   * 执行系统初始化任务
   */
 @Singleton
-class InitializeService @Inject()(mongo: Mongo, app: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
   val settingCol = mongo.collection("common-setting")
-  val useExternalES = config.getOptional[Boolean]("es.useExternalES").getOrElse(false)
-  val externalESServer = config.getOptional[String]("es.externalESServer").getOrElse("127.0.0.1:9200")
+  val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
 
   if (env.mode == Mode.Dev) {
     App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
   }
+
+  app.Global.esEnabled = esEnabled
 
   // 系统初始化
   for {
@@ -59,97 +66,71 @@ class InitializeService @Inject()(mongo: Mongo, app: Application, actorSystem: A
     }
   }
 
-  /*
-  if (!useExternalES) {
-    Logger.info("Starting Embedded ElasticSearch ...")
-    val es = EmbeddedElastic.builder()
-      .withDownloadUrl(new URL(s"file:///${env.rootPath}${File.separator}embed${File.separator}elasticsearch-5.5.0.zip"))
-      //.withElasticVersion("5.5.0")
-      .withSetting(PopularProperties.TRANSPORT_TCP_PORT, 9350)
-      .withSetting(PopularProperties.CLUSTER_NAME, "cluster-0")
-      .withInstallationDirectory(new File(s"${env.rootPath}${File.separator}embed"))
-      .withCleanInstallationDirectoryOnStop(false)
-      .withStartTimeout(15, TimeUnit.MINUTES)
-      .build().start()
-
-    Logger.info("Embedded ElasticSearch started!")
-  } else {
-    Logger.info("Use external ElasticSearch " + externalESServer)
-  }
-
   // 检查ES索引是否存在
-  val esIndexExists = Await.result(elasticService.existsIndex, 60 seconds)
-  if (!esIndexExists) {
-    Logger.info("Creating ElasticSearch Index ...")
-    val success = Await.result(elasticService.createIndex, 60 seconds)
-    if (!success) {
-      Logger.error("Create ElasticSearch Index Failed.")
-      Await.result(appLifecycle.stop(), 24 hours)
-      System.exit(0)
+  if (esEnabled) {
+    elasticService.existsIndex.map { esIndexExists =>
+      if (!esIndexExists) {
+        Logger.info("Creating ElasticSearch Index ...")
+        elasticService.createIndex.map { success =>
+          if (success) {
+            app.Global.isElasticReady = true
+            Logger.info("Created ElasticSearch Index.")
+          } else {
+            Logger.error("Create ElasticSearch Index Failed.")
+          }
+        }
+      } else {
+        app.Global.isElasticReady = true
+      }
     }
   }
 
   /**
-    * Tail oplog.
-    *
-    * 保存的check point时间使用ts原始格式。
+    * 同步更新至ES
     */
-  var tailCount = new AtomicLong(0L)
-  for{
-    oplogCol <- oplogColFuture
-    db <- reactiveMongoApi.database.map(_.name)
-    lastTS <- settingColFuture.flatMap(_.find(Json.obj("_id" -> "oplog-last-ts")).one[JsObject]).map(_.map(obj => obj("value").as[BSONDocument]).getOrElse(BSONTimestamp(System.currentTimeMillis()/1000, 1)))
-  } {
-    println("lastTS: " + lastTS)
-    val tailingCursor =
-      oplogCol
-        .find(Json.obj("ns" -> Json.obj("$in" -> Set(s"${db}.common-doc", s"${db}.common-article", s"${db}.common-qa")), "ts" -> Json.obj("$gte" -> lastTS)))
-        .options(QueryOpts().tailable.oplogReplay.awaitData.noCursorTimeout)
-        .cursor[BSONDocument]()
-
-    Logger.info("start tailing oplog ...")
-    tailingCursor.fold(()){ (_, doc) =>
-      try {
-        tailCount.addAndGet(1L)
-        val jsObj = doc.as[JsObject]
-        println(tailCount.get() + " - oplog: " + jsObj("ts").toString())
-        val ns = jsObj("ns").as[String]
-        val resType = ns.split("-").last
-        jsObj("op").as[String] match {
-          case "i" =>
-            val r = jsObj("o").as[JsObject]
-            val content = Jsoup.parse(r("content").as[String]).text()
-            elasticService.insert(IndexedDocument(r("_id").as[String], resType, r("title").as[String], content, r("author")("name").as[String], r("author")("_id").as[String], OffsetDateTime.parse(r("timeStat")("createTime").as[String]).toEpochSecond * 1000, None, None, None))
-            println("insert " + r("title").as[String])
-          case "u" =>
-            val _id = jsObj("o2")("_id").as[String]
-            val modifier: JsObject = jsObj("o")("$set").as[JsObject]
-            val title = (modifier \ "title").asOpt[String]
-            val content = (modifier \ "content").asOpt[String]
-            if (title.nonEmpty || content.nonEmpty){
-              var obj = Json.obj()
-              title.foreach(t => obj ++= Json.obj("title" -> t))
-              content.foreach(c => obj ++= Json.obj("content" -> Jsoup.parse(c).text()))
-              println("update " + _id)
-              elasticService.update(_id, obj)
-            }
-          case "d" =>
-            val _id = jsObj("o")("_id").as[String]
-            elasticService.remove(_id)
-            println("remove " + _id)
+  if (esEnabled) {
+    mongo
+      .collection("common-resource")
+      .watch()
+      .fullDocument
+      .toSource
+      .groupedWithin(10, 1000.millis)
+      .throttle(elements = 1, per = 1.second, maximumBurst = 1, ThrottleMode.shaping)
+      .watchTermination() { (_, done) =>
+        done.onComplete {
+          case Success(_) => Logger.error("common-resource's change stream completed..")
+          case Failure(error) => Logger.error(s"common-resource's change stream failed with error ${error.getMessage}")
         }
-
-        if (tailCount.get() % 10 == 0) {
-          settingColFuture.map(_.update(Json.obj("_id" -> "oplog-last-ts"), Json.obj("$set" -> Json.obj("value" -> jsObj("ts"))), upsert = true))
-          Logger.info("record last ts time for tailing oplog.")
-        }
-      } catch {
-        case t: Throwable =>
-          Logger.error("Tail oplog Error: " + t.getMessage, t)
       }
-    }
+      .runForeach { seq =>
+        try {
+          Logger.info(seq.toString())
+
+          val inserts = seq.filter(c => c.getOperationType == OperationType.INSERT).map(_.getFullDocument.as[Resource]).toList
+          val updates = seq.filter(c => c.getOperationType == OperationType.UPDATE || c.getOperationType == OperationType.REPLACE).map(_.getFullDocument.as[Resource]).toList
+          val deletes = seq.filter(c => c.getOperationType == OperationType.DELETE).map(_.getDocumentKey.getString("_id").getValue).toList
+
+          inserts.foreach { r =>
+            elasticService.insert(IndexedDocument(r._id, r.resType, r.title, r.content, r.author.name, r.author._id, r.createTime.toEpochMilli, None, None, None))
+          }
+
+          updates.foreach { r =>
+            val obj = Json.obj(
+              "title" -> r.title,
+              "content" -> r.content
+            )
+            elasticService.update(r._id, obj)
+          }
+
+          deletes.foreach { _id =>
+            elasticService.remove(_id)
+          }
+        } catch {
+          case t: Throwable =>
+            Logger.error("watch common-resource error" + t.getMessage, t)
+        }
+      }
   }
-  */
 
   /**
     * 更新IP地理位置

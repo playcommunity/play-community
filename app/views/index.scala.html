@@ -1,4 +1,4 @@
-@(topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(status: String, topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
@@ -47,13 +47,13 @@
 
       <div class="fly-panel" style="margin-bottom: 0;">
         <div class="fly-panel-title fly-filter">
-          <a href="" class="layui-this">综合</a>
+          <a href="/" @if(status == "0"){class="layui-this"}>所有</a>
           <span class="fly-mid"></span>
-          <a href="">未结</a>
+          <a @if(status == "1"){class="layui-this"} href="/?status=1">未结</a>
           <span class="fly-mid"></span>
-          <a href="">已结</a>
+          <a @if(status == "2"){class="layui-this"} href="/?status=2">已结</a>
           <span class="fly-mid"></span>
-          <a href="">精华</a>
+          <a @if(status == "3"){class="layui-this"} href="/?status=3">精华</a>
         </div>
 
         <ul class="fly-list">
@@ -88,7 +88,7 @@
         </ul>
         <div style="text-align: center">
           <div class="laypage-main">
-            <a href="/?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?page=@{page+1}" class="laypage-next">下一页</a></div>
+            <a href="/?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty){1}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?page=@{page+1}" class="laypage-next">下一页</a></div>
         </div>
       </div>
     </div>

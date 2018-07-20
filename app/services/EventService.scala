@@ -32,6 +32,10 @@ class EventService @Inject()(mongo: Mongo) {
     mongo.insertOne[Event](Event(ObjectId.get().toHexString, actor, "vote", resId, resType, resTitle, DateTimeUtil.now()))
   }
 
+  def unvoteResource(actor: Author, resId: String, resType: String, resTitle: String) {
+    mongo.insertOne[Event](Event(ObjectId.get().toHexString, actor, "unvote", resId, resType, resTitle, DateTimeUtil.now()))
+  }
+
   def collectResource(actor: Author, resId: String, resType: String, resTitle: String) {
     mongo.insertOne[Event](Event(ObjectId.get().toHexString, actor, "collect", resId, resType, resTitle, DateTimeUtil.now()))
   }

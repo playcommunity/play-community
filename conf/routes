@@ -8,12 +8,12 @@ POST    /corporation/add                          controllers.CorporationControl
 POST    /corporation/vote                         controllers.CorporationController.doVote
 
 # Resource
-GET     /articles                                 controllers.ResourceController.index(resType: String = "article", filter: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /articles                                 controllers.ResourceController.index(resType: String = "article", status: String ?= "0", path: String ?= "/", page: Int ?= 1)
 GET     /article/add                              controllers.ResourceController.add(resType: String = "article")
 GET     /article/edit                             controllers.ResourceController.edit(_id: String)
 GET     /article/view                             controllers.ResourceController.view(_id: String)
 
-GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", filter: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", path: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
 GET     /qa/edit                                  controllers.ResourceController.edit(_id: String)
 GET     /qa/view                                  controllers.ResourceController.view(_id: String)
@@ -21,12 +21,6 @@ GET     /qa/view                                  controllers.ResourceController
 
 POST    /resource/add                             controllers.ResourceController.doAdd()
 POST    /resource/collect                         controllers.ResourceController.doCollect()
-POST    /resource/reply                           controllers.ResourceController.doReply
-POST    /resource/vote                            controllers.ResourceController.doVote
-POST    /resource/reply/vote                      controllers.ResourceController.doVoteReply
-GET     /resource/reply/edit                      controllers.ResourceController.editReply(aid: String, rid: String)
-POST    /resource/reply/edit                      controllers.ResourceController.doEditReply
-POST    /resource/reply/delete                    controllers.ResourceController.doRemoveReply
 POST    /resource/remove                          controllers.ResourceController.doRemove
 POST    /resource/push                            controllers.ResourceController.doPush
 POST    /resource/status                          controllers.ResourceController.doSetStatus
@@ -51,13 +45,21 @@ GET     /tweet/json                              controllers.TweetController.get
 POST    /tweet/add                               controllers.TweetController.doAdd
 GET     /tweet/view                              controllers.TweetController.view(_id: String)
 
+# Common
+POST    /resource/vote                            controllers.CommonController.doVote
+POST    /resource/reply/vote                      controllers.CommonController.doVoteReply
+POST    /resource/reply                           controllers.CommonController.doReply
+GET     /resource/reply/edit                      controllers.CommonController.editReply(aid: String, rid: String)
+POST    /resource/reply/edit                      controllers.CommonController.doEditReply
+POST    /resource/reply/delete                    controllers.CommonController.doRemoveReply
+
 + nocsrf
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 + nocsrf
 POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Application
-GET     /                                         controllers.Application.index(page: Int ?= 1)
+GET     /                                         controllers.Application.index(status: String ?= "0", page: Int ?= 1)
 GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
