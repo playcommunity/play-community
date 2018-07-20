@@ -30,14 +30,14 @@ class CorporationController @Inject()(cc: ControllerComponents, mongo: Mongo, co
   }
 
   def doAdd = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
-    Form(tuple("title" -> nonEmptyText, "link" -> nonEmptyText, "desc" -> nonEmptyText)).bindFromRequest().fold(
+    Form(tuple("title" -> nonEmptyText, "city" -> nonEmptyText, "grade" -> nonEmptyText, "link" -> nonEmptyText, "desc" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       tuple => {
-        val (title, url, description) = tuple
+        val (title, city, grade, url, description) = tuple
         val _id = RequestHelper.generateId
         for {
           _id <- commonService.getNextSequence("corporation")
-          ir  <- mongo.insertOne[Corporation](Corporation(_id.toString, title, url, "/assets/images/corporation.jpg", description, RequestHelper.getAuthor, false, VoteStat(0, ""), ViewStat(0, ""), false, DateTimeUtil.now(), DateTimeUtil.now()))
+          ir  <- mongo.insertOne(Corporation(_id.toString, title, city, grade, url, "/assets/images/corporation.jpg", description, RequestHelper.getAuthor, false, VoteStat(0, ""), ViewStat(0, ""), false, DateTimeUtil.now(), DateTimeUtil.now()))
         } yield {
           Ok(Json.obj("status" -> 0, "msg" -> "非常感谢，审核通过后才会展示哦！"))
         }

@@ -1,6 +1,17 @@
 @(sortBy: String, list: List[Corporation])(implicit request: RequestHeader)
 
 @import utils._
+
+@prettyGrade(grade: String) = @{
+  grade match {
+    case "0" => "10人以下"
+    case "1" => "10-100人"
+    case "2" => "100-500人"
+    case "3" => "500-1000人"
+    case "4" => "1000人以上"
+    case _ => "-"
+  }
+}
 <!DOCTYPE html>
 <html style="background-color: #e2e2e2;">
 <head>
@@ -59,13 +70,13 @@
         @for(c <- list){
         <li data-id="@c._id">
             <a class="fly-case-img" href="@c.url" target="_blank" >
-                <img src="/assets/images/corporation.jpg" alt="@c.title">
+                <img src="@c.logo" alt="@c.title">
                 <cite class="layui-btn layui-btn-primary layui-btn-small">去围观</cite>
             </a>
-            <h2><a href="@c.url" target="_blank">@c.title</a></h2>
-            <p class="fly-case-desc">@c.description</p>
+            <h2 title="@prettyGrade(c.grade)"><a href="@c.url" target="_blank">@c.title</a></h2>
+            <p class="fly-case-desc" title="@c.description">@c.description</p>
             <div class="fly-case-info">
-                <a href="../user/home.html" class="fly-case-user" target="_blank"><img src="https://tva1.sinaimg.cn/crop.0.0.118.118.180/5db11ff4gw1e77d3nqrv8j203b03cweg.jpg"></a>
+                <a href="/user/home?uid=@{c.author._id}" class="fly-case-user" target="_blank"><img src="@c.author.headImg"></a>
                 <p class="layui-elip" style="font-size: 12px;"><span style="color: #666;">@c.author.name</span> @utils.DateTimeUtil.toPrettyString(c.createTime)</p>
                 <p>
                     获得<a class="fly-case-nums fly-case-active" href="javascript:;" style=" padding:0 5px; color: #01AAED;">@c.voteStat.count</a>个赞

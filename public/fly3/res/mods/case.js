@@ -34,6 +34,24 @@ layui.define(['laypage', 'fly'], function(exports){
             ,'</div>'
           ,'</li>'
           ,'<li class="layui-form-item">'
+            ,'<label class="layui-form-label">所在城市</label>'
+            ,'<div class="layui-input-block">'
+              ,'<input required name="city" placeholder="所在城市" value="" class="layui-input">'
+            ,'</div>'
+          ,'</li>'
+          ,'<li class="layui-form-item">'
+            ,'<label class="layui-form-label">公司规模</label>'
+            ,'<div class="layui-input-block">'
+              ,'<select name="grade" lay-verify="required" lay-skin="primary">'
+                ,'<option value="0">10人以下</option>'
+                ,'<option value="1">10-100人</option>'
+                ,'<option value="2">100-500人</option>'
+                ,'<option value="3">500-1000人</option>'
+                ,'<option value="4">1000人以上</option>'
+              ,'</select>'
+            ,'</div>'
+          ,'</li>'
+          ,'<li class="layui-form-item">'
             ,'<label class="layui-form-label">公司网址</label>'
             ,'<div class="layui-input-block">'
               ,'<input required name="link" lay-verify="url" placeholder="公司网址" value="" class="layui-input">'
@@ -55,7 +73,7 @@ layui.define(['laypage', 'fly'], function(exports){
           var image = layero.find('.fly-case-image')
           ,preview = $('#preview');
  
-          form.render('checkbox').on('submit(pushCase)', function(data){
+          form.render('select').on('submit(pushCase)', function(data){
             fly.json('/corporation/add', data.field, function(res){
               layer.close(index);
               layer.alert(res.msg, {
