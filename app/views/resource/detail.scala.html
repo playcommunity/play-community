@@ -5,6 +5,7 @@
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main(s"${App.siteSetting.name} - ${resource.title}", "community", resource.resType, resource.keywords, resource.title) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>
 /* Set default font-family */
@@ -62,9 +63,16 @@
             <span class="layui-btn layui-btn-xs jie-admin" type="set" field="stick" rank="false" style="background-color:#ccc;">取消置顶</span>
             }
             @if(!resource.recommended){
-            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="status" rank="true">加精</span>
+            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="recommended" rank="true">加精</span>
             }else{
-            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="status" rank="false" style="background-color:#ccc;">取消加精</span>
+            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="recommended" rank="false" style="background-color:#ccc;">取消加精</span>
+            }
+            }
+            @if(RequestHelper.isOwnerOf(resource._id)){
+            @if(!resource.closed){
+            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="closed" rank="true">关贴</span>
+            }else{
+            <span class="layui-btn layui-btn-xs jie-admin" type="set" field="closed" rank="false" style="background-color:#ccc;">开贴</span>
             }
             }
           </div>
@@ -172,13 +180,13 @@
           <li class="fly-none">消灭零回复</li>
           }
         </ul>
-
+        @if(RequestHelper.isLogin && !resource.closed){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/resource/reply" method="post">
             <div class="layui-form-item">
               <input type="hidden" name="resId" value="@resource._id">
-              <input type="hidden" name="resType" value="resource">
+              <input type="hidden" name="resType" value="@resource.resType">
               <input type="hidden" name="resTitle" value="@resource.title">
               <input id="L_content" type="hidden" name="content"/>
               <input id="at-input" type="hidden" name="at" value="">
@@ -187,18 +195,19 @@
             </div>
           </form>
         </div>
+        }
       </div>
     </div>
   </div>
 </div>
 }
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
-layui.cache.page = 'resource';
-var token = '';
+//layui.cache.page = 'resource';
 
-@if(RequestHelper.isLogin){
+@if(RequestHelper.isLogin && !resource.closed){
 var quill = new Quill('#quill-container', {
   theme: 'snow',
   modules: {
@@ -210,12 +219,17 @@ var quill = new Quill('#quill-container', {
         [{ 'list': 'ordered' }, { 'list': 'bullet'}],
         [{ 'align': [] }],
         [ 'link', 'image' ],
+        ['emoji'],
         [ 'clean' ]
       ],
       handlers: {
-        image: function(){ $('#LAY-upload-image').click(); }
+        image: function(){ $('#LAY-upload-image').click(); },
+        'emoji': function () {}
       }
-    }
+    },
+    "emoji-toolbar": true,
+    "emoji-shortname": true,
+    "emoji-textarea": false
   }
 });
 

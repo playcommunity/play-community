@@ -44,7 +44,7 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
               if (authorOpt.nonEmpty) {
                 mongo.updateOne[User](Json.obj("_id" -> authorOpt.get._id), Json.obj("$inc" -> Json.obj("stat.votedCount" -> count)))
               }
-              Ok(Json.obj("status" -> 0, "count" -> 1))
+              Ok(Json.obj("status" -> 0, "count" -> count))
             case None =>
               Ok(Json.obj("status" -> 1, "msg" -> "Resource not found."))
           }
@@ -80,37 +80,44 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
         val (resId, resType, resTitle, content, at) = tuple
         val atIds = at.split(",").filter(_.trim != "").toList
         val reply = Reply(RequestHelper.generateId, content, "quill", RequestHelper.getAuthor, atIds, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
+        val idObj = resType match {
+          case "tweet" => obj("_id" -> resId)
+          case _ => obj("_id" -> resId, "closed" -> false)
+        }
         mongo
           .collection(AppUtil.getCollectionName(resType))
           .findOneAndUpdate(
-            obj("_id" -> resId),
+            idObj,
             obj(
               "$push" -> Json.obj("replies" -> reply),
               "$set" -> Json.obj("lastReply" -> reply),
               "$inc" -> obj("replyCount" -> 1)
             )
-          ).map{ case Some(obj) =>
-            val authorOpt = (obj \ "author").asOpt[Author]
+          ).map{
+            case Some(obj) =>
+              val authorOpt = (obj \ "author").asOpt[Author]
 
-            // 记录回复事件
-            eventService.replyResource(RequestHelper.getAuthor, resId, resType, resTitle)
+              // 记录回复事件
+              eventService.replyResource(RequestHelper.getAuthor, resId, resType, resTitle)
 
-            // 通知楼主
-            if (authorOpt.nonEmpty) {
-              if (!RequestHelper.getUidOpt.exists(_ == authorOpt.get._id)) {
-                mongo.insertOne[Message](Message(ObjectId.get().toHexString, authorOpt.get._id, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), false))
+              // 通知楼主
+              if (authorOpt.nonEmpty) {
+                if (!RequestHelper.getUidOpt.exists(_ == authorOpt.get._id)) {
+                  mongo.insertOne[Message](Message(ObjectId.get().toHexString, authorOpt.get._id, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "reply", content, DateTimeUtil.now(), false))
+                }
               }
-            }
 
-            // 通知被@用户
-            atIds.foreach{ uid =>
-              mongo.insertOne[Message](Message(ObjectId.get().toHexString, uid, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false))
-            }
+              // 通知被@用户
+              atIds.foreach{ uid =>
+                mongo.insertOne[Message](Message(ObjectId.get().toHexString, uid, resType, resId, resTitle, RequestHelper.getAuthorOpt.get, "at", content, DateTimeUtil.now(), false))
+              }
 
-            // 用户统计
-            mongo.updateOne[User](Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> 1), "$set" -> Json.obj("stat.lastReplyTime" -> DateTimeUtil.now())))
+              // 用户统计
+              mongo.updateOne[User](Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> 1), "$set" -> Json.obj("stat.lastReplyTime" -> DateTimeUtil.now())))
 
-            Redirect(s"/${resType}/view?_id=${resId}")
+              Redirect(s"/${resType}/view?_id=${resId}")
+
+            case None => Ok(views.html.message("系统提示", "很抱歉，您回复的资源不存在！"))
           }
       }
     )
@@ -159,6 +166,29 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
           } else {
             Ok(Json.obj("status" -> 1, "msg" -> "已采纳回复不允许删除！"))
           }
+        }
+      }
+    )
+  }
+
+  def doSetStatus = checkAdmin.async { implicit request: Request[AnyContent] =>
+    Form(tuple("id" -> nonEmptyText, "field" -> nonEmptyText, "rank" -> boolean)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
+      tuple => {
+        val (_id, field, status) = tuple
+        var isValidField = true
+        val modifier = field match {
+          case "stick" => Json.obj("$set" -> Json.obj("top" -> status))
+          case "closed" => Json.obj("$set" -> Json.obj("closed" -> status))
+          case "recommended" => Json.obj("$set" -> Json.obj("recommended" -> status))
+          case _ =>
+            isValidField = false
+            Json.obj()
+        }
+        if (isValidField) {
+          mongo.updateOne[Article](Json.obj("_id" -> _id), modifier).map{ _ => Ok(Json.obj("status" -> 0)) }
+        } else {
+          Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "Invalid field.")))
         }
       }
     )

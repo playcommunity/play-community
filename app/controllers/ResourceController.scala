@@ -203,24 +203,6 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
     )
   }
 
-  def doSetStatus = checkAdmin.async { implicit request: Request[AnyContent] =>
-    Form(tuple("id" -> nonEmptyText, "field" -> nonEmptyText, "rank" -> boolean)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
-      tuple => {
-        val (_id, field, status) = tuple
-        val modifier = field match {
-          case "stick" => Json.obj("$set" -> Json.obj("top" -> status))
-          case _ => Json.obj("$set" -> Json.obj("recommended" -> status))
-        }
-        for{
-          wr <- mongo.updateOne[Article](Json.obj("_id" -> _id), modifier)
-        } yield {
-          Ok(Json.obj("status" -> 0))
-        }
-      }
-    )
-  }
-
   def doAcceptReply = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "rid" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "弄啥嘞？"))),

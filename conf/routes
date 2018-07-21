@@ -23,7 +23,6 @@ POST    /resource/add                             controllers.ResourceController
 POST    /resource/collect                         controllers.ResourceController.doCollect()
 POST    /resource/remove                          controllers.ResourceController.doRemove
 POST    /resource/push                            controllers.ResourceController.doPush
-POST    /resource/status                          controllers.ResourceController.doSetStatus
 
 # Doc
 GET     /docs                                     controllers.DocController.index
@@ -52,6 +51,7 @@ POST    /resource/reply                           controllers.CommonController.d
 GET     /resource/reply/edit                      controllers.CommonController.editReply(aid: String, rid: String)
 POST    /resource/reply/edit                      controllers.CommonController.doEditReply
 POST    /resource/reply/delete                    controllers.CommonController.doRemoveReply
+POST    /resource/status                          controllers.CommonController.doSetStatus
 
 + nocsrf
 GET     /socket.io/                              play.engineio.EngineIOController.endpoint(transport)

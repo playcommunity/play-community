@@ -41,7 +41,7 @@
               <span>{{ t.time }}</span>
               <span class="fly-list-nums">
                         <i class="iconfont icon-pinglun1" title="回答"></i> {{ t.replyCount }}
-                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet" data-title="说说"></i> {{ t.voteCount }}
                       </span>
             </div>
           </li>
@@ -75,7 +75,7 @@
                       <span>{{ t.time }}</span>
                       <span class="fly-list-nums">
                         <i class="iconfont icon-pinglun1" title="回答"></i> {{ t.replyCount }}
-                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet"></i> {{ t.voteCount }}
+                        <i class="iconfont icon-zan zan-resource" style="cursor: pointer;" title="点赞" :data-id="t._id"  data-type="tweet" data-title="说说"></i> {{ t.voteCount }}
                       </span>
                     </div>
                   </li>
@@ -159,11 +159,11 @@ $('#tweet-form').submit(function(){
 });
 
 $(document).on('click', 'i.zan-resource', function(){
-  var othis = $(this), resId = othis.attr('data-id'), resType = othis.attr('data-type');
+  var othis = $(this), resId = othis.attr('data-id'), resType = othis.attr('data-type'), resTitle = othis.attr('data-title');
   layui.fly.json('/resource/vote', {
     resId: resId
     ,resType: resType
-    ,csrfToken: token
+    ,resTitle: resTitle
   }, function(res){
     for(i in app.tweets){
       if(app.tweets[i]._id == resId){

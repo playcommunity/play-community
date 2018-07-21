@@ -5,6 +5,7 @@
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main(s"${App.siteSetting.name} - ${tweet.title}", "community", "tweet", "", "") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>
 /* Set default font-family */
@@ -150,21 +151,10 @@
 </div>
 }
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
 layui.cache.page = 'resource';
-var token = '';
-
-/*
-$(document).on('click', 'i.zan-resource', function(){
-  var othis = $(this), resId = othis.attr('data-id');
-  layui.fly.json('/resource/vote', {
-    resId: resId
-  }, function(res){
-    app.tweet.voteCount += res.count;
-  });
-});
-*/
 
 @if(RequestHelper.isLogin){
 var quill = new Quill('#quill-container', {
@@ -178,12 +168,17 @@ var quill = new Quill('#quill-container', {
         [{ 'list': 'ordered' }, { 'list': 'bullet'}],
         [{ 'align': [] }],
         [ 'link', 'image' ],
+        ['emoji'],
         [ 'clean' ]
       ],
       handlers: {
-        image: function(){ $('#LAY-upload-image').click(); }
+        image: function(){ $('#LAY-upload-image').click(); },
+        'emoji': function () {}
       }
-    }
+    },
+    "emoji-toolbar": true,
+    "emoji-shortname": true,
+    "emoji-textarea": false
   }
 });
 
