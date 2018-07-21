@@ -29,7 +29,7 @@ object AppUtil {
       case Resource.QA => "问答"
       case Resource.Tweet => "说说"
       case Resource.Corporation => "公司"
-      case _ => "其它"
+      case _ => ""
     }
   }
 

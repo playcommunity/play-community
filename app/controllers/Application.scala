@@ -66,10 +66,10 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
             userOpt match {
               case Some(u) =>
                 if (u.activeCode.nonEmpty) {
-                  Redirect("http://www.playscala.cn/user/activate")
+                  Redirect("/user/activate")
                     .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0")
                 } else {
-                  Redirect(s"http://www.playscala.cn/user/home?uid=${u._id}")
+                  Redirect(s"/user/home?uid=${u._id}")
                     .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
                 }
               case None =>
