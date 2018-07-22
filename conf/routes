@@ -109,6 +109,9 @@ DELETE   /resource/:rid                          controllers.GridFSController.re
 GET      /ueditor                                controllers.GridFSController.ueditorGet(action: String)
 POST     /ueditor                                controllers.GridFSController.ueditorPost(action: String)
 
+# Update
+GET     /migrate/110To120                   controllers.MigrateController.migrateForm110To120
+
 # Assets
 GET     /baidu_verify_5vujE3CYCX.html             controllers.Assets.at(path="/public", file = "baidu_verify_5vujE3CYCX.html")
 GET     /favicon.ico                              controllers.Assets.at(path="/public", file = "favicon.ico")

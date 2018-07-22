@@ -28,10 +28,6 @@ class InitializeService @Inject()(mongo: Mongo, application: Application, actorS
   val settingCol = mongo.collection("common-setting")
   val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
 
-  if (env.mode == Mode.Dev) {
-    App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
-  }
-
   app.Global.esEnabled = esEnabled
 
   // 系统初始化

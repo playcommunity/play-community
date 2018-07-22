@@ -54,8 +54,7 @@ object DateTimeUtil {
   }
 
   def toPrettyString(epochMillis: Long): String = {
-    val time = OffsetDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneOffset.ofHours(8))
-    toPrettyString(time)
+    toPrettyString(Instant.ofEpochMilli(epochMillis))
   }
 
   def toString(time: OffsetDateTime): String = {

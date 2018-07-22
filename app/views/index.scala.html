@@ -100,34 +100,17 @@
         <dl>
           <!--<i class="layui-icon fly-loading">&#xe63d;</i>-->
           <dd style="width:130px;height:180px;">
-            <a href="user/home.html">
-              <img src="http://www.playscala.cn/resource/acd7825c-dd17-4e2a-80f2-ac744d0530f7" style="width:130px;height:180px;"><cite>2016.04</cite><i title="Programming in Scala 3rd">Programming in Scala 3rd</i>
+            <a href="/book/p-i-s-3/index.html">
+              <img src="/resource/acd7825c-dd17-4e2a-80f2-ac744d0530f7" style="width:130px;height:180px;"><cite>2016.04</cite><i title="Programming in Scala 3rd">Programming in Scala 3rd</i>
             </a>
           </dd>
           <dd style="width:130px;height:180px;">
-            <a href="user/home.html">
-              <img src="http://www.playscala.cn/resource/8ec9b6ac-a77a-494e-9a05-a2ae08e8dc14" style="width:130px;height:180px;"><cite>2012.05</cite><i>Scala In Depth</i>
+            <a href="/book/scala-in-depth/index.html">
+              <img src="/resource/8ec9b6ac-a77a-494e-9a05-a2ae08e8dc14" style="width:130px;height:180px;"><cite>2012.05</cite><i>Scala In Depth</i>
             </a>
           </dd>
         </dl>
       </div>
-      <div class="fly-panel">
-        <h3 class="fly-panel-title">温馨通道</h3>
-        <ul class="fly-panel-main fly-list-static">
-          <li>
-            <a href="/docs" target="_blank">Play For Scala 开发指南</a>
-          </li>
-          <li>
-            <a href="https://github.com/playcommunity/play-community" target="_blank">
-              PlayScala 社区源码
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play-Mongo 开源项目源码</a>
-          </li>
-        </ul>
-      </div>
-
       <div class="fly-panel">
         <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief" style="margin-top: 0px;">
           <ul class="layui-tab-title fly-panel-title">
@@ -219,6 +202,22 @@
         }
       </dl>
 
+      <div class="fly-panel">
+        <h3 class="fly-panel-title">温馨通道</h3>
+        <ul class="fly-panel-main fly-list-static">
+          <li>
+            <a href="/docs" target="_blank">Play For Scala 开发指南</a>
+          </li>
+          <li>
+            <a href="https://github.com/playcommunity/play-community" target="_blank">
+              Play Scala 社区源码
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play Mongo 项目源码</a>
+          </li>
+        </ul>
+      </div>
       <!--<div class="fly-panel">
           <div class="fly-panel-title">
               这里可作为广告区域
@@ -246,8 +245,7 @@
 <script src="/assets/js/socket.io.js"></script>
 <script src="/assets/js/vue.js"></script>
 <script>
-var token = '';
-layui.use('element', function(){});
+layui.cache.page = 'index';
 
 var app = new Vue({
   el: '#app',
@@ -285,7 +283,7 @@ $(function () {
  $.ajax({
     type: 'get',
     dataType: 'json',
-    url: '/tweet/json?count=10',
+    url: '/tweet/json?count=5',
     success: function(res){
       if(res.status === 0) {
         app.tweets = res.tweets;

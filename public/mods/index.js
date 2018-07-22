@@ -252,13 +252,13 @@ layui.define(['layer', 'laytpl', 'form', 'upload', 'util'], function(exports){
     
     //新消息通知
     ,newmsg: function(){
-      if(layui.cache.user.uid !== -1){
+      if(layui.cache.user.uid != "-1"){
         gather.json('/user/message/count', {
           _: new Date().getTime()
         }, function(res){
           if(res.status === 0 && res.count > 0){
             var msg = $('<a class="nav-message" href="javascript:;" title="您有'+ res.count +'条未阅读的消息">'+ res.count +'</a>');
-            $('.nav-user').append(msg);
+            $('.fly-nav-user').append(msg);
             msg.on('click', function(){
               gather.json('/user/message/read', {}, function(res){
                 if(res.status === 0){

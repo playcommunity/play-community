@@ -3,7 +3,7 @@ package controllers
 import javax.inject._
 
 import cn.playscala.mongo.Mongo
-import models.{Article, Author, Corporation, Message, Reply, Resource, User, VoteStat}
+import models.{ Author, Corporation, Message, Reply, Resource, User, VoteStat}
 import org.bson.types.ObjectId
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
@@ -140,7 +140,7 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
         val reply = Reply(ObjectId.get().toHexString, content, "lay-editor", RequestHelper.getAuthor, Nil, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
         val uid = request.session("uid").toInt
         for{
-          wr <- mongo.updateOne[Article](Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
+          wr <- mongo.updateOne[Resource](Json.obj("_id" -> aid, "replies._id" -> rid), Json.obj("$set" -> Json.obj("replies.$.content" -> content)))
         } yield {
           Ok(Json.obj("status" -> 0))
         }
@@ -172,10 +172,11 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
   }
 
   def doSetStatus = checkAdmin.async { implicit request: Request[AnyContent] =>
-    Form(tuple("id" -> nonEmptyText, "field" -> nonEmptyText, "rank" -> boolean)).bindFromRequest().fold(
+    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "field" -> nonEmptyText, "rank" -> boolean)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
-        val (_id, field, status) = tuple
+        val (resId, resType, field, status) = tuple
+        val resCol = mongo.collection(AppUtil.getCollectionName(resType))
         var isValidField = true
         val modifier = field match {
           case "stick" => Json.obj("$set" -> Json.obj("top" -> status))
@@ -186,7 +187,7 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
             Json.obj()
         }
         if (isValidField) {
-          mongo.updateOne[Article](Json.obj("_id" -> _id), modifier).map{ _ => Ok(Json.obj("status" -> 0)) }
+          resCol.updateOne(Json.obj("_id" -> resId), modifier).map{ _ => Ok(Json.obj("status" -> 0)) }
         } else {
           Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "Invalid field.")))
         }

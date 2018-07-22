@@ -13,8 +13,9 @@ import scala.concurrent._
 @Singleton
 class ErrorHandler @Inject() (env: Environment, config: Configuration, sourceMapper: OptionalSourceMapper, router: Provider[Router]) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
   override def onProdServerError(request: RequestHeader, exception: UsefulException) = {
+    Logger.error(exception.getMessage, exception)
     Future.successful(
-      InternalServerError("A server error occurred: " + exception.getMessage)
+      Ok(views.html.message("系统错误", "很抱歉，系统繁忙请稍后再试！")(request))
     )
   }
 

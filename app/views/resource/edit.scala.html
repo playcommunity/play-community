@@ -2,6 +2,7 @@
 @import helper._
 @main(s"${App.siteSetting.name} - 创建分享", "community", resType) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <style>
 /* Set default font-family */
 #quill-container {
@@ -71,6 +72,7 @@
 }
 
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
 <script>
 layui.cache.page = 'jie';
 var token = '';
@@ -89,12 +91,17 @@ var quill = new Quill('#quill-container', {
         [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
         [ 'direction', { 'align': [] }],
         [ 'link', 'image', 'video' ],
+        ['emoji'],
         [ 'clean' ]
       ],
       handlers: {
-        image: function(){ $('#LAY-upload-image').click(); }
+        image: function(){ $('#LAY-upload-image').click(); },
+        'emoji': function () {}
       }
-    }
+    },
+    "emoji-toolbar": true,
+    "emoji-shortname": true,
+    "emoji-textarea": false
   }
 });
 

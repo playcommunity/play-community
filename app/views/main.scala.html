@@ -83,9 +83,7 @@
 
         <div class="fly-column-right layui-hide-xs">
             <span class="fly-search"><i class="layui-icon"></i></span>
-            @if(nav2 != "tweet"){
-            <a href='/@{nav2}/add' class="layui-btn">发表新帖</a>
-            }
+            <a href='/@{if(Set("qa","doc","article").contains(nav2)){nav2}else{"qa"}}/add' class="layui-btn">发表新帖</a>
         </div>
         <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
             @if(nav2 != "tweet"){
@@ -112,7 +110,7 @@
 layui.cache.page = '';
 layui.cache.user = {
   username: '游客'
-  ,uid: -1
+  ,uid: '@request.session.get("uid").getOrElse("-1")'
   ,avatar: '/assets/fly3/res/images/avatar/00.jpg'
   ,experience: 83
   ,sex: '男'

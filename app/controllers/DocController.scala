@@ -1,7 +1,6 @@
 package controllers
 
 import javax.inject._
-
 import cn.playscala.mongo.Mongo
 import models._
 import play.api.data.Form
@@ -19,8 +18,8 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
   def index = Action.async { implicit request: Request[AnyContent] =>
     for{
       catalogOpt <- mongo.collection("doc-catalog").find().first
-      firstDocOpt <- mongo.find[Resource]().sort(Json.obj("timeStat.createTime" -> 1)).first
-      defaultDocOpt <- mongo.find[DocSetting](obj("_id" -> "docSetting")).first.flatMap{
+      firstDocOpt <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("createTime" -> 1)).first
+      defaultDocOpt <- mongo.collection("common-setting").find[DocSetting](obj("_id" -> "docSetting")).first.flatMap{
         case Some(s) => mongo.find[Resource](obj("catalogId" -> s.defaultCatalogId)).first
         case None => Future.successful(None)
       }
@@ -51,7 +50,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
             val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
             if (!viewBitmap.contains(uid)) {
               viewBitmap.add(uid)
-              mongo.updateOne[Doc](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+              mongo.updateOne[Resource](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
           Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))
@@ -74,7 +73,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
             val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
             if (!viewBitmap.contains(uid)) {
               viewBitmap.add(uid)
-              mongo.updateOne[Doc](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+              mongo.updateOne[Resource](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
           }
           Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))

@@ -74,13 +74,14 @@ layui.define('fly', function(exports){
   gather.jieAdmin = {
     //删求解
     del: function(div){
-      layer.confirm('确认删除该求解么？', function(index){
+      layer.confirm('确认删除么？', function(index){
         layer.close(index);
-        fly.json('/api/jie-delete/', {
-          id: div.data('id')
+        fly.json('/resource/remove', {
+          resId: div.data('id')
+          ,resType: div.data('type')
         }, function(res){
           if(res.status === 0){
-            location.href = '/jie/';
+            location.href = '/';
           } else {
             layer.msg(res.msg);
           }
@@ -92,7 +93,8 @@ layui.define('fly', function(exports){
     ,set: function(div){
       var othis = $(this);
       fly.json('/resource/status', {
-        id: div.data('id')
+        resId: div.data('id')
+        ,resType: div.data('type')
         ,rank: othis.attr('rank')
         ,field: othis.attr('field')
       }, function(res){
@@ -108,7 +110,6 @@ layui.define('fly', function(exports){
       fly.json('/resource/collect', {
         resType: resType
         ,resId: div.data('id')
-        ,csrfToken: token
       }, function(res){
         var count = $('#collect-count').html()|0;
         if(type === 'add'){
@@ -128,7 +129,7 @@ layui.define('fly', function(exports){
   });
 
   //异步渲染
-  var asyncRender = function(){
+  /*var asyncRender = function(){
     var div = $('.fly-admin-box'), jieAdmin = $('#LAY_jieAdmin');
     //查询帖子是否收藏
     if(jieAdmin[0] && layui.cache.user.uid != -1){
@@ -138,7 +139,7 @@ layui.define('fly', function(exports){
         jieAdmin.append('<span class="layui-btn layui-btn-xs jie-admin '+ (res.data.collection ? 'layui-btn-danger' : '') +'" type="collect" data-type="'+ (res.data.collection ? 'remove' : 'add') +'">'+ (res.data.collection ? '取消收藏' : '收藏') +'</span>');
       });
     }
-  }();
+  }();*/
 
   //解答操作
   gather.jiedaActive = {
@@ -180,8 +181,9 @@ layui.define('fly', function(exports){
       var othis = $(this);
       layer.confirm('是否采纳该回答为最佳答案？', function(index){
         layer.close(index);
-        fly.json('/api/jieda-accept/', {
-          id: li.data('id')
+        fly.json('/qa/reply/accept', {
+          _id: li.data('id')
+          ,rid: li.data('rid')
         }, function(res){
           if(res.status === 0){
             $('.jieda-accept').remove();

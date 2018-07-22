@@ -21,8 +21,8 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
   def index(page: Int) = checkAdmin.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     for {
-      docs <- mongo.find[Doc]().sort(Json.obj("timeStat.updateTime" -> -1)).skip((cPage-1) * 15).limit(15).list
-      total <- mongo.count[Doc]()
+      docs <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("timeStat.updateTime" -> -1)).skip((cPage-1) * 15).limit(15).list
+      total <- mongo.count[Resource](obj("resType" -> Resource.Doc))
     } yield {
       Ok(views.html.admin.doc.index(docs, cPage, total.toInt))
     }
@@ -34,7 +34,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
 
   def edit(_id: String) = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
-      docOpt <- mongo.findById[Doc](_id)
+      docOpt <- mongo.findById[Resource](_id)
     } yield {
       Ok(views.html.admin.doc.edit(docOpt))
     }
@@ -49,7 +49,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
         _idOpt match {
           case Some(_id) =>
             eventService.updateResource(RequestHelper.getAuthor, _id, "doc", title)
-            mongo.updateOne[Doc](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
+            mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj(
               "title" -> title,
               "content" -> content,
               "keywords" -> "",
@@ -64,7 +64,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
             val _id = RequestHelper.generateId
             eventService.createResource(RequestHelper.getAuthor, _id, "doc", title)
             mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.docCount" -> 1)))
-            mongo.insertOne[Doc](Doc(_id, title, "", content, "", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), DateTimeUtil.now, DateTimeUtil.now, false, false, false, Resource.Doc, catalogId)).map{ wr =>
+            mongo.insertOne[Resource](Resource(_id, title, "", content, "", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), DateTimeUtil.now, DateTimeUtil.now, false, false, false, Resource.Doc, "/", "", Some(catalogId), None)).map{ wr =>
               Ok(Json.obj("status" -> 0, "action" -> "create", "_id" -> _id))
             }
         }
@@ -76,7 +76,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
     Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       _id => {
-        mongo.deleteById[Doc](_id).map{ wr =>
+        mongo.deleteById[Resource](_id).map{ wr =>
           Ok(Json.obj("status" -> 0))
         }
       }

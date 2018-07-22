@@ -23,7 +23,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   def index(resType: String, status: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
     var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${path}"))
-    val sort = Json.obj("timeStat.createTime" -> -1)
+    val sort = Json.obj("createTime" -> -1)
     status match {
       case "0" =>
       case "1" =>
@@ -36,8 +36,8 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
     }
     for {
       resources <- mongo.find[Resource](q).sort(sort).skip((cPage-1) * 15).limit(15).list()
-      topViewResources <- mongo.find[Resource]().sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
-      topReplyResources <- mongo.find[Resource]().sort(Json.obj("replyCount" -> -1)).limit(10).list()
+      topViewResources <- mongo.find[Resource](obj("resType" -> resType)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
+      topReplyResources <- mongo.find[Resource](obj("resType" -> resType)).sort(Json.obj("replyCount" -> -1)).limit(10).list()
       total <- mongo.count[Resource](q)
     } yield {
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
@@ -168,7 +168,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
         val (resType, resId) = tuple
-        val resCol = mongo.collection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-resource")
         for{
           objOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1)).first
           wr <- resCol.deleteOne(Json.obj("_id" -> resId))
@@ -188,7 +188,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {
         val (resType, resId) = tuple
-        val resCol = mongo.collection(s"common-${resType}")
+        val resCol = mongo.collection(s"common-resource")
         for{
           Some(resObj) <- resCol.find(Json.obj("_id" -> resId), Json.obj("title" -> 1, "author" -> 1)).first
         } yield {
@@ -209,13 +209,13 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       tuple => {
         val (_id, rid) = tuple
         for {
-          Some(qa) <- mongo.find[QA](Json.obj("_id" -> _id)).first
+          Some(qa) <- mongo.find[Resource](Json.obj("_id" -> _id)).first
         } yield {
           if (qa.answer.isEmpty) {
             eventService.acceptReply(RequestHelper.getAuthor, _id, "qa", qa.title)
             qa.replies.find(_._id == rid) match {
               case Some(reply) =>
-                mongo.updateOne[QA](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
+                mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
                 mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> 10)))
 
                 // 消息提醒

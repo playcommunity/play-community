@@ -51,7 +51,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
   }
 
   def logout = checkLogin(parser, ec) { implicit request: Request[AnyContent] =>
-    Redirect("https://secure.playscala.cn/login").withNewSession
+    Redirect("/login").withNewSession
   }
 
   def doLogin = Action.async { implicit request: Request[AnyContent] =>

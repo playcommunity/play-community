@@ -25,10 +25,10 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
 
   def index() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
-      articles <- mongo.find[Article](obj("author._id" -> request.session("uid"))).sort(obj("timeStat.updateTime" -> -1)).limit(15).list
-      articlesCount <- mongo.count[Article](obj("author._id" -> request.session("uid")))
-      qas <- mongo.find[QA](obj("author._id" -> request.session("uid"))).sort(obj("timeStat.updateTime" -> -1)).limit(15).list
-      qaCount <- mongo.count[QA](obj("author._id" -> request.session("uid")))
+      articles <- mongo.find[Resource](obj("resType" -> Resource.Article, "author._id" -> request.session("uid"))).sort(obj("timeStat.updateTime" -> -1)).limit(15).list
+      articlesCount <- mongo.count[Resource](obj("resType" -> Resource.Article, "author._id" -> request.session("uid")))
+      qas <- mongo.find[Resource](obj("resType" -> Resource.QA, "author._id" -> request.session("uid"))).sort(obj("timeStat.updateTime" -> -1)).limit(15).list
+      qaCount <- mongo.count[Resource](obj("resType" -> Resource.QA, "author._id" -> request.session("uid")))
       collectRes <- mongo.find[StatCollect](obj("uid" -> request.session("uid"))).sort(obj("collectTime" -> -1)).limit(15).list
       collectResCount <- mongo.count[StatCollect](obj("uid" -> request.session("uid")))
     } yield {
@@ -131,15 +131,16 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
   }*/
 
   def doSetHeadImg = checkLogin.async { implicit request: Request[AnyContent] =>
-    Form(single("url" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
+    Form(single("avatar" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       url => {
         mongo.updateOne[User](
           obj("_id" -> request.session("uid")),
           obj(
             "$set" -> Json.obj("setting.headImg" -> url)
         )).map{ wr =>
-          Redirect(routes.UserController.setting()).addingToSession("headImg" -> url)
+          Ok(Json.obj("status" -> 0))
+            .addingToSession("headImg" -> url)
         }
       }
     )
