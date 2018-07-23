@@ -4,7 +4,7 @@ PlayCommunity 社区系统基于 [Play Framework 2.6.x](https://www.playframewor
 
 ## 下载&编译
 ```
-git clone https://github.com/playcommunity//play-community.git
+git clone https://github.com/playcommunity/play-community.git
 ```
 打开命令行，进入 play-community 目录，执行命令:
 ```

@@ -88,15 +88,13 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
                 "keywords" -> keywords,
                 "categoryPath" -> categoryPath,
                 "categoryName" -> category.map(_.name).getOrElse[String]("-"),
-                "author.name" -> request.session("name"),
-                "author.headImg" -> request.session("headImg"),
                 "updateTime" -> Instant.now()
               )))
             case None =>
               val _id = RequestHelper.generateId
               eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
               mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.articleCount" -> 1)))
-              mongo.insertOne[Resource](Resource(_id, title, content, keywords, "quill", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), Instant.now, Instant.now, false, false, false, resType, categoryPath, category.map(_.name).getOrElse("-"), None, None))
+              mongo.insertOne[Resource](Resource(_id, title, keywords, content, "quill", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), Instant.now, Instant.now, false, false, false, resType, categoryPath, category.map(_.name).getOrElse("-"), None, None))
           }
         } yield {
           Redirect(routes.ResourceController.index(resType, "0", categoryPath, 1))

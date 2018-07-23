@@ -157,7 +157,7 @@ layui.define(['laypage', 'fly'], function(exports){
   var asyncRender = function(){
     var div = $('.fly-detail-hint'), jieAdmin = $('#LAY_jieAdmin');
     //查询帖子是否收藏
-    if(jieAdmin[0] && layui.cache.user.uid != -1){
+    if(jieAdmin[0] && layui.cache.user.uid != "-1"){
       fly.json('/collection/find/', {
         cid: div.data('id')
       }, function(res){

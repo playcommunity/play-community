@@ -1,5 +1,6 @@
 package controllers
 
+import java.net.URLEncoder
 import javax.inject._
 
 import akka.stream.Materializer
@@ -30,7 +31,7 @@ class GridFSController @Inject()(cc: ControllerComponents, mongo: Mongo)(implici
       case Some(file) =>
         Ok.chunked(file.stream.toSource)
           .as(file.getContentType)
-          .withHeaders("Content-Disposition" -> s"""${inlineStr}; filename="${file.getFilename}"""")
+          .withHeaders("Content-Disposition" -> s"""${inlineStr}; filename="${URLEncoder.encode(file.getFilename, "utf-8")}"""")
       case None =>
         NotFound
     }

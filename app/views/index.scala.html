@@ -264,7 +264,7 @@ $('#tweet-form').submit(function(){
     type: 'post',
     dataType: 'json',
     data: {content: tweet, images: []},
-    url: '/tweet/add?csrfToken=' + token,
+    url: '/tweet/add',
     success: function(res){
       if(res.status === 0) {
         $('#tweet').val('');
