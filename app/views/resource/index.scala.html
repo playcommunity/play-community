@@ -15,6 +15,10 @@
           <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">已结</a>
           <span class="fly-mid"></span>
           <a @if(status == "3"){class="layui-this"} href="/@{resType}s?status=3">精华</a>
+          @if(category != "/"){
+          <span class="fly-mid"></span>
+          <a class="layui-this" href="javascript:;">按分类查看</a>
+          }
         </div>
 
         <ul class="fly-list">

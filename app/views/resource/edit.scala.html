@@ -50,7 +50,7 @@
                   <label class="layui-form-label">所在类别</label>
                   <div class="layui-input-block">
                     <select lay-verify="required" name="categoryPath">
-                      @for(c <- categoryList){
+                      @for(c <- categoryList.sortBy(_.index)){
                       <option value="@c.path" @if(resourceOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
                       }
                     </select>
