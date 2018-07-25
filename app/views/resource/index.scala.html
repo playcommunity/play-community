@@ -1,4 +1,4 @@
-@(resType: String, status: String, path: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(resType: String, status: String, category: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${App.siteSetting.name} - 社区分享", "community", resType) {
@@ -36,6 +36,7 @@
                 -->
               </a>
               <span>@utils.DateTimeUtil.toPrettyString(a.createTime)</span>
+              <a href="/@{resType}s?status=@{status}&category=@{a.categoryPath}" link>@a.categoryName</a>
 
               <!--<span class="fly-list-kiss layui-hide-xs" title="悬赏飞吻"><i class="iconfont icon-kiss"></i> 60</span>-->
               @if(a.closed){
@@ -62,7 +63,7 @@
 
         <div style="text-align: center">
           <div class="laypage-main">
-            <a href="/@{resType}s?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(resources.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/@{resType}s?page=@{page+1}" class="laypage-next">下一页</a>
+            <a href="/@{resType}s?status=@{status}&category=@{category}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(resources.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/@{resType}s?status=@{status}&category=@{category}&page=@{page+1}" class="laypage-next">下一页</a>
           </div>
         </div>
       </div>

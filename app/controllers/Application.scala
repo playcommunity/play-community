@@ -27,13 +27,14 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     Ok(views.html.icons())
   }
 
-  def index(status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    val q = status match {
-      case "0" => obj()
-      case "1" => obj("closed" -> false)
-      case "2" => obj("closed" -> true)
-      case "3" => obj("recommended" -> true)
+    var q = obj("categoryPath" -> obj("$regex" -> s"^${category}"))
+    status match {
+      case "0" =>
+      case "1" => q ++= obj("closed" -> false)
+      case "2" => q ++= obj("closed" -> true)
+      case "3" => q ++= obj("recommended" -> true)
     }
     for {
       topNews <- mongo.find[Resource](Json.obj("top" -> true)).sort(Json.obj("createTime" -> -1)).limit(5).list()
@@ -42,7 +43,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       activeUsers <- mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(12).list()
       topViewDocs <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
     } yield {
-      Ok(views.html.index(status, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
+      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
     }
   }
 
@@ -198,7 +199,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     mongo.find[User](Json.obj("login" -> RequestHelper.getLogin)).first.flatMap {
       case Some(u) =>
         Future.successful {
-          Redirect(routes.Application.index("0", 1))
+          Redirect(routes.Application.index("0", "/", 1))
             .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
         }
       case None =>
@@ -206,7 +207,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
           uid <- counterService.getNextSequence("user-sequence")
           _ <- mongo.insertOne[User](User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
-          Redirect(routes.Application.index("0", 1))
+          Redirect(routes.Application.index("0", "/", 1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER, "active" -> "1")
         }
     }

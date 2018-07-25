@@ -77,7 +77,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
   }
 
   def removeMessage = checkLogin.async { implicit request: Request[AnyContent] =>
-    Form(single("_id" -> nonEmptyText)).bindFromRequest().fold(
+    Form(single("id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       _id => {
         for {

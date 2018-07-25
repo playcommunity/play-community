@@ -59,7 +59,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
               Redirect(controllers.routes.UserController.setting("pass"))
                 .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
             } else {
-              Redirect(controllers.routes.Application.index("0", 1))
+              Redirect(controllers.routes.Application.index("0", "/", 1))
                 .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
             }
           }

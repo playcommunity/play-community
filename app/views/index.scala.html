@@ -1,4 +1,4 @@
-@(status: String, topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(status: String, category: String, topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
@@ -69,6 +69,7 @@
             </h2>
             <div class="fly-list-info">
               <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
+              <a href="/?status=@{status}&category=@{r.categoryPath}" link>@r.categoryName</a>
               @if(r.closed){
               <span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>
               }
@@ -90,7 +91,7 @@
         </ul>
         <div style="text-align: center">
           <div class="laypage-main">
-            <a href="/?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?page=@{page+1}" class="laypage-next">下一页</a></div>
+            <a href="/?status=@{status}&category=@{category}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?status=@{status}&category=@{category}&page=@{page+1}" class="laypage-next">下一页</a></div>
         </div>
       </div>
     </div>

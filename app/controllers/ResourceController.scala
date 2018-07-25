@@ -20,9 +20,9 @@ import scala.util.control.NonFatal
 @Singleton
 class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def index(resType: String, status: String, path: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(resType: String, status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${path}"))
+    var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${category}"))
     val sort = Json.obj("createTime" -> -1)
     status match {
       case "0" =>
@@ -43,7 +43,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       if (total > 0 && cPage > math.ceil(total/15.0).toInt) {
         Redirect(s"/${resType}s")
       } else {
-        Ok(views.html.resource.index(resType, status, path, resources, topViewResources, topReplyResources, cPage, total.toInt))
+        Ok(views.html.resource.index(resType, status, category, resources, topViewResources, topReplyResources, cPage, total.toInt))
       }
     }
   }

@@ -8,12 +8,12 @@ POST    /corporation/add                          controllers.CorporationControl
 POST    /corporation/vote                         controllers.CorporationController.doVote
 
 # Resource
-GET     /articles                                 controllers.ResourceController.index(resType: String = "article", status: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /articles                                 controllers.ResourceController.index(resType: String = "article", status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /article/add                              controllers.ResourceController.add(resType: String = "article")
 GET     /article/edit                             controllers.ResourceController.edit(_id: String)
 GET     /article/view                             controllers.ResourceController.view(_id: String)
 
-GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", path: String ?= "/", page: Int ?= 1)
+GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
 GET     /qa/edit                                  controllers.ResourceController.edit(_id: String)
 GET     /qa/view                                  controllers.ResourceController.view(_id: String)
@@ -59,7 +59,7 @@ GET     /socket.io/                              play.engineio.EngineIOControlle
 POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Application
-GET     /                                         controllers.Application.index(status: String ?= "0", page: Int ?= 1)
+GET     /                                         controllers.Application.index(status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
