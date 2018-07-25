@@ -310,7 +310,7 @@ button.ql-table[value="append-col"]::after {
 }
 
 .emoji {
-  margin-bottom: -5px;
+  margin-bottom: 5px;
 }
 
 .ap {

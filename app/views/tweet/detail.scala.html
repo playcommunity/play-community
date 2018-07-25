@@ -135,6 +135,7 @@
           }
         </ul>
 
+        @if(RequestHelper.isLogin){
         <div id="quill-container"></div>
         <div class="layui-form layui-form-pane" style="margin-top: 15px;">
           <form id="form" action="/resource/reply" method="post">
@@ -149,6 +150,7 @@
             </div>
           </form>
         </div>
+        }
       </div>
     </div>
   </div>

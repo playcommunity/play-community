@@ -62,7 +62,7 @@
 
         <div style="text-align: center">
           <div class="laypage-main">
-            <a href="/@{resType}s?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(resources.isEmpty){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/@{resType}s?page=@{page+1}" class="laypage-next">下一页</a>
+            <a href="/@{resType}s?page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(resources.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/@{resType}s?page=@{page+1}" class="laypage-next">下一页</a>
           </div>
         </div>
       </div>
