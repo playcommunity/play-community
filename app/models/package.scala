@@ -7,5 +7,8 @@ package object models {
   implicit val voteStatFormat = Json.format[VoteStat]
   implicit val commentFormat = Json.format[Comment]
   implicit val replyFormat = Json.format[Reply]
+  implicit val linkFormat = Json.format[Link]
+  implicit val siteSettingFormat = Json.format[SiteSetting]
+
   implicit def formats[T <: Product]: Format[T] = macro JsonFormatMacro.materializeJsonFormat[T]
 }

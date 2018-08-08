@@ -27,9 +27,9 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
 
   def base = checkAdmin.async { implicit request: Request[AnyContent] =>
     for {
-      opt <- settingCol.findById("siteSetting")
+      opt <- settingCol.findById[SiteSetting]("siteSetting")
     } yield {
-      Ok(views.html.admin.setting.base(opt.map(_.as[SiteSetting]).getOrElse(App.siteSetting)))
+      Ok(views.html.admin.setting.base(opt.getOrElse(App.siteSetting)))
     }
   }
 

@@ -48,7 +48,7 @@ class InitializeService @Inject()(mongo: Mongo, application: Application, actorS
     siteSettingOpt.map(_.as[SiteSetting]).foreach{ siteSetting =>
       App.siteSetting = siteSetting
       if (env.mode == Mode.Dev) {
-        App.siteSetting = App.siteSetting.copy(logo = "http://bbs.chatbot.cn/resource/363b9e2e-e958-4d61-af1c-4c29442f21a7", name = "奇智机器人")
+        App.siteSetting = App.siteSetting.copy(logo = "https://www.playscala.cn/assets/images/logo.png", name = "PlayScala社区")
       }
     }
   }
