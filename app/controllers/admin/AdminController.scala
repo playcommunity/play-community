@@ -78,7 +78,8 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
                 "index" -> 0,
                 "disabled" -> false
               )
-            )
+            ),
+            true
           )
           Ok(Json.obj("status" -> 0))
         }
