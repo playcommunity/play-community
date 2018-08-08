@@ -8,10 +8,12 @@ scalaVersion := "2.12.4"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
+addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+
 libraryDependencies ++= Seq(
   guice, ws,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.0.0" % Test,
-  "cn.playscala" % "play-mongo_2.12" % "0.2.0",
+  "cn.playscala" % "play-mongo_2.12" % "0.3.0",
   "com.hankcs" % "hanlp" % "portable-1.3.4",
   "org.roaringbitmap" % "RoaringBitmap" % "0.6.44",
   "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0",
@@ -23,3 +25,5 @@ libraryDependencies ++= Seq(
   "org.scalameta" %% "scalameta" % "3.7.3",
   "org.scalameta" %% "contrib" % "3.7.3"
 )
+
+
