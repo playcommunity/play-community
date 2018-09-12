@@ -83,7 +83,11 @@
 
         <div class="fly-column-right layui-hide-xs">
             <span class="fly-search"><i class="layui-icon"></i></span>
-            <a href='/@{if(Set("qa","doc","article").contains(nav2)){nav2}else{"qa"}}/add' class="layui-btn">发表新帖</a>
+            @if(nav2 == "index" || nav2 == "article"){
+                <a href='/article/add' class="layui-btn">我要分享</a>
+            }else{
+                <a href='/qa/add' class="layui-btn">我要提问</a>
+            }
         </div>
         <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
             @if(nav2 != "tweet"){
@@ -121,6 +125,22 @@ layui.config({
 }).extend({
   fly: 'index'
 }).use('fly');
+</script>
+
+<!-- 百度自动推送索引链接代码 -->
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
 </script>
 </body>
 </html>

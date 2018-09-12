@@ -15,7 +15,7 @@ import play.api.libs.json.Json._
 @Singleton
 class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService) (implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def index = Action.async { implicit request: Request[AnyContent] =>
+  def index = checkLogin.async { implicit request: Request[AnyContent] =>
     for{
       catalogOpt <- mongo.collection("doc-catalog").find().first
       firstDocOpt <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("createTime" -> 1)).first
