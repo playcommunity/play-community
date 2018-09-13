@@ -37,7 +37,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
     }
   }
 
-  def viewCatalog(_id: String) = Action.async { implicit request: Request[AnyContent] =>
+  def viewCatalog(_id: String) = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       Some(catalog) <- mongo.collection("doc-catalog").find().first
       docOpt <- mongo.find[Resource](obj("catalogId" -> _id)).first
@@ -60,7 +60,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
     }
   }
 
-  def viewDoc(_id: String) = Action.async { implicit request: Request[AnyContent] =>
+  def viewDoc(_id: String) = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       Some(catalog) <- mongo.collection("doc-catalog").find().first
       docOpt <- mongo.find[Resource](Json.obj("_id" -> _id)).first

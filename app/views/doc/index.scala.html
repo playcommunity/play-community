@@ -80,7 +80,7 @@
     code { color: #333; }
   </style>
 
-<body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo">
+<body class="page-container-bg-solid page-header-fixed page-sidebar-closed-hide-logo page-sidebar-fixed">
 <!-- BEGIN HEADER -->
 <div class="page-header navbar navbar-fixed-top">
   <!-- BEGIN HEADER INNER -->
@@ -156,7 +156,7 @@
     <!-- BEGIN SIDEBAR -->
     <!-- DOC: Set data-auto-scroll="false" to disable the sidebar from auto scrolling/focusing -->
     <!-- DOC: Change data-auto-speed="200" to adjust the sub menu slide up/down speed -->
-    <div class="page-sidebar navbar-collapse collapse">
+    <div class="page-sidebar navbar-collapse collapse" style="position: fixed;">
       <!-- BEGIN SIDEBAR MENU -->
       <!-- DOC: Apply "page-sidebar-menu-light" class right after "page-sidebar-menu" to enable light sidebar menu style(without borders) -->
       <!-- DOC: Apply "page-sidebar-menu-hover-submenu" class right after "page-sidebar-menu" to enable hoverable(hover vs accordion) sub menu mode -->
@@ -164,7 +164,7 @@
       <!-- DOC: Set data-auto-scroll="false" to disable the sidebar from auto scrolling/focusing -->
       <!-- DOC: Set data-keep-expand="true" to keep the submenues expanded -->
       <!-- DOC: Set data-auto-speed="200" to adjust the sub menu slide up/down speed -->
-      <ul class="page-sidebar-menu   " data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
+      <ul class="page-sidebar-menu page-sidebar-menu-fixed" data-keep-expanded="false" data-auto-scroll="true" data-slide-speed="200">
         @for(node <- nodes.value){
           <li class="heading">
             <h3>@(node("text").as[String])</h3>
