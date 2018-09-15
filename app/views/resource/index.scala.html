@@ -77,7 +77,7 @@
         <dt class="fly-panel-title">热点@if(resType == "qa"){问题}else{文章}</dt>
         @for(a <- topViewResources){
         <dd>
-          <a href="/resource/view?_id=@{a._id}">@a.title</a>
+          <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
           <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
         </dd>
         }
@@ -86,7 +86,7 @@
         <dt class="fly-panel-title">热议@if(resType == "qa"){问题}else{文章}</dt>
         @for(a <- topReplyResources){
         <dd>
-          <a href="/resource/view?_id=@{a._id}">@a.title</a>
+          <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
           <span><i class="iconfont icon-pinglun1"></i> @a.replyCount</span>
         </dd>
         }
