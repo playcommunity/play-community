@@ -29,7 +29,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
 
   def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
-    var q = obj("categoryPath" -> obj("$regex" -> s"^${category}"))
+    var q = obj("categoryPath" -> obj("$regex" -> s"^${category}"), "visible" -> true)
     status match {
       case "0" =>
       case "1" => q ++= obj("closed" -> false)
@@ -37,11 +37,11 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       case "3" => q ++= obj("recommended" -> true)
     }
     for {
-      topNews <- mongo.find[Resource](Json.obj("top" -> true)).sort(Json.obj("createTime" -> -1)).limit(5).list()
+      topNews <- mongo.find[Resource](Json.obj("top" -> true, "visible" -> true)).sort(Json.obj("createTime" -> -1)).limit(5).list()
       news <- mongo.find[Resource](q).sort(Json.obj("createTime" -> -1)).skip((cPage-1) * 15).limit(15).list()
       total <- mongo.count[Resource](q)
       activeUsers <- mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(12).list()
-      topViewDocs <- mongo.find[Resource](obj("resType" -> Resource.Doc)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
+      topViewDocs <- mongo.find[Resource](obj("resType" -> Resource.Doc, "visible" -> true)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
     } yield {
       Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
     }

@@ -54,18 +54,20 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
   }
 
   def doVoteReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText)).fill(("user@playscala.cn", "123456"))
     Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "resTitle" -> nonEmptyText, "replyId" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("success" -> false, "message" -> "invalid args."))),
       tuple => {
         val (resId, resType, resTitle, replyId) = tuple
         val resCol = mongo.collection(AppUtil.getCollectionName(resType))
         for{
-          reply <- resCol.find(Json.obj("_id" -> resId), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> replyId)))).first.map(objOpt => (objOpt.get \ "replies")(0).as[Reply])
+          replyOpt <- resCol.find(Json.obj("_id" -> resId)).first
         } yield {
+          val reply = (replyOpt.get \ "replyStat" \ "replies").as[List[Reply]].find(_._id == replyId).get
           val uid = RequestHelper.getUid.toInt
           val newVoteStat = AppUtil.toggleVote(reply.voteStat, uid)
           val count = newVoteStat.count - reply.voteStat.count
-          resCol.updateOne(Json.obj("_id" -> resId, "replies._id" -> replyId), Json.obj("$set" -> Json.obj("replies.$.voteStat" -> newVoteStat)))
+          resCol.updateOne(Json.obj("_id" -> resId, "replyStat.replies._id" -> replyId), Json.obj("$set" -> Json.obj("replyStat.replies.$.voteStat" -> newVoteStat)))
           mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("stat.votedCount" -> count)))
           Ok(Json.obj("status" -> 0, "count" -> 1))
         }
@@ -89,9 +91,9 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
           .findOneAndUpdate(
             idObj,
             obj(
-              "$push" -> Json.obj("replies" -> reply),
-              "$set" -> Json.obj("lastReply" -> reply),
-              "$inc" -> obj("replyCount" -> 1)
+              "$push" -> Json.obj("replyStat.replies" -> reply),
+              "$set" -> Json.obj("replyStat.lastReply" -> reply),
+              "$inc" -> obj("replyStat.replyCount" -> 1)
             )
           ).map{
             case Some(obj) =>
@@ -126,7 +128,7 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
 
   def editReply(aid: String, rid: String) = checkOwner("rid").async { implicit request: Request[AnyContent] =>
     for {
-      reply <- mongo.collection("common-article").find(Json.obj("_id" -> aid), Json.obj("replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get)("replies")(0).as[Reply])
+      reply <- mongo.collection("common-resource").find(Json.obj("_id" -> aid), Json.obj("replyStat.replies" -> Json.obj("$elemMatch" -> Json.obj("_id" -> rid)))).first.map(objOpt => (objOpt.get)("replyStat")("replies")(0).as[Reply])
     } yield {
       Ok(Json.obj("status" -> 0, "rows" -> Json.obj("content" -> reply.content)))
     }
@@ -156,11 +158,11 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
         val uid = request.session("uid").toInt
         val resCol = mongo.collection(AppUtil.getCollectionName(resType))
         for{
-          answerObjOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("answer" -> 1)).first
+          bestReplyOpt <- resCol.find(Json.obj("_id" -> resId), Json.obj("replyStat.bestReply" -> 1)).first
         } yield {
-          val answerId = answerObjOpt.flatMap(obj => (obj \ "answer" \ "_id").asOpt[String]).getOrElse("")
-          if (answerId != rid) {
-            resCol.updateOne(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyCount" -> -1)))
+          val bestReplyId = bestReplyOpt.flatMap(obj => (obj \ "answer" \ "_id").asOpt[String]).getOrElse("")
+          if (bestReplyId != rid) {
+            resCol.updateOne(Json.obj("_id" -> resId), Json.obj("$pull" -> Json.obj("replyStat.replies" -> Json.obj("_id" -> rid)), "$inc" -> Json.obj("replyStat.replyCount" -> -1)))
             mongo.updateOne[User](Json.obj("_id" -> request.session("uid")), Json.obj("$inc" -> Json.obj("stat.replyCount" -> -1)))
             Ok(Json.obj("status" -> 0))
           } else {

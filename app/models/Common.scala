@@ -10,26 +10,24 @@ import utils.DateTimeUtil
 case class Resource (
   _id: String,
   title: String,
-  keywords: String,
+  keywords: String = "",
   content: String,
-  editorType: String,
+  editorType: String = "quill",
   author: Author,
-  replies: List[Reply],
-  lastReply: Option[Reply],
-  viewStat: ViewStat,
-  voteStat: VoteStat,
-  replyCount: Int,
-  collectStat: CollectStat,
-  createTime: Instant,
-  updateTime: Instant,
-  top: Boolean, // 置顶
-  recommended: Boolean, // 精华
-  closed: Boolean, // 是否关闭
+  replyStat: ReplyStat = ReplyStat(0, Nil, None, None),
+  viewStat: ViewStat = ViewStat(0, ""),
+  voteStat: VoteStat = VoteStat(0, ""),
+  collectStat: CollectStat = CollectStat(0, ""),
+  createTime: Instant = Instant.now,
+  updateTime: Instant = Instant.now,
+  top: Boolean = false, // 置顶
+  recommended: Boolean = false, // 精华
+  closed: Boolean = false, // 是否关闭
+  visible: Boolean = true, // 是否发布
   resType: String, // 资源类型
-  categoryPath: String,
-  categoryName: String,
-  catalogId: Option[String], // 文档目录
-  answer: Option[Reply] // 最佳回复
+  categoryPath: String = "/",
+  categoryName: String = "",
+  catalogId: Option[String] = None // 文档目录
 )
 
 object Resource {
@@ -111,6 +109,7 @@ case class UserSetting(name: String, gender: String, introduction: String, headI
 
 object UserStat { val DEFAULT = UserStat(0, 0, 0, 0, 0, 0, 0, 0, 0, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now, DateTimeUtil.now()) }
 case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: Int, fileCount: Int, replyCount: Int, commentCount: Int, voteCount: Int, votedCount: Int, createTime: Instant, updateTime: Instant, lastLoginTime: Instant, lastReplyTime: Instant)
+case class ReplyStat(replyCount: Int, replies: List[Reply], bestReply: Option[Reply], lastReply: Option[Reply])
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)

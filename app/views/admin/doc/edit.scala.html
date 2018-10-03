@@ -4,6 +4,16 @@
 @views.html.admin.main("系统设置 - 基础设置", "learn", "docs") {
 <link href="/assets/theme/global/plugins/bootstrap-daterangepicker/daterangepicker.min.css" rel="stylesheet" type="text/css" />
 <style>
+code {
+    height: 4px;
+    padding: 0;
+    background: #fafafa;
+    color: #666;
+    border: 1px solid #ddd;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    font-family: inconsolata,monospace;
+}
 </style>
 <!-- BEGIN PAGE HEAD-->
 <div class="page-head">
@@ -73,7 +83,7 @@
                                 </div>
                             </div>
                         </div>
-                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>
+                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>
                     </div>
                     <div class="form-actions noborder">
 

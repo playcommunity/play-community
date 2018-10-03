@@ -94,7 +94,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
               val _id = RequestHelper.generateId
               eventService.createResource(RequestHelper.getAuthor, _id, "article", title)
               mongo.updateOne[User](Json.obj("_id" -> RequestHelper.getUid), Json.obj("$inc" -> Json.obj("stat.resCount" -> 1, "stat.articleCount" -> 1)))
-              mongo.insertOne[Resource](Resource(_id, title, keywords, content, "quill", RequestHelper.getAuthor, Nil, None, ViewStat(0, ""), VoteStat(0, ""), 0, CollectStat(0, ""), Instant.now, Instant.now, false, false, false, resType, categoryPath, category.map(_.name).getOrElse("-"), None, None))
+              mongo.insertOne[Resource](Resource(_id, title, keywords, content, author = RequestHelper.getAuthor, resType = resType, categoryPath = categoryPath, categoryName = category.map(_.name).getOrElse("-")))
           }
         } yield {
           Redirect(routes.ResourceController.index(resType, "0", categoryPath, 1))
@@ -209,11 +209,11 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
         for {
           Some(qa) <- mongo.find[Resource](Json.obj("_id" -> _id)).first
         } yield {
-          if (qa.answer.isEmpty) {
+          if (qa.replyStat.bestReply.isEmpty) {
             eventService.acceptReply(RequestHelper.getAuthor, _id, "qa", qa.title)
-            qa.replies.find(_._id == rid) match {
+            qa.replyStat.replies.find(_._id == rid) match {
               case Some(reply) =>
-                mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("answer" -> reply)))
+                mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("replyStat.bestReply" -> reply)))
                 mongo.updateOne[User](Json.obj("_id" -> reply.author._id), Json.obj("$inc" -> Json.obj("score" -> 10)))
 
                 // 消息提醒

@@ -85,7 +85,7 @@
           <span class="fly-list-nums">
             <i class="layui-icon" title="收藏">&#xe600;</i> <em id="collect-count">@resource.collectStat.count</em>
             <i class="iconfont icon-zan" title="点赞"></i> <em id="vote-count">@resource.voteStat.count</em>
-            <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @resource.replies.size</a>
+            <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @resource.replyStat.replies.size</a>
             <i class="iconfont" title="人气">&#xe60b;</i> @resource.viewStat.count
           </span>
         </div>
@@ -129,7 +129,7 @@
         </fieldset>
 
         <ul class="jieda" id="jieda">
-          @for(r <- resource.replies){
+          @for(r <- resource.replyStat.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
           <li data-id="@{resource._id}" data-uid="@{r.author._id}" data-rid="@{r._id}" data-type="resource" data-title="@{resource.title} 中 @{r.author.name} 的回复" class="jieda-daan">
             <a name="item-@{r._id}"></a>
@@ -182,7 +182,7 @@
           }
           }
 
-          @if(resource.replies.isEmpty){
+          @if(resource.replyStat.replies.isEmpty){
           <li class="fly-none">消灭零回复</li>
           }
         </ul>
