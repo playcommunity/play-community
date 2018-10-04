@@ -42,8 +42,8 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
   }
 
   def doAdd = checkAdmin.async { implicit request: Request[AnyContent] =>
-    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText, "content" -> nonEmptyText, "catalogId" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
+    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText, "content" -> text, "catalogId" -> nonEmptyText)).bindFromRequest().fold(
+      errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       tuple => {
         val (_idOpt, title, content, catalogId) = tuple
         _idOpt match {
@@ -55,7 +55,7 @@ class AdminDocController @Inject()(cc: ControllerComponents, mongo: Mongo, commo
               "keywords" -> "",
               "author.name" -> request.session("name"),
               "author.headImg" -> request.session("headImg"),
-              "timeStat.updateTime" -> DateTimeUtil.now(),
+              "updateTime" -> DateTimeUtil.now(),
               "catalogId" -> catalogId
             ))).map{ wr =>
               Ok(Json.obj("status" -> 0, "action" -> "update"))

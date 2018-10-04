@@ -16,11 +16,11 @@
           @for(r <- topNews){
           <li>
             <a href="/user/home?uid=@{r.author._id}" class="fly-avatar">
-              <img src="@r.author.headImg" alt="贤心">
+              <img src="@r.author.headImg" alt="@r.author.name">
             </a>
             <h2>
               <a class="layui-badge">@utils.AppUtil.prettyResource(r.resType)</a>
-              <a href="/@{r.resType}/view?_id=@r._id">@r.title</a>
+              <a href="/@{r.resType}/view?_id=@r._id">@{r.docTitle.map(t => t + " - ").getOrElse("")}@{r.title}</a>
             </h2>
             <div class="fly-list-info">
               <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
@@ -69,7 +69,7 @@
             </a>
             <h2>
               <a class="layui-badge">@utils.AppUtil.prettyResource(r.resType)</a>
-              <a href="/@{r.resType}/view?_id=@r._id">@r.title</a>
+              <a href="/@{r.resType}/view?_id=@r._id">@{r.docTitle.map(t => t + " - ").getOrElse("")}@{r.title}</a>
             </h2>
             <div class="fly-list-info">
               <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>

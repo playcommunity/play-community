@@ -27,6 +27,7 @@ case class Resource (
   resType: String, // 资源类型
   categoryPath: String = "/",
   categoryName: String = "",
+  docTitle: Option[String] = None, // 文档标题
   catalogId: Option[String] = None // 文档目录
 )
 
