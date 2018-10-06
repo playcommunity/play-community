@@ -90,8 +90,10 @@
             }
         </div>
         <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
-            @if(nav2 != "tweet"){
-            <a href='/@{nav2}/add' class="layui-btn">发表新帖</a>
+            @if(nav2 == "index" || nav2 == "article"){
+                <a href='/article/add' class="layui-btn">我要分享</a>
+            }else{
+                <a href='/qa/add' class="layui-btn">我要提问</a>
             }
         </div>
     </div>

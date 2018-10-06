@@ -40,7 +40,7 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
   def viewCatalog(_id: String) = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
       Some(catalog) <- mongo.collection("doc-catalog").find().first
-      docOpt <- mongo.find[Resource](obj("catalogId" -> _id)).first
+      docOpt <- mongo.find[Resource](obj("doc.catalogId" -> _id)).first
     } yield {
       docOpt match {
         case Some(doc) =>

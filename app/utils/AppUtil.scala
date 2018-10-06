@@ -17,6 +17,7 @@ object AppUtil {
       case Resource.Doc => "common-resource"
       case Resource.Article => "common-resource"
       case Resource.QA => "common-resource"
+      case Resource.Exam => "common-resource"
       case Resource.Tweet => "common-tweet"
       case Resource.Corporation => "common-corporation"
     }
@@ -27,6 +28,7 @@ object AppUtil {
       case Resource.Doc => "文档"
       case Resource.Article => "分享"
       case Resource.QA => "问答"
+      case Resource.Exam => "题库"
       case Resource.Tweet => "说说"
       case Resource.Corporation => "公司"
       case _ => ""

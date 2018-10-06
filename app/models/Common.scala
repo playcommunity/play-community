@@ -27,8 +27,8 @@ case class Resource (
   resType: String, // 资源类型
   categoryPath: String = "/",
   categoryName: String = "",
-  docTitle: Option[String] = None, // 文档标题
-  catalogId: Option[String] = None // 文档目录
+  doc: Option[DocInfo] = None,
+  exam: Option[ExamInfo] = None,
 )
 
 object Resource {
@@ -36,9 +36,15 @@ object Resource {
   val QA = "qa"
   val Doc = "doc"
   val Article = "article"
+  val Exam = "exam"
   val Tweet = "tweet"
   val Corporation = "corporation"
 }
+
+case class DocInfo(title: String, catalogId: String)
+
+case class ExamAnswer(uid: String, option: String, createTime: Instant = Instant.now())
+case class ExamInfo(options: List[String], answer: String, answers: List[ExamAnswer], explain: String)
 
 @Entity("common-user")
 case class User(

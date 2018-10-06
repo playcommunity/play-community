@@ -105,23 +105,32 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
 
   def view(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      article <- mongo.findById[Resource](_id)
+      resource <- mongo.findById[Resource](_id)
     } yield {
-      article match {
-        case Some(a) =>
-          request.session.get("uid") match {
-            case Some(id) =>
-              val uid = id.toInt
-              val viewBitmap = BitmapUtil.fromBase64String(a.viewStat.bitmap)
-              if (!viewBitmap.contains(uid)) {
-                viewBitmap.add(uid)
-                mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(a.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
-                Ok(views.html.resource.detail(a.copy(viewStat = a.viewStat.copy(count = a.viewStat.count + 1))))
-              } else {
-                Ok(views.html.resource.detail(a))
-              }
-            case None =>
-              Ok(views.html.resource.detail(a))
+      resource match {
+        case Some(r) =>
+          val res =
+            request.session.get("uid") match {
+              case Some(id) =>
+                val uid = id.toInt
+                val viewBitmap = BitmapUtil.fromBase64String(r.viewStat.bitmap)
+                if (!viewBitmap.contains(uid)) {
+                  viewBitmap.add(uid)
+                  mongo.updateOne[Resource](Json.obj("_id" -> _id), Json.obj("$set" -> Json.obj("viewStat" -> ViewStat(r.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
+                  r.resType match {
+                    case "exam" => r.copy(viewStat = r.viewStat.copy(count = r.viewStat.count + 1))
+                    case _ => r
+                  }
+                } else {
+                  r
+                }
+              case None =>
+                r
+            }
+
+          res.resType match {
+            case "exam" => Ok(views.html.resource.exam.detail(res))
+            case _ => Ok(views.html.resource.detail(res))
           }
         case None => Redirect(routes.Application.notFound)
       }

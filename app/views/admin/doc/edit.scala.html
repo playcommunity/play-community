@@ -72,7 +72,7 @@ code {
                                 <div class="form-group form-md-line-input has-success" style="margin-bottom: 0px;">
                                     <div class="input-group">
                                         <div class="input-group-control">
-                                            <input id="catalogIdInput" name="catalogId" type="hidden" value='@docOpt.map(_.catalogId).getOrElse("")'>
+                                            <input id="catalogIdInput" name="catalogId" type="hidden" value='@docOpt.flatMap(_.doc.map(_.catalogId)).getOrElse("")'>
                                             <input id="catalogTextInput" type="text" class="form-control" placeholder="请选择目录" readonly>
                                             <label>关联目录</label>
                                         </div>
@@ -118,7 +118,7 @@ $('.choose-catalog').click(function(){
     maxmin: true,
     shadeClose: true,
     area : ['800px' , '700px'],
-    content: ['/admin/doc/catalog/view@{docOpt.map(d => "?select=" + d.catalogId).getOrElse("")}', 'no']
+    content: ['/admin/doc/catalog/view@{docOpt.map(d => "?select=" + d.doc.map(_.catalogId).getOrElse("")).getOrElse("")}', 'no']
   });
 });
 

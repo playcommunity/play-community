@@ -20,7 +20,9 @@
             </a>
             <h2>
               <a class="layui-badge">@utils.AppUtil.prettyResource(r.resType)</a>
-              <a href="/@{r.resType}/view?_id=@r._id">@{r.docTitle.map(t => t + " - ").getOrElse("")}@{r.title}</a>
+              <a href="/@{r.resType}/view?_id=@r._id">
+                  @{r.doc.map(t => t.title + " - ").getOrElse("")}@{r.title}
+              </a>
             </h2>
             <div class="fly-list-info">
               <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
@@ -69,10 +71,12 @@
             </a>
             <h2>
               <a class="layui-badge">@utils.AppUtil.prettyResource(r.resType)</a>
-              <a href="/@{r.resType}/view?_id=@r._id">@{r.docTitle.map(t => t + " - ").getOrElse("")}@{r.title}</a>
+              <a href="/@{r.resType}/view?_id=@r._id">
+                  @{r.doc.map(t => t.title + " - ").getOrElse("")}@{r.title}
+              </a>
             </h2>
             <div class="fly-list-info">
-              <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
+              <span title="创建时间">@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
               <a href="/?status=@{status}&category=@{r.categoryPath}" link>@r.categoryName</a>
               @if(r.closed){
               <span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>
