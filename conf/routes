@@ -32,7 +32,10 @@ GET     /doc/catalog                              controllers.DocController.view
 
 # Exam
 GET     /exam/view                                controllers.ResourceController.view(_id: String)
-POST    /exam/submit                              controllers.ExamController.doSubmit
+GET     /exam/add                                 controllers.ExamController.add
+GET     /exam/edit                                controllers.ExamController.edit(_id: String)
+POST    /exam/edit                                controllers.ExamController.doEdit
+POST    /exam/submit                              controllers.ExamController.doAnswer
 
 
 # Tweet

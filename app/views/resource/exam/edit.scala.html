@@ -1,0 +1,39 @@
+@(resourceOpt: Option[Resource])(implicit request: RequestHeader)
+@import helper._
+@main(s"${App.siteSetting.name} - 创建/编辑试题", "community", "exam") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+<style>
+/* Set default font-family */
+#quill-container {
+  font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+  font-size: 14px;
+  height: 500px;
+}
+.layui-upload-file, .layui-upload-button { display: none;}
+
+.ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+    margin: 5px 0px 5px;
+    padding: 10px 0px 5px;
+}
+</style>
+<div class="main layui-clear">
+  <div class="fly-panel" pad20 style="padding-top: 5px;">
+    <div class="layui-tab layui-tab-brief" lay-filter="user">
+      <ul class="layui-tab-title">
+        <li class="layui-this">@resourceOpt.map(_ => "编辑试题").getOrElse("创建试题")</li>
+      </ul>
+      <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
+        <div class="layui-tab-item layui-show">
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
+<script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
+<script>
+</script>

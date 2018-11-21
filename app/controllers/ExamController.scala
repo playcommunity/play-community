@@ -15,7 +15,23 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ExamController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def doSubmit = checkLogin.async { implicit request: Request[AnyContent] =>
+  //添加试题
+  def add = checkLogin(parser, ec) { implicit request: Request[AnyContent] =>
+    Ok(views.html.resource.exam.edit(None))
+  }
+
+  //编辑试题
+  def edit(_id: String) = checkLogin.async { implicit request: Request[AnyContent] =>
+    Future.successful(Ok(views.html.resource.exam.edit(None)))
+  }
+
+  //保存试题
+  def doEdit = checkLogin.async { implicit request: Request[AnyContent] =>
+    Future.successful(Ok(""))
+  }
+
+  //提交试题答案
+  def doAnswer = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "option" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       tuple => {
