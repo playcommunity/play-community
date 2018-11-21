@@ -31,7 +31,7 @@ class ExamController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
   }
 
   //提交试题答案
-  def doAnswer = checkLogin.async { implicit request: Request[AnyContent] =>
+  def doSubmitAnswer = checkLogin.async { implicit request: Request[AnyContent] =>
     Form(tuple("_id" -> nonEmptyText, "option" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       tuple => {

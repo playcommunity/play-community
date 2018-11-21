@@ -49,7 +49,7 @@ case class ExamInfo(
   options: List[String], //试题选项
   answer: String, //试题答案
   answers: List[ExamAnswer], //用户提交答案
-  explain: String //试题答案
+  explain: String //试题答案解析
 )
 //用户提交答案
 case class ExamAnswer(

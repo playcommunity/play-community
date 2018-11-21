@@ -1,6 +1,8 @@
 @(resource: Resource)(implicit request: RequestHeader)
 @import helper._
-@import utils.RequestHelper
+@import _root_.utils.RequestHelper
+@import _root_.utils.BitmapUtil
+@import _root_.utils.DateTimeUtil
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main(s"${App.siteSetting.name} - ${resource.title}", "community", resource.resType, resource.keywords, resource.title) {
@@ -39,6 +41,9 @@
 .layui-form-radio * {
   font-size: 15px;
 }
+.layui-form-checkbox span, .layui-form-checkbox * {
+  font-size: 15px;
+}
 </style>
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
@@ -54,19 +59,19 @@
               <!--<i class="iconfont icon-renzheng" title="认证信息：{{ rows.user.approve }}"></i>
               <i class="layui-badge fly-badge-vip">VIP3</i>-->
             </a>
-            <span>@utils.DateTimeUtil.toPrettyString(resource.createTime)发布</span>
+            <span>@DateTimeUtil.toPrettyString(resource.createTime)发布</span>
           </div>
           <div class="detail-hits" id="LAY_jieAdmin" data-id="@resource._id">
             <!--<span style="padding-right: 10px; color: #FF7200">悬赏：60飞吻</span>-->
             @if(resource.author._id == request.session.get("uid").getOrElse("")){
             <span class="layui-btn layui-btn-xs jie-admin" type="edit"><a href="/@{resource.resType}/edit?_id=@{resource._id}">编辑此贴</a></span>
             }
-            @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(resource.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
+            @if(RequestHelper.isLogin && BitmapUtil.fromBase64String(resource.collectStat.bitmap).contains(request.session.get("uid").getOrElse("-1").toInt)){
             <span class="layui-btn layui-btn-xs jie-admin  layui-btn-danger" type="collect" data-type="remove" data-resource="resource">取消收藏</span>
             }else{
             <span class="layui-btn layui-btn-xs jie-admin " type="collect" data-type="add" data-resource="resource">收藏</span>
             }
-            @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(resource.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
+            @if(RequestHelper.isLogin && BitmapUtil.fromBase64String(resource.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
             <span class="layui-btn layui-btn-xs zan-resource layui-btn-danger" data-zan="1" data-id="@resource._id"  data-type="resource" data-title="@resource.title">取消点赞</span>
             }else{
             <span class="layui-btn layui-btn-xs zan-resource" data-zan="0" data-id="@resource._id"  data-type="resource" data-title="@resource.title">点赞</span>
@@ -79,7 +84,7 @@
           <form class="layui-form">
             <ul>
             @for(t <- resource.exam.get.options.zipWithIndex){
-              <li><input type="radio" name="option" value="@t._2" title="@t._1" @if(answer.exists(_.option.toInt == t._2)){checked}  @if(answer.nonEmpty){disabled}></li>
+              <li><input type="@if(resource.exam.get.answer.contains(",")){checkbox}else{radio}" lay-skin="primary" name="option" value="@t._2" title="@t._1" @if(answer.exists(_.option.split(",").exists(_.toInt == t._2))){checked}  @if(answer.nonEmpty){disabled}></li>
             }
             </ul>
             <button id="submit" type="button" class="layui-btn @if(answer.nonEmpty){layui-btn-disabled}" style="margin-top: 30px;" @if(answer.nonEmpty){disabled}>@if(answer.nonEmpty){已提交}else{提交答案}</button>
@@ -89,7 +94,11 @@
             <legend>正确答案</legend>
             <div class="layui-field-box">
               <form class="layui-form">
-              <input type="radio" name="answer" value="" title="@resource.exam.get.options(resource.exam.get.answer.toInt)" checked>
+                <ul>
+                @for(a <- resource.exam.get.answer.split(",")){
+                  <li><input type="checkbox"  lay-skin="primary" name="answer" value="" title="@resource.exam.get.options(a.toInt)" checked disabled></li>
+                }
+                </ul>
               </form>
               <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 20px;">@resource.exam.get.explain</blockquote>
             </div>
@@ -114,7 +123,7 @@
 
         <ul class="jieda" id="jieda">
           @for(r <- resource.replyStat.replies){
-          @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
+          @defining(BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
           <li data-id="@{resource._id}" data-uid="@{r.author._id}" data-rid="@{r._id}" data-type="resource" data-title="@{resource.title} 中 @{r.author.name} 的回复" class="jieda-daan">
             <a name="item-@{r._id}"></a>
             <div class="detail-about detail-about-reply">
@@ -137,7 +146,7 @@
               </div>
 
               <div class="detail-hits">
-                <span>@utils.DateTimeUtil.toPrettyString(r.createTime)</span>
+                <span>@DateTimeUtil.toPrettyString(r.createTime)</span>
               </div>
 
               <!--<i class="iconfont icon-caina" title="最佳答案"></i>-->
@@ -259,11 +268,12 @@ $(document).ready(function() {
 });
 
 $('#submit').click(function (e) {
+  var option = $("input[name='option']:checked").map(function(){return $(this).val();}).toArray().join(",");
   $.ajax({
      type: 'post',
      dataType: 'json',
      contentType: 'application/x-www-form-urlencoded',
-     data: {_id: '@resource._id', option: $("input[name='option']:checked").val()},
+     data: {_id: '@resource._id', option: option},
      url: '/exam/submit',
      success: function(res){
        if(res.status != 0){
