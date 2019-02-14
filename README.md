@@ -17,6 +17,9 @@ play-community\target\universal\play-community-<version>.zip
 
 ## 配置
 ### 配置 MongoDB 连接
+
+> 如果MongoDB是单击部署，则需要手动开启[replica set](https://docs.mongodb.com/manual/tutorial/deploy-replica-set/index.html)。
+
 将 `play-community-<version>.zip` 文件上传至服务器并解压，打开配置文件 `conf/application.conf`，配置如下：
 ```
 # 配置 MongoDB
@@ -60,6 +63,7 @@ es {
 ```
 nohup ./play-community -J-Xms1g -J-Xmx1g -Dhttp.port=80 > ../log.txt &
 ```
+> 关于Play应用的启动、停止以及升级，请参考：[Play For Scala 开发指南 - 第5章 第一个Play项目 - 发布Play项目](https://www.playscala.cn/doc/catalog?_id=j1_11)
 
 ## 管理
 系统的管理入口为：
