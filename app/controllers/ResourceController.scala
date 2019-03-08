@@ -1,6 +1,7 @@
 package controllers
 
 import java.time.Instant
+
 import javax.inject._
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
@@ -12,13 +13,14 @@ import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
 import play.api.mvc._
-import services.{CommonService, EventService}
+import services.{CommonService, EventService, ResourceService}
 import utils._
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.NonFatal
 
 @Singleton
-class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService, commonService: CommonService, resourceService: ResourceService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def index(resType: String, status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = if(page < 1){1}else{page}
@@ -73,12 +75,13 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   }
 
   def doAdd = (checkActive andThen checkAdminOrOwner("_id")).async { implicit request: Request[AnyContent] =>
-    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "keywords" -> nonEmptyText, "categoryPath" -> nonEmptyText, "resType" -> nonEmptyText)).bindFromRequest().fold(
+    Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "keywords" -> text, "categoryPath" -> nonEmptyText, "resType" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
-        val (_idOpt, title, content, keywords, categoryPath, resType) = tuple
+        val (_idOpt, title, rawContent, keywords, categoryPath, resType) = tuple
         for {
           category <- mongo.find[Category](Json.obj("path" -> categoryPath)).first
+          content <- resourceService.process(rawContent)
           wr <-  _idOpt match {
             case Some(_id) =>
               eventService.updateResource(RequestHelper.getAuthor, _id, "article", title)
@@ -239,6 +242,12 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
         }
       }
     )
+  }
+
+  def test = Action.async {
+    resourceService.process("""<img src="https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo_top_86d58ae1.png">""").map{ html =>
+      Ok(html)
+    }
   }
 
 }

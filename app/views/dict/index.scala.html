@@ -1,0 +1,42 @@
+@()(implicit request: RequestHeader)
+
+@main("欢迎来到社区！", "dict") {
+<style>
+.search-input {
+    height: 48px;
+    line-height: 48px;
+    font-size: 20px;
+}
+.search-logo {
+    margin: 50px 0 0;
+    padding: 20px 0 30px;
+    text-align: center;
+}
+</style>
+<div class="layui-container" style="margin-top: 10px; margin-bottom: 100px;">
+    <div class="search-logo">
+        <p>
+            <img src="/assets/images/dict-200.png" alt="PlayScala社区" style="width: 180px;height:180px;">
+        </p>
+    </div>
+    <div class="layui-row layui-col-space0">
+        <div class="layui-col-md5 layui-col-xs8 layui-col-md-offset3 layui-col-xs-offset2">
+            <input id="query" type="text" name="q" required lay-verify="required" placeholder="请输入查询单词或短语" autocomplete="off" class="layui-input search-input">
+        </div>
+        <div class="layui-col-md1 layui-col-xs2">
+            <button id="query-btn" class="layui-btn search-input">立即查词</button>
+        </div>
+    </div>
+</div>
+}
+
+<script>
+$('#query-btn').click(function(){
+    var q = $('#query').val();
+    if(q.replace(/\s/g, '') === ''){
+        return false;
+    }
+    window.location.href = "/dict/" + q;
+});
+
+</script>

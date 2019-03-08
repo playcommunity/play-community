@@ -17,6 +17,7 @@
     padding: 10px 0px 5px;
 }
 </style>
+@nav(resType)
 <div class="main layui-clear">
   <div class="fly-panel" pad20 style="padding-top: 5px;">
     <div class="layui-tab layui-tab-brief" lay-filter="user">
@@ -43,7 +44,7 @@
               <div class="layui-form-item">
                 <label for="L_title" class="layui-form-label">关键词</label>
                 <div class="layui-input-block">
-                  <input name="keywords" value="@resourceOpt.map(_.keywords).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input" placeholder="关键词之间以英文逗号分隔"> </div>
+                  <input name="keywords" value="@resourceOpt.map(_.keywords).getOrElse("")" autocomplete="off" class="layui-input" placeholder="关键词之间以英文逗号分隔"> </div>
               </div>
               <div class="layui-form-item">
                 <div class="layui-inline">

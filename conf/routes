@@ -13,6 +13,8 @@ GET     /article/add                              controllers.ResourceController
 GET     /article/edit                             controllers.ResourceController.edit(_id: String)
 GET     /article/view                             controllers.ResourceController.view(_id: String)
 
+GET     /resource/test                            controllers.ResourceController.test
+
 GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
 GET     /qa/edit                                  controllers.ResourceController.edit(_id: String)
@@ -43,6 +45,10 @@ GET     /tweets                                   controllers.TweetController.in
 GET     /tweet/json                               controllers.TweetController.getLatestAndHot(count: Int ?= 15)
 POST    /tweet/add                                controllers.TweetController.doAdd
 GET     /tweet/view                               controllers.TweetController.view(_id: String)
+
+# Dict
+GET     /dict                                     controllers.DictController.index
+GET     /dict/:_id                                controllers.DictController.query(_id: String)
 
 # Common
 POST    /resource/vote                            controllers.CommonController.doVote

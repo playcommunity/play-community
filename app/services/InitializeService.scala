@@ -100,7 +100,7 @@ class InitializeService @Inject()(mongo: Mongo, application: Application, actorS
       }
       .runForeach { seq =>
         try {
-          Logger.info(seq.toString())
+          //Logger.info(seq.toString())
 
           val inserts = seq.filter(c => c.getOperationType == OperationType.INSERT).map(_.getFullDocument.as[Resource]).toList
           val updates = seq.filter(c => c.getOperationType == OperationType.UPDATE || c.getOperationType == OperationType.REPLACE).map(_.getFullDocument.as[Resource]).toList

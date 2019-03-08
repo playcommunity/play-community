@@ -29,8 +29,10 @@
   <logger name="application" level="DEBUG" />
   <logger name="cloud" level="DEBUG" />
 
+  <!-- All loggers are descendants of the predefined root logger. -->
   <root level="ERROR">
     <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </root>
 
 </configuration>
