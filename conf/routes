@@ -48,6 +48,12 @@ GET     /tweet/view                               controllers.TweetController.vi
 
 # Dict
 GET     /dict                                     controllers.DictController.index
+GET     /dict/add                                 controllers.DictController.add(_id: String ?= "")
+POST    /dict/add                                 controllers.DictController.doAdd
+GET     /dict/edit                                controllers.DictController.edit(_id: String ?= "")
+POST    /dict/edit                                controllers.DictController.doEdit
+GET     /dict/pass                                controllers.DictController.pass(_id: String ?= "")
+GET     /dict/remove                              controllers.DictController.remove(_id: String ?= "")
 GET     /dict/:_id                                controllers.DictController.query(_id: String)
 
 # Common

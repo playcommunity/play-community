@@ -1,0 +1,206 @@
+@(_id: String, wordOpt: Option[Word])(implicit request: RequestHeader)
+
+@main("PlayScala社区 - 添加新词", "dict") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+<style>
+/* Set default font-family */
+#quill-container {
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+    font-size: 14px;
+    height: 300px;
+}
+.layui-upload-file, .layui-upload-button { display: none;}
+
+.ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+    margin: 5px 0px 5px;
+    padding: 10px 0px 5px;
+}
+.search-input {
+    height: 48px;
+    line-height: 48px;
+    font-size: 20px;
+}
+.search-logo {
+    margin: 0px 0 0;
+    padding: 40px 0 40px;
+    text-align: center;
+}
+.sound {
+    background-image: url(/assets/images/sound.png);
+    background-repeat: no-repeat;
+}
+</style>
+<div class="main layui-clear">
+    <div class="fly-panel" pad20 style="padding-top: 5px;">
+        <div class="layui-tab layui-tab-brief" lay-filter="user">
+            <ul class="layui-tab-title">
+                <li class="layui-this">添加新词</li>
+            </ul>
+            <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-form layui-form-pane" style="margin-top: 15px;">
+                        <form id="form" action="/resource/edit" method="post">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">单词</label>
+                                <div class="layui-input-block">
+                                    <input id="word" type="text" value="@_id.toLowerCase" required  lay-verify="required" placeholder="请输入单词，例如：scala" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">音标</label>
+                                <div class="layui-input-block">
+                                    <input id="pronounce" type="text" value='@wordOpt.map(_.pronounce).getOrElse("")' required  lay-verify="required" placeholder="请输入音标，例如：[ˈskɑːlə]" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">标签</label>
+                                <div class="layui-input-block">
+                                    <input id="tags" type="text" value='@wordOpt.map(_.tags).getOrElse("")' required  lay-verify="required" placeholder="请输入标签，之间以逗号隔开，例如：编程语言,函数式语言" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">发音</label>
+                                <div class="layui-input-inline" style="margin-left: 10px; width: 120px;">
+                                    <select id="audioType" lay-verify="required">
+                                        <option value="">文件类型</option>
+                                        <option value="audio/mp3" @if(wordOpt.exists(_.audioType == "audio/mp3")){selected}>MP3</option>
+                                    </select>
+                                </div>
+                                <button id="audio-btn" type="button" class="layui-btn layui-btn-primary">
+                                    <i class="layui-icon">&#xe67c;</i><span id="audio-tip">上传发音</span>
+                                </button>
+                                @if(wordOpt.exists(_.audioUrl.trim != "")) {
+                                    <span style="margin-left: 5px; cursor: pointer;"><i id="sound" class="sound" title="发音">　</i></span>
+                                }
+                            </div>
+                        </form>
+                    </div>
+                    <fieldset class="layui-elem-field layui-field-title">
+                        <legend>释义</legend>
+                        <div class="layui-field-box">
+                            <div id="quill-container">@Html(wordOpt.map(_.content).getOrElse(""))</div>
+                        </div>
+                    </fieldset>
+                    <div class="layui-form-item">
+                        <input id="audioUrl" type="hidden" value='@wordOpt.map(_.audioUrl).getOrElse("")' />
+                        <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
+                        <button id="submit-btn" class="layui-btn">@if(wordOpt.isEmpty){提交单词}else{保存修改}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if(wordOpt.nonEmpty){
+    <audio id='@{wordOpt.map(_._id).getOrElse("")}'>
+        <source src='@{wordOpt.get.audioUrl}' type='@{wordOpt.get.audioType}'>
+    </audio>
+}
+}
+
+<script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
+<script>
+var quill = new Quill('#quill-container', {
+    theme: 'snow',
+    modules: {
+        toolbar: {
+            container : [
+                [{ 'size': [] }],
+                [ 'bold', 'italic', 'underline', 'strike' ],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'script': 'super' }, { 'script': 'sub' }],
+                [{ 'header': 1 }, { 'header': 2 }, { 'header': [1, 2, 3, 4, 5, 6, false] }],
+                ['blockquote', 'code-block' ],
+                [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
+                [ 'direction', { 'align': [] }],
+                [ 'link', 'image', 'video' ],
+                ['emoji'],
+                [ 'clean' ]
+            ],
+            handlers: {
+                image: function(){ $('#LAY-upload-image').click(); },
+                'emoji': function () {}
+            }
+        },
+        "emoji-toolbar": true,
+        "emoji-shortname": true,
+        "emoji-textarea": false
+    }
+});
+
+layui.use('upload', function(upload){
+    var upload = layui.upload;
+    upload.render({
+        elem: '#LAY-upload-image'
+        ,method: 'post'
+        ,url: '/resource/owner/editor'
+        ,done: function(res){
+            var range = quill.getSelection(true);
+            var Delta = Quill.import('delta');
+            quill.updateContents(
+                    new Delta().retain(range.index)
+                            .delete(range.length)
+                            .insert({ image: res.url })
+                    , 'user');
+        }
+        ,error: function(){
+            layer.msg('error');
+        }
+    });
+
+    upload.render({
+        elem: '#audio-btn'
+        ,method: 'post'
+        ,url: '/resource/owner/editor'
+        ,accept: 'file'
+        ,done: function(res){
+            $('#audioUrl').val(res.url);
+            $('#audio-tip').text('上传成功');
+        }
+        ,error: function(){
+            layer.msg('error');
+            $('#audio-tip').text('上传失败');
+        }
+    });
+});
+
+var word = '@{wordOpt.map(_._id).getOrElse("")}';
+
+$('#sound').click(function(){
+    var audio = document.getElementById(word);
+    audio.currentTime = 0;
+    audio.play();
+});
+
+$('#submit-btn').click(function(){
+    var _id = $('#word').val();
+    var pronounce = $('#pronounce').val();
+    var tags = $('#tags').val();
+    var audioUrl = $('#audioUrl').val();
+    var audioType = $('#audioType').val();
+    var content = quill.root.innerHTML;
+    var data = {_id: _id, pronounce: pronounce, tags: tags, audioType: audioType, audioUrl: audioUrl, content: content};
+    $.ajax({
+        type: 'post',
+        dataType: 'json',
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify(data),
+        url: '/dict/@wordOpt.map(_ => "edit").getOrElse("add")',
+        success: function(res){
+            if (res.code == "0") {
+                window.location.href = "/dict/" + _id;
+            } else {
+                layer.msg(res.msg);
+            }
+        }, error: function(e){
+            layer.msg("提交失败");
+        }
+    });
+
+
+});
+
+</script>

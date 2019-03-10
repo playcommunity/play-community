@@ -1,15 +1,15 @@
 @()(implicit request: RequestHeader)
 
-@main("欢迎来到社区！", "dict") {
+@main("PlayScala社区 - 社区词典", "dict") {
 <style>
 .search-input {
-    height: 48px;
-    line-height: 48px;
-    font-size: 20px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 18px;
 }
 .search-logo {
-    margin: 50px 0 0;
-    padding: 20px 0 30px;
+    margin: 0px 0 0;
+    padding: 40px 0 40px;
     text-align: center;
 }
 </style>
@@ -20,10 +20,10 @@
         </p>
     </div>
     <div class="layui-row layui-col-space0">
-        <div class="layui-col-md5 layui-col-xs8 layui-col-md-offset3 layui-col-xs-offset2">
-            <input id="query" type="text" name="q" required lay-verify="required" placeholder="请输入查询单词或短语" autocomplete="off" class="layui-input search-input">
+        <div class="layui-col-md3 layui-col-xs5 layui-col-md-offset4 layui-col-xs-offset3">
+            <input id="query" type="text" name="q" required lay-verify="required" placeholder="请输入单词" autocomplete="off" class="layui-input search-input">
         </div>
-        <div class="layui-col-md1 layui-col-xs2">
+        <div class="layui-col-md4 layui-col-xs3">
             <button id="query-btn" class="layui-btn search-input">立即查词</button>
         </div>
     </div>
@@ -32,11 +32,21 @@
 
 <script>
 $('#query-btn').click(function(){
+    query();
+});
+
+$('#query').keyup(function(e){
+    if (e.keyCode == 13) {
+        query();
+    }
+});
+
+function query() {
     var q = $('#query').val();
     if(q.replace(/\s/g, '') === ''){
         return false;
     }
     window.location.href = "/dict/" + q;
-});
+}
 
 </script>

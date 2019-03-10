@@ -1,6 +1,7 @@
 @(query: String, wordOpt: Option[Word], topWords: List[String])(implicit request: RequestHeader)
 
-@main("欢迎来到社区！", "search") {
+@import utils.RequestHelper._
+@main("PlayScala社区 - 词典搜索", "dict") {
 <style>
   .fly-list .fly-list-li { height: auto; }
   .fly-list-li h2 a { font-size: 18px; }
@@ -25,11 +26,11 @@
                 <form onsubmit="return submit();">
                     <div class="layui-form">
                         <div class="layui-inline">
-                            <input id="query" type="text" name="q" value="@query" required lay-verify="required" placeholder="请输入查询单词或短语" autocomplete="off" class="layui-input" style="width:300px;">
+                            <input id="query" type="text" value="@query" required lay-verify="required" placeholder="请输入单词" autocomplete="off" class="layui-input" style="width:300px;">
                         </div>
                         <div class="layui-inline">
                             <div class="layui-btn-group">
-                                <button id="query-btn" class="layui-btn">立即查词</button>
+                                <button id="query-btn" type="button" class="layui-btn">立即查词</button>
                             </div>
                         </div>
                     </div>
@@ -38,20 +39,31 @@
         </div>
     </div>
 </div>
-@if(wordOpt.nonEmpty) {
-    <div class="layui-container">
-        <div class="layui-row  layui-col-space15">
-            <div class="layui-col-md10 content detail">
+<div class="layui-container">
+    <div class="layui-row  layui-col-space15">
+        <div class="layui-col-md10 content detail">
+            @if(wordOpt.nonEmpty) {
                 <div class="fly-panel detail-box">
                     <span style="font-size: 32px;">@wordOpt.get._id</span>
-                    <span>@wordOpt.get.pronounce</span>
-                    <span style="cursor: pointer;"><i id="sound" class="sound" title="发音">　</i></span>
+                    <span style="font-size: 15px; margin-left: 5px;">@wordOpt.get.pronounce</span>
+                    <span style="margin-left: 5px; cursor: pointer;"><i id="sound" class="sound" title="发音">　</i></span>
                     <div class="fly-detail-info">
                     </div>
                     <div class="fly-detail-info">
+                        @if(wordOpt.exists(!_.isReviewed)) {
+                            <span class="layui-badge layui-bg-red fly-detail-column">待审核</span>
+                        }
                         @for(tag <- wordOpt.get.tags) {
                             <span class="layui-badge layui-bg-green fly-detail-column">@tag</span>
                         }
+                        @if(request.session.get("login").exists(_ == wordOpt.get.creator) || isAdmin) {
+                            <a href="/dict/edit?_id=@query" class="layui-btn layui-btn-primary">编辑</a>
+                        }
+                        @if(isAdmin){
+                            <a href="/dict/pass?_id=@query" class="layui-btn layui-btn-primary">通过</a>
+                            <a href="/dict/remove?_id=@query" class="layui-btn layui-btn-primary">删除</a>
+                        }
+
                         @*<span class="layui-btn layui-btn-xs">流计算</span>*@
                         @*<span class="fly-list-nums">
                         <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> 66</a>
@@ -59,35 +71,31 @@
                         </span>*@
                     </div>
                     <div class="detail-body photos">
-                    @wordOpt.get.content
+                    @Html(wordOpt.get.content)
                     </div>
                 </div>
-            </div>
-            <div class="layui-col-md2">
-                <dl class="fly-panel fly-list-one">
-                    <dt class="fly-panel-title">热门查询</dt>
-                    @for(w <- topWords) {
-                        <dd>
-                            <a href="/dict/@{w}">@w</a>
-                        </dd>
-                    }
-                </dl>
-            </div>
+            } else {
+                <div class="fly-panel detail-box">
+                    非常抱歉，我们会尽快添加该词条！<a href="/dict/add?_id=@query" class="layui-btn"><i class="layui-icon layui-icon-edit"></i> 我来添加</a>
+                </div>
+            }
+        </div>
+        <div class="layui-col-md2">
+            <dl class="fly-panel fly-list-one">
+                <dt class="fly-panel-title">热门查询</dt>
+                @for(w <- topWords) {
+                    <dd>
+                        <a href="/dict/@{w}">@w</a>
+                    </dd>
+                }
+            </dl>
         </div>
     </div>
-} else {
-    <div class="layui-container">
-        @if(query.trim != "") {
-            抱歉，该词尚未维护！
-        } else {
-            请输入查询词！
-        }
-    </div>
-}
+</div>
 }
 
 @if(wordOpt.nonEmpty){
-<audio id="spark">
+<audio id='word-@{wordOpt.map(_._id).getOrElse("")}'>
     <source src='@{wordOpt.get.audioUrl}' type='@{wordOpt.get.audioType}'>
 </audio>
 }
@@ -95,18 +103,27 @@
 var word = '@{wordOpt.map(_._id).getOrElse("")}';
 
 $('#sound').click(function(){
-  var audio = document.getElementById(word);
+  var audio = document.getElementById("word-" + word);
   audio.currentTime = 0;
   audio.play();
 });
 
-function submit() {
-    alert("aa");
+$('#query-btn').click(function(){
+    query();
+});
+
+$('#query').keydown(function(e){
+    if (e.keyCode == 13) {
+        query();
+        e.preventDefault();
+    }
+});
+
+function query() {
     var q = $('#query').val();
     if(q.replace(/\s/g, '') === ''){
         return false;
     }
     window.location.href = "/dict/" + q;
-    return false;
 }
 </script>
