@@ -56,7 +56,7 @@
                             <div class="layui-form-item">
                                 <label class="layui-form-label">标签</label>
                                 <div class="layui-input-block">
-                                    <input id="tags" type="text" value='@wordOpt.map(_.tags).getOrElse("")' required  lay-verify="required" placeholder="请输入标签，之间以逗号隔开，例如：编程语言,函数式语言" autocomplete="off" class="layui-input">
+                                    <input id="tags" type="text" value='@wordOpt.map(_.tags.mkString(",")).getOrElse("")' required  lay-verify="required" placeholder="请输入标签，之间以逗号隔开，例如：编程语言,函数式语言" autocomplete="off" class="layui-input">
                                 </div>
                             </div>
                             <div class="layui-form-item">

@@ -1,0 +1,42 @@
+@(query: String)
+
+<div class="fly-panel fly-column" style="height: 80px;">
+    <div class="layui-container" style="padding-top:15px;">
+        <div class="layui-row">
+            <div class="layui-col-md6 layui-col-md-offset3">
+               <div class="layui-form">
+                   <div class="layui-inline">
+                       <input id="query" type="text" value="@query" required lay-verify="required" placeholder="请输入单词" autocomplete="off" class="layui-input" style="width:300px;">
+                   </div>
+                   <div class="layui-inline">
+                       <div class="layui-btn-group">
+                           <button id="query-btn" type="button" class="layui-btn">立即查词</button>
+                       </div>
+                   </div>
+               </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$('#query-btn').click(function(){
+    query();
+});
+
+$('#query').keydown(function(e){
+    console.log(e.keyCode);
+    if (e.keyCode == 13) {
+        query();
+        e.preventDefault();
+    }
+});
+
+function query() {
+    var q = $('#query').val();
+    if(q.replace(/\s/g, '') === ''){
+        return false;
+    }
+    window.location.href = "/dict/" + q;
+}
+</script>

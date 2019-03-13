@@ -61,7 +61,7 @@
               <div class="layui-form-item">
                 <input type="hidden" name="resType" value="@resType">
                 <input type="file" name="file" id="LAY-upload-image" data-token="" class="layui-upload-file">
-                <button class="layui-btn" lay-submit>立即发布</button>
+                <button id="submit-btn" class="layui-btn" lay-submit>立即发布</button>
               </div>
             </form>
           </div>
@@ -107,6 +107,8 @@ var quill = new Quill('#quill-container', {
 });
 
 $('#form').submit(function(){
+  $('#submit-btn').prop("disabled", true);
+  $('#submit-btn').addClass("layui-btn-disabled");
   $('#L_title_hidden').val($('#L_title').val());
   $('#L_content').val(quill.root.innerHTML);
 });

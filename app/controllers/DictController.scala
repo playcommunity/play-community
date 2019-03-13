@@ -60,7 +60,7 @@ class DictController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
       content <- (js \ "content").asOpt[String]
     } yield {
       if (_id.trim != "") {
-        mongo.insertOne[Word](Word(_id, content, pronounce, Nil, tags.split("\\,|，").toList.filter(_.trim != ""), audioUrl, audioType, 0, false, RequestHelper.getLogin, "", Instant.now(), Instant.now()))
+        mongo.insertOne[Word](Word(_id.toLowerCase(), content, pronounce, Nil, tags.split("\\,|，").toList.filter(_.trim != ""), audioUrl, audioType, 0, false, RequestHelper.getLogin, "", Instant.now(), Instant.now()))
         Ok(obj("code" -> "0"))
       } else {
         Ok(obj("code" -> "1", "msg" -> "单词不能为空"))
@@ -83,7 +83,7 @@ class DictController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
     } yield {
       if (_id.trim != "") {
         mongo.updateById[Word](
-          _id,
+          _id.toLowerCase(),
           obj(
             "$set" -> obj(
               "pronounce" -> pronounce,
@@ -144,6 +144,15 @@ class DictController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
       }
 
       Ok(views.html.dict.search(word, opt, topList.map(obj => (obj \ "_id").as[String])))
+    }
+  }
+
+  def viewTag(tag: String) = Action.async { implicit request: Request[AnyContent] =>
+    val q = obj("isReviewed" -> true, "tags" -> tag)
+    for {
+      list <- dictCol.find[Word](q).sort(Json.obj("viewCount" -> -1)).limit(100).list()
+    } yield {
+      Ok(views.html.dict.viewTag(tag, list))
     }
   }
 

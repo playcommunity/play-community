@@ -14,31 +14,12 @@
     border-bottom: 1px dotted #e2e2e2;
   }
   p.content { color: #545454; font-size: 13px; }
-  .sound {
+  .play-audio {
       background-image: url(/assets/images/sound.png);
       background-repeat: no-repeat;
   }
 </style>
-<div class="fly-panel fly-column" style="height: 80px;">
-    <div class="layui-container" style="padding-top:15px;">
-        <div class="layui-row">
-            <div class="layui-col-md6 layui-col-md-offset3">
-                <form onsubmit="return submit();">
-                    <div class="layui-form">
-                        <div class="layui-inline">
-                            <input id="query" type="text" value="@query" required lay-verify="required" placeholder="请输入单词" autocomplete="off" class="layui-input" style="width:300px;">
-                        </div>
-                        <div class="layui-inline">
-                            <div class="layui-btn-group">
-                                <button id="query-btn" type="button" class="layui-btn">立即查词</button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+@searchBar(query)
 <div class="layui-container">
     <div class="layui-row  layui-col-space15">
         <div class="layui-col-md10 content detail">
@@ -46,7 +27,7 @@
                 <div class="fly-panel detail-box">
                     <span style="font-size: 32px;">@wordOpt.get._id</span>
                     <span style="font-size: 15px; margin-left: 5px;">@wordOpt.get.pronounce</span>
-                    <span style="margin-left: 5px; cursor: pointer;"><i id="sound" class="sound" title="发音">　</i></span>
+                    <span style="margin-left: 5px; cursor: pointer;"><i class="play-audio" title="发音" audio-url='@wordOpt.get.audioUrl'>　</i></span>
                     <div class="fly-detail-info">
                     </div>
                     <div class="fly-detail-info">
@@ -54,7 +35,7 @@
                             <span class="layui-badge layui-bg-red fly-detail-column">待审核</span>
                         }
                         @for(tag <- wordOpt.get.tags) {
-                            <span class="layui-badge layui-bg-green fly-detail-column">@tag</span>
+                            <span class="layui-badge layui-bg-green fly-detail-column"><a href="/dict/tag/@tag" class="layui-btn layui-btn-xs">@tag</a></span>
                         }
                         @if(request.session.get("login").exists(_ == wordOpt.get.creator) || isAdmin) {
                             <a href="/dict/edit?_id=@query" class="layui-btn layui-btn-primary">编辑</a>
@@ -102,28 +83,11 @@
 <script>
 var word = '@{wordOpt.map(_._id).getOrElse("")}';
 
-$('#sound').click(function(){
-  var audio = document.getElementById("word-" + word);
+$('.play-audio').click(function(){
+  //var audio = document.getElementById("word-" + word);
+  var audio = new Audio($(this).attr('audio-url'));
   audio.currentTime = 0;
   audio.play();
 });
 
-$('#query-btn').click(function(){
-    query();
-});
-
-$('#query').keydown(function(e){
-    if (e.keyCode == 13) {
-        query();
-        e.preventDefault();
-    }
-});
-
-function query() {
-    var q = $('#query').val();
-    if(q.replace(/\s/g, '') === ''){
-        return false;
-    }
-    window.location.href = "/dict/" + q;
-}
 </script>
