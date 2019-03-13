@@ -2,7 +2,38 @@
 
 @import utils.RequestHelper._
 @main("PlayScala社区 - 词典搜索", "dict") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+<link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>
+  /* Set default font-family */
+  #quill-container {
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+      height: 200px;
+  }
+  .layui-upload-file, .layui-upload-button { display: none;}
+
+  .ql-editor {
+      padding: 0px 15px;
+      color: #3d464d;
+      white-space: normal;
+  }
+  .ql-editor p, .ql-editor ol, .ql-editor ul {
+      line-height: 28px;
+  }
+  .ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+      margin: 5px 0px 5px;
+      padding: 10px 0px 5px;
+  }
+  .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+      margin-top: 15px;
+  }
+
+  .ql-editor ul li, .ql-editor ul li {
+      padding: 0px;
+      border: 0px;
+  }
+
   .fly-list .fly-list-li { height: auto; }
   .fly-list-li h2 a { font-size: 18px; }
   .fly-panel-title a { padding: 0px; }
@@ -51,8 +82,8 @@
                         <i class="iconfont" title="人气">&#xe60b;</i> 99999
                         </span>*@
                     </div>
-                    <div class="detail-body photos">
-                    @Html(wordOpt.get.content)
+                    <div class="detail-body photos ql-snow">
+                        <div class="ql-editor"> @Html(wordOpt.get.content) </div>
                     </div>
                 </div>
             } else {
