@@ -10,7 +10,7 @@ import org.bson.types.ObjectId
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.Json._
 import play.api.mvc._
 import services.{CommonService, EventService, ResourceService}
@@ -244,9 +244,15 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
     )
   }
 
-  def test = Action.async {
-    resourceService.process("""<img src="https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo_top_86d58ae1.png">""").map{ html =>
-      Ok(html)
+  def sitemap = Action.async {
+    mongo.collection("common-resource").find[JsObject]().projection(obj("_id" -> 1, "resType" -> 1)).list().map{ list =>
+      val urls: List[String] = list map { obj =>
+        val _id = (obj \ "_id").as[String]
+        val resType = (obj \ "resType").as[String]
+        s"${app.Global.homeUrl}/${resType}/view?_id=${_id}"
+      }
+
+      Ok(urls.mkString("\r\n"))
     }
   }
 

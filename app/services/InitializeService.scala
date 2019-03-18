@@ -27,8 +27,10 @@ import scala.util.{Failure, Success}
 class InitializeService @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
   val settingCol = mongo.collection("common-setting")
   val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
+  val homeUrl = config.getOptional[String]("homeUrl").getOrElse("https://www.playscala.cn")
 
   app.Global.esEnabled = esEnabled
+  app.Global.homeUrl = homeUrl
 
   // 系统初始化
   for {
