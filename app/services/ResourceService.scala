@@ -31,8 +31,9 @@ class ResourceService @Inject()(mongo: Mongo, system: ActorSystem, ws: WSClient)
   def process(html: String): Future[String] = {
     val doc = Jsoup.parse(html)
     val fList =
-      doc.select("img").asScala.toList.filter(e => e.attr("src").startsWith("http")).map{ e =>
-        val imgUrl = e.attr("src")
+      doc.select("img").asScala.toList.filter(e => e.attr("src").startsWith("http") || e.attr("src").startsWith("//")).map{ e =>
+        val imgSrc = e.attr("src")
+        val imgUrl = if (imgSrc.startsWith("//")) { "http:" + imgSrc } else { imgSrc }
         Logger.info(s"Process img ${imgUrl}")
         ws.url(imgUrl)
           .withRequestTimeout(6 seconds)
