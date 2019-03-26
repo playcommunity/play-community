@@ -3,7 +3,7 @@
 @import utils.RequestHelper
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main(s"${App.siteSetting.name} - ${tweet.title}", "community", "tweet", "", "") {
+@main(s"${app.Global.siteSetting.name} - ${tweet.title}", "community", "tweet", "", "") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">

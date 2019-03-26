@@ -132,3 +132,9 @@ case class ReplyStat(replyCount: Int, replies: List[Reply], bestReply: Option[Re
 case class ViewStat(count: Int, bitmap: String)
 case class VoteStat(count: Int, bitmap: String)
 case class CollectStat(count: Int, bitmap: String)
+
+
+object Role {
+  val USER = "user"
+  val ADMIN = "admin"
+}

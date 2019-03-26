@@ -24,7 +24,7 @@ import scala.util.{Failure, Success}
   * 执行系统初始化任务
   */
 @Singleton
-class InitializeService @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer) {
+class InitializeService @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService, watchService: WatchService)(implicit ec: ExecutionContext, mat: Materializer) {
   val settingCol = mongo.collection("common-setting")
   val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
   val homeUrl = config.getOptional[String]("homeUrl").getOrElse("https://www.playscala.cn")
@@ -40,17 +40,17 @@ class InitializeService @Inject()(mongo: Mongo, application: Application, actorS
     versionOpt match {
       case Some(js) =>
         val ver = js("value").as[String]
-        if (VersionComparator.compareVersion(ver, App.version) > 0) {
+        if (VersionComparator.compareVersion(ver, app.Global.version) > 0) {
           Logger.warn("You are using a lower version than before.")
         }
 
       case None =>
-        settingCol.updateOne(Json.obj("_id" -> "version"), Json.obj("$set" -> Json.obj("value" -> App.version)), upsert = true)
+        settingCol.updateOne(Json.obj("_id" -> "version"), Json.obj("$set" -> Json.obj("value" -> app.Global.version)), upsert = true)
     }
     siteSettingOpt.map(_.as[SiteSetting]).foreach{ siteSetting =>
-      App.siteSetting = siteSetting
+      app.Global.siteSetting = siteSetting
       if (env.mode == Mode.Dev) {
-        App.siteSetting = App.siteSetting.copy(logo = "https://www.playscala.cn/assets/images/logo.png", name = "PlayScala社区")
+        app.Global.siteSetting = app.Global.siteSetting.copy(logo = "https://www.playscala.cn/assets/images/logo.png", name = "PlayScala社区")
       }
     }
   }
@@ -83,56 +83,15 @@ class InitializeService @Inject()(mongo: Mongo, application: Application, actorS
     }
   }
 
-  /**
-    * 同步更新至ES
-    */
+  //如果开启搜索功能，则监听common-resource变化
   if (esEnabled) {
-    mongo
-      .collection("common-resource")
-      .watch()
-      .fullDocument
-      .toSource
-      .groupedWithin(10, 1000.millis)
-      .throttle(elements = 1, per = 1.second, maximumBurst = 1, ThrottleMode.shaping)
-      .watchTermination() { (_, done) =>
-        done.onComplete {
-          case Success(_) => Logger.error("common-resource's change stream completed..")
-          case Failure(error) => Logger.error(s"common-resource's change stream failed with error ${error.getMessage}")
-        }
-      }
-      .runForeach { seq =>
-        try {
-          //Logger.info(seq.toString())
-
-          val inserts = seq.filter(c => c.getOperationType == OperationType.INSERT).map(_.getFullDocument.as[Resource]).toList
-          val updates = seq.filter(c => c.getOperationType == OperationType.UPDATE || c.getOperationType == OperationType.REPLACE).map(_.getFullDocument.as[Resource]).toList
-          val deletes = seq.filter(c => c.getOperationType == OperationType.DELETE).map(_.getDocumentKey.getString("_id").getValue).toList
-
-          inserts.foreach { r =>
-            elasticService.insert(IndexedDocument(r._id, r.resType, r.title, r.content, r.author.name, r.author._id, r.createTime.toEpochMilli, None, None, None))
-          }
-
-          updates.foreach { r =>
-            val obj = Json.obj(
-              "title" -> r.title,
-              "content" -> r.content
-            )
-            elasticService.update(r._id, obj)
-          }
-
-          deletes.foreach { _id =>
-            elasticService.remove(_id)
-          }
-        } catch {
-          case t: Throwable =>
-            Logger.error("watch common-resource error" + t.getMessage, t)
-        }
-      }
+    watchService.watchResources()
   }
 
-  /**
-    * 更新IP地理位置
-    */
+  //监听系统配置变化
+  watchService.watchSettings()
+
+  //更新IP地理位置
   actorSystem.scheduler.schedule(2 minutes, 2 minutes){
     for{
       jsOpt <- mongo.collection("common-user").find(Json.obj("ipLocation" -> Json.obj("$exists" -> false)), Json.obj("ip" -> 1)).first

@@ -4,7 +4,7 @@
 @import play.api.libs.json.Json
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
-@main(s"${App.siteSetting.name} - ${tweet.title}", "tweet", "说说", tweet.title) {
+@main(s"${app.Global.siteSetting.name} - ${tweet.title}", "tweet", "说说", tweet.title) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>

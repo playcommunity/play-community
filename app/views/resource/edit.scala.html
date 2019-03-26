@@ -1,6 +1,6 @@
 @(resType: String, resourceOpt: Option[Resource], categoryList: List[Category])(implicit request: RequestHeader)
 @import helper._
-@main(s"${App.siteSetting.name} - 创建${_root_.utils.AppUtil.prettyResource(resType)}", "community", resType) {
+@main(s"${app.Global.siteSetting.name} - 创建${_root_.utils.AppUtil.prettyResource(resType)}", "community", resType) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <style>

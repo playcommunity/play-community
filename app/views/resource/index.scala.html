@@ -1,7 +1,7 @@
 @(resType: String, status: String, category: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
-@main(s"${App.siteSetting.name} - 社区分享", "community", resType) {
+@main(s"${app.Global.siteSetting.name} - 社区分享", "community", resType) {
 @nav(resType)
 <div class="layui-container">
   <div class="layui-row layui-col-space15">

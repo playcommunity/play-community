@@ -41,7 +41,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>@{docOpt.map(_.title).getOrElse("尚未完成")} - @{App.siteSetting.indexTitle}</title>
+  <title>@{docOpt.map(_.title).getOrElse("尚未完成")} - @{app.Global.siteSetting.indexTitle}</title>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta content="width=device-width, initial-scale=1" name="viewport" />
@@ -63,7 +63,7 @@
   <link href="/assets/theme/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
   <!-- END THEME LAYOUT STYLES -->
   <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
-  <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
+  <link rel="shortcut icon" href="@app.Global.siteSetting.favicon"/>
   <!-- END HEAD -->
 
   <style>
@@ -87,8 +87,8 @@
   <div class="page-header-inner ">
     <!-- BEGIN LOGO -->
     <div class="page-logo">
-      <a href="@App.siteSetting.url">
-        <img src="@App.siteSetting.logo" alt="logo" class="logo-default" style="margin: 15px 0px 0;" /> </a>
+      <a href="@app.Global.siteSetting.url">
+        <img src="@app.Global.siteSetting.logo" alt="logo" class="logo-default" style="margin: 15px 0px 0;" /> </a>
       <div class="menu-toggler sidebar-toggler">
         <!-- DOC: Remove the above "hide" to enable the sidebar toggler button on header -->
       </div>

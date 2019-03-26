@@ -3,7 +3,7 @@
 @import helper._
 @import utils.RequestHelper
 @import play.api.libs.json.Json
-@main(s"${App.siteSetting.indexTitle}", "community", "tweet") {
+@main(s"${app.Global.siteSetting.indexTitle}", "community", "tweet") {
 @views.html.nav("tweet")
 <div id="app" class="layui-container">
   <div class="layui-row layui-col-space15">
