@@ -46,7 +46,7 @@
                 <a href="/dict"><i class="layui-icon layui-icon-read"></i>词典</a>
             </li>
             <li class='layui-nav-item layui-this'>
-                <a href="/corporation/cn"><i class="iconfont icon-logo"></i>圈子</a>
+                <a href="/corporations"><i class="iconfont icon-logo"></i>圈子</a>
             </li>
             <li class='layui-nav-item'>
                 <a href="https://github.com/playcommunity/play-community" target="_blank"><i class="iconfont icon-daima"></i>源码</a>
@@ -97,7 +97,9 @@
 </div>
 
 <div class="fly-footer">
-    <p>2018 &copy; <a href="http://www.playscala.cn/" target="_blank">PlayScala 社区</a></p>
+    <p> <span id="footer-copyright">2018</span> &copy; <a href="http://www.playscala.cn/" target="_blank">PlayScala 社区</a>
+           <a href="http://www.miitbeian.gov.cn" target="_blank">苏ICP备14005538号-1</a></p>
+
     <!--<p>
         <a href="https://github.com/playcommunity/play-community" target="_blank">社区源码</a>
         <a href="" target="_blank">微信公众号</a>
@@ -105,6 +107,9 @@
 </div>
 
 <script src="/assets/fly3/res/layui/layui.js"></script>
+<script src="/assets/js/jquery.js"></script>
+<script src="/assets/js/copyright.js"></script>
+
 <script>
 layui.cache.page = 'case';
 layui.cache.user = {
