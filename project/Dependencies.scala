@@ -7,7 +7,7 @@ import sbt._
  * 拆分配置、版本、依赖
  *
  * @author 梦境迷离
- * @version 1.0, 2019-06-08
+ * @version 1.0, 2019-06-16
  */
 object Dependencies {
 
