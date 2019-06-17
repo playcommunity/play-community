@@ -26,6 +26,28 @@ play-community\target\universal\play-community-<version>.zip
 mongodb.uri = "mongodb://user:password@host:port/play-community?authMode=scram-sha1"
 ```
 
+> Windows一键启动开启mongodb replica（只要你安装了MongoDB）
+
+需要Git bash 支持，linux自己改路径即可。
+
+初始化需要的配置
+```
+config={_id:"rs",members:[{_id:0,host:"127.0.0.1:27001"},{_id:1,host:"127.0.0.1:27002"}]}
+```
+- 打开本项目下的IDEA的Terminal
+- 进入配置文件目录：cd /conf
+- 在 conf 下执行 mongo 脚本：bash start_mongo.sh
+- 输入上面的 config 内容，初始化：rs.initiate(config)
+- 检查连接：rs.status()
+
+默认配置 (只为跑起来项目，不需要改。保证自己没有文件和mongo同名即可，因为会被删掉 hhh)
+```
+db1=127.0.0.1:27001
+db2=127.0.0.1:27002
+数据地址="C:/mongo/data"
+日志="C:/mongo/logs/log1.log"、"C:/mongo/logs/log2.log"
+```
+
 ### 配置发送邮件账户:
 打开配置文件 `conf/application.conf`，配置如下：
 ```
