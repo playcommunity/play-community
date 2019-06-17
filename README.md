@@ -18,35 +18,24 @@ play-community\target\universal\play-community-<version>.zip
 ## 配置
 ### 配置 MongoDB 连接
 
-> 如果MongoDB是单击部署，则需要手动开启[replica set](https://docs.mongodb.com/manual/tutorial/deploy-replica-set/index.html)。
-
 将 `play-community-<version>.zip` 文件上传至服务器并解压，打开配置文件 `conf/application.conf`，配置如下：
 ```
 # 配置 MongoDB
 mongodb.uri = "mongodb://user:password@host:port/play-community?authMode=scram-sha1"
 ```
 
-> Windows一键启动开启mongodb replica（只要你安装了MongoDB）
+需要注意的是，MongoDB需要开启ReplicaSet功能，开启方法可以参考官方文档：[Deploy Replica Set](https://docs.mongodb.com/manual/tutorial/deploy-replica-set/index.html)，也可以使用群友`梦境迷离`贡献的一键启动脚本，该脚本需要在`Git Bash`中运行。启动脚本的使用方法如下：
+- 打开`Git Bash`，切换当前目录至项目根目录；
+- 进入配置文件目录：`cd conf`
+- 执行启动脚本：`bash start_mongo.sh`，该脚本会启动`mongod`进程，并随后自动进入`mongo shell`；
+- 在`mongo shell`中输入如下命令初始化ReplicaSet：
+```
+var config = {_id:"rs",members:[{_id:0,host:"127.0.0.1:27001"},{_id:1,host:"127.0.0.1:27002"}]};
+rs.initiate(config);
+```
+- 检查ReplicaSet状态：`rs.status()`
 
-需要Git bash 支持，linux自己改路径即可。
-
-初始化需要的配置
-```
-config={_id:"rs",members:[{_id:0,host:"127.0.0.1:27001"},{_id:1,host:"127.0.0.1:27002"}]}
-```
-- 打开本项目下的IDEA的Terminal
-- 进入配置文件目录：cd /conf
-- 在 conf 下执行 mongo 脚本：bash start_mongo.sh
-- 输入上面的 config 内容，初始化：rs.initiate(config)
-- 检查连接：rs.status()
-
-默认配置 (只为跑起来项目，不需要改。保证自己没有文件和mongo同名即可，因为会被删掉 hhh)
-```
-db1=127.0.0.1:27001
-db2=127.0.0.1:27002
-数据地址="C:/mongo/data"
-日志="C:/mongo/logs/log1.log"、"C:/mongo/logs/log2.log"
-```
+以上启动脚本会启动两个MongoDB节点，分别是`127.0.0.1:27001`和`127.0.0.1:27002`，数据库文件位置为`C:/mongo/data`，日志路径为：`C:/mongo/logs/log1.log`、`C:/mongo/logs/log2.log`。
 
 ### 配置发送邮件账户:
 打开配置文件 `conf/application.conf`，配置如下：
