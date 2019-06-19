@@ -4,11 +4,15 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>@title</title>
+    <title>@{title}</title>
     <meta property="og:site_name" content="@app.Global.siteSetting.name"/>
     <meta property="og:description" content="@app.Global.siteSetting.seoDescription"/>
-    <meta name="keywords" content="@keywords">
-    <meta name="description" content="@description">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@app.Global.siteSetting.name">
+    <meta property="og:url" content="https://www.playscala.cn">
+    <meta property="og:locale" content="zh-CN">
+    <meta name="description" content="@{description} | @{app.Global.siteSetting.seoDescription}">
+    <meta name="keywords" content="@{keywords} | @{app.Global.siteSetting.seoKeyword}">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="/assets/fly3/res/layui/css/layui.css">
     <link rel="stylesheet" href="/assets/fly3/res/css/global.css">

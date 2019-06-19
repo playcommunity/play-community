@@ -85,7 +85,9 @@ class RequestHandler @Inject() (mongo: Mongo, router: Router, errorHandler: Http
             }
           case None =>
             val visitorId = request.session.get("visitor").getOrElse(ObjectId.get.toHexString)
-            if (!isStaticRequest(request)) {
+
+            // 为适应百度HTTPS网站认证策略，暂时不统计匿名用户访问操作
+            if (!isStaticRequest(request) && request.session.get("visitor").nonEmpty) {
               // 统计访客流量
               mongo.updateOne[StatVisitor](
                 Json.obj("uid" -> visitorId, "hourStr" -> hourStr),
@@ -97,11 +99,14 @@ class RequestHandler @Inject() (mongo: Mongo, router: Router, errorHandler: Http
                 upsert = true
               )
             }
-            if (request.session.get("visitor").nonEmpty) {
+
+            /*if (request.session.get("visitor").nonEmpty) {
               super.routeRequest(request)
             } else {
               Some(Action(Redirect(request.path, request.queryString, 302).withSession("visitor" -> visitorId)))
-            }
+            }*/
+
+            super.routeRequest(request)
         }
     }
   }
