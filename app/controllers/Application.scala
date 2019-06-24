@@ -172,6 +172,23 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     )
   }
 
+  //todo 跳转到重置密码页面
+  def resetPassword =  { implicit request: Request[AnyContent] =>
+    ???
+    }
+
+  //todo 处理重置密码逻辑，发送邮件
+  def doResetPassword= Action.async { implicit request: Request[AnyContent] =>{
+    ???
+  }}
+
+  //todo 验证重置密码逻辑，成功修改密码
+  def verifyResetPassword(p:String) = Action.async { implicit request: Request[AnyContent] =>{
+      ???
+    }}
+
+
+
   def doSendActiveMail = (checkLogin andThen userAction) { implicit request =>
     val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
     // 发送激活码
