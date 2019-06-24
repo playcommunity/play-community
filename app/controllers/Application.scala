@@ -154,9 +154,10 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
                     uid <- counterService.getNextSequence("user-sequence")
                     wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode)))
                   } yield {
+                    val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
                     // 发送激活码
-                    mailer.sendEmail(name, login, views.html.mail.activeMail(name, activeCode).body)
-                    Redirect("http://www.playscala.cn/user/activate")
+                    mailer.sendEmail(name, login, subject, views.html.mail.activeMail(name, activeCode).body)
+                    Redirect(routes.UserController.activate())
                       .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                   }
                 } else {
@@ -172,8 +173,9 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
   }
 
   def doSendActiveMail = (checkLogin andThen userAction) { implicit request =>
+    val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
     // 发送激活码
-    mailer.sendEmail(RequestHelper.getName, RequestHelper.getLogin, views.html.mail.activeMail(RequestHelper.getName, request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
+    mailer.sendEmail(RequestHelper.getName, RequestHelper.getLogin, subject, views.html.mail.activeMail(RequestHelper.getName, request.user.activeCode.getOrElse("您的账号已经激活了！")).body)
     Ok(Json.obj("status" -> 0))
   }
 
