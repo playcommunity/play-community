@@ -25,10 +25,13 @@ object Dependencies {
     val jsoup = "1.10.3"
     val scalameta = "3.7.3"
     val contrib = "3.7.3"
+    val config = "1.3.4"
 
   }
 
   object Compiles {
+
+    lazy val config: ModuleID = "com.typesafe" % "config" % Versions.config
 
     //测试依赖少，直接放这了
     lazy val scalatestplus: ModuleID = "org.scalatestplus.play" %% "scalatestplus-play" % Versions.scalatestplus % Test
@@ -60,6 +63,7 @@ object Dependencies {
 
   //项目依赖
   lazy val depend: Setting[Seq[ModuleID]] = libraryDependencies ++= Seq(
+    config,
     scalatestplus,
     hanlp,
     roaringBitmap,
