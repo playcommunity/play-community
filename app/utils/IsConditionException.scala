@@ -16,7 +16,7 @@ object IsConditionException {
    * @param cause 异常原因 默认空
    */
   @throws[Exception]
-  def conditionException(condition: => Boolean, msg: String = "exception info", cause: Throwable = new Exception("default rpc exception")) = {
+  def conditionException(condition: => Boolean, msg: String = "default message info", cause: Throwable = new Exception("default exception")) = {
     if (condition) {
       if (cause != null) {
         throw new Exception(s"Not satisfying the conditions because : {$msg}", cause)
