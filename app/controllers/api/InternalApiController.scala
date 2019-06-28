@@ -103,7 +103,6 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     }.flatMap {
       js =>
         //用户账号就是openId
-        val login = openId
         val qqUrl = "qq.com"
         val ret = js("ret").as[Int]
         val msg = js("msg").asOpt[String].getOrElse("")
@@ -113,18 +112,32 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
         //40*40的头像一定存在
         val headImg = js("figureurl_qq_1").as[String]
         val name = js("nickname").as[String]
-        val gender = js("gender").asOpt[String].getOrElse("男")
-        //查询用户
-        mongo.find[User](Json.obj("$or" -> Json.arr(Json.obj("login" -> ""), Json.obj("login" -> login)))).first.flatMap {
+        //默认男
+        val gender = js("gender").as[String]
+        var sex = ""
+        if ("男".equals(gender)) {
+          sex = "male"
+        } else {
+          sex = "female"
+        }
+        val login = IntHash.hashOpenId(openId).asInstanceOf[String]
+        //通过open作为唯一用户标识，hash成Int后的值作为用户的账号，待考虑
+        mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
           case Some(u) => Future.successful(u)
           case None => for {
             uid <- counterService.getNextSequence("user-sequence")
-            u = User(uid.toString, Role.USER, "", "", UserSetting(name, gender, "", headImg, ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
-            wr <- mongo.insertOne[User](u) //创建用户并重定向到
+            u = User(uid.toString, Role.USER, "", "", UserSetting(name, sex, "", headImg, "中国"),
+              UserStat.DEFAULT, 0, true, "", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
+            _ <- mongo.insertOne[User](u) //创建用户并重定向到
           } yield u
         }.map { u =>
           //来自QQ的
-          if (u.channels != null && u.channels.head.name.equals("QQ")) {
+          if (u.channels != null && u.channels.head.name.equals("QQ") && u.password == "") {
+            //QQ用户的密码没有设置过
+            Redirect(controllers.routes.UserController.setting("pass"))
+              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+          } else {
+            //密码设置过
             Redirect(controllers.routes.Application.index("0", "/", 1))
               .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
           }
