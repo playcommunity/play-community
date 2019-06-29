@@ -6,7 +6,7 @@ package utils
  * @author 梦境迷离
  * @version 1.0, 2019-06-27
  */
-object IsConditionException {
+object IsCondition {
 
   /**
    * 满足条件就抛出通用异常

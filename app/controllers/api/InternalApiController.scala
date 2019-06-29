@@ -86,7 +86,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     //通用请求头
     val headers: (String, String) = "Accept" -> "application/json"
     //没有设置这个就抛异常。
-    IsConditionException.conditionException(QQ_APPID == null || "".equals(QQ_APPID)
+    IsCondition.conditionException(QQ_APPID == null || "".equals(QQ_APPID)
       || QQ_APPKEY == null || "".equals(QQ_APPKEY) || !QQ_OPEN_ID.startsWith("https://") ||
       !QQ_ACCESS_TOKEN.startsWith("https://") || !QQ_USER_INFO.startsWith("https://"))
     //匹配目前随意
