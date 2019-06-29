@@ -3,6 +3,7 @@ package controllers.api
 import java.net.URLEncoder
 
 import akka.stream.Materializer
+import app.enums.LoginType._
 import cn.playscala.mongo.Mongo
 import javax.inject._
 import models._
@@ -55,10 +56,12 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
         }.map { u =>
           if (u.password == "" && email.contains("@")) {
             Redirect(controllers.routes.UserController.setting("pass"))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+                "loginType" -> GITHUB)
           } else {
             Redirect(controllers.routes.Application.index("0", "/", 1))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+                "loginType" -> GITHUB)
           }
         }
       }
@@ -120,13 +123,15 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
         } else {
           sex = "female"
         }
-        val login = IntHash.hashOpenId(openId).asInstanceOf[String]
+        // 注释掉
+        // val login = IntHash.hashOpenId(openId).asInstanceOf[String]
         //通过open作为唯一用户标识，hash成Int后的值作为用户的账号，待考虑
-        mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
+        // mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
+        mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(openId))).first.flatMap {
           case Some(u) => Future.successful(u)
           case None => for {
             uid <- counterService.getNextSequence("user-sequence")
-            u = User(uid.toString, Role.USER, "", "", UserSetting(name, sex, "", headImg, "中国"),
+            u = User(uid.toString, Role.USER, openId, "", UserSetting(name, sex, "", headImg, ""),
               UserStat.DEFAULT, 0, true, "", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
             _ <- mongo.insertOne[User](u) //创建用户并重定向到
           } yield u
@@ -135,11 +140,13 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
           if (u.channels != null && u.channels.head.name.equals("QQ") && u.password == "") {
             //QQ用户的密码没有设置过
             Redirect(controllers.routes.UserController.setting("pass"))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+                "loginType" -> QQ)
           } else {
             //密码设置过
             Redirect(controllers.routes.Application.index("0", "/", 1))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1")
+              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+                "loginType" -> QQ)
           }
         }
     }
