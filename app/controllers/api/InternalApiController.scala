@@ -3,8 +3,9 @@ package controllers.api
 import java.net.URLEncoder
 
 import akka.stream.Materializer
-import app.enums.LoginType._
 import cn.playscala.mongo.Mongo
+import config.QQConfig._
+import enums.LoginType._
 import javax.inject._
 import models._
 import models.qq.api.QQAccessTokenRequest
@@ -13,9 +14,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import services.CommonService
-import utils.QQConfig._
 import utils._
-
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton

@@ -1,4 +1,4 @@
-package app.enums
+package enums
 
 /**
  * 第三方登录类型
