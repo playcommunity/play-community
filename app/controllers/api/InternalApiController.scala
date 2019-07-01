@@ -15,6 +15,7 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 import services.CommonService
 import utils._
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -77,9 +78,6 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
    * @return
    */
   def qqOauthCallback(code: String, state: String) = Action.async { implicit request =>
-    if (state.equals("playscala")) {
-      Future.successful(Ok(views.html.message("系统提示", "非法登录请求")))
-    }
     //保存openId
     var openId = ""
     //通用请求头
@@ -89,7 +87,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
       || QQ_APPKEY == null || "".equals(QQ_APPKEY) || !QQ_OPEN_ID.startsWith("https://") ||
       !QQ_ACCESS_TOKEN.startsWith("https://") || !QQ_USER_INFO.startsWith("https://"))
     //匹配目前随意
-    val accessTokenRequest = new QQAccessTokenRequest("authorization_code", QQ_APPID, QQ_APPKEY, code, URLEncoder.encode("https://www.playscala.cn"))
+    val accessTokenRequest = new QQAccessTokenRequest("authorization_code", QQ_APPID, QQ_APPKEY, code, QQ_CALL_BACK)
     //通过Authorization Code获取Access Token
     ws.url(QQ_ACCESS_TOKEN + accessTokenRequest.toString)
       //需要存储，Access_Token的有效期默认是3个月，最后持久化，定时刷新
@@ -151,5 +149,4 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     }
     Future.successful(Ok(views.html.message("系统提示", "系统暂不支持QQ登录！")))
   }
-
 }
