@@ -1,7 +1,5 @@
 package controllers.api
 
-import java.net.URLEncoder
-
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
 import config.QQConfig._
@@ -78,74 +76,63 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
    * @return
    */
   def qqOauthCallback(code: String, state: String) = Action.async { implicit request =>
-    //保存openId
-    var openId = ""
     //通用请求头
-    val headers: (String, String) = "Accept" -> "application/json"
+    val headers = Seq("Accept" -> "application/json", "Content-Type" -> "application/json")
     //没有设置这个就抛异常。
     IsCondition.conditionException(QQ_APPID == null || "".equals(QQ_APPID)
       || QQ_APPKEY == null || "".equals(QQ_APPKEY) || !QQ_OPEN_ID.startsWith("https://") ||
       !QQ_ACCESS_TOKEN.startsWith("https://") || !QQ_USER_INFO.startsWith("https://"))
-    //匹配目前随意
+    //匹配目前随意 QQ_CALL_BACK
     val accessTokenRequest = new QQAccessTokenRequest("authorization_code", QQ_APPID, QQ_APPKEY, code, QQ_CALL_BACK)
     //通过Authorization Code获取Access Token
-    ws.url(QQ_ACCESS_TOKEN + accessTokenRequest.toString)
-      //需要存储，Access_Token的有效期默认是3个月，最后持久化，定时刷新
-      .withHttpHeaders(headers).get().map(_.json("access_token").as[String]).flatMap { access_token =>
-      //使用Access Token来获取用户的OpenID
-      ws.url(QQ_OPEN_ID + s"access_token=$access_token")
-        .withHttpHeaders(headers).get().map(_.json("openid").as[String]).flatMap { openid =>
-        openId = openid
-        //使用Access Token以及OpenID来访问
-        ws.url(QQ_USER_INFO + s"access_token=$access_token&oauth_consumer_key=$QQ_APPID&openid=$openid")
-          .withHttpHeaders(headers).get().map(_.json)
+    for {
+      access_token <- ws.url(QQ_ACCESS_TOKEN + accessTokenRequest.toString).withHttpHeaders(headers: _*).get()
+        .map(x => StringUtil.getString(x.body))
+      openid <- ws.url(QQ_OPEN_ID + s"access_token=$access_token").withHttpHeaders(headers: _*)
+        .get().map(x => StringUtil.getJsonBody(x.body)("openid").asOpt[String].getOrElse(""))
+      js <- ws.url(QQ_USER_INFO + s"access_token=$access_token&oauth_consumer_key=$QQ_APPID&openid=$openid")
+        .withHttpHeaders(headers: _*).get().map(_.json)
+    } yield {
+      val qqUrl = "qq.com"
+      val ret = js("ret").as[Int]
+      val msg = js("msg").asOpt[String].getOrElse("")
+      if (ret < 0) {
+        Future.successful(Ok(views.html.message("系统提示", msg))) //错误
       }
-    }.flatMap {
-      js =>
-        //用户账号就是openId
-        val qqUrl = "qq.com"
-        val ret = js("ret").as[Int]
-        val msg = js("msg").asOpt[String].getOrElse("")
-        if (ret < 0) {
-          Future.successful(Ok(views.html.message("系统提示", msg))) //错误
+      //40*40的头像一定存在
+      val headImg = js("figureurl_qq_1").as[String]
+      val name = js("nickname").as[String]
+      val province = js("province").asOpt[String].getOrElse("")
+      val city = js("city").asOpt[String].getOrElse("")
+      //默认是男
+      val gender = js("gender").as[String]
+      var sex = ""
+      if ("男".equals(gender)) {
+        sex = "male"
+      } else {
+        sex = "female"
+      }
+      //TODO 注释掉
+      // val login = IntHash.hashOpenId(openId).asInstanceOf[String]
+      //通过open作为唯一用户标识，hash成Int后的值作为用户的账号，待考虑
+      // mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
+      mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(openid))).first.flatMap {
+        case Some(u) => Future.successful(u)
+        case None => for {
+          uid <- counterService.getNextSequence("user-sequence")
+          u = User(uid.toString, Role.USER, openid, "", UserSetting(name, sex, "", headImg, province + " " + city),
+            UserStat.DEFAULT, 0, true, "", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
+          _ <- mongo.insertOne[User](u) //创建用户并重定向到
+        } yield u
+      }.map { u =>
+        //来自QQ的
+        if (u.channels != null && u.channels.exists(x => x.name.equals("QQ")) && u.password == "") {
+          //TODO QQ用户的密码没有设置过处理
+          Redirect(controllers.routes.Application.index("0", "/", 1))
+            .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+              "loginType" -> QQ)
         }
-        //40*40的头像一定存在
-        val headImg = js("figureurl_qq_1").as[String]
-        val name = js("nickname").as[String]
-        //默认男
-        val gender = js("gender").as[String]
-        var sex = ""
-        if ("男".equals(gender)) {
-          sex = "male"
-        } else {
-          sex = "female"
-        }
-        // 注释掉
-        // val login = IntHash.hashOpenId(openId).asInstanceOf[String]
-        //通过open作为唯一用户标识，hash成Int后的值作为用户的账号，待考虑
-        // mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
-        mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(openId))).first.flatMap {
-          case Some(u) => Future.successful(u)
-          case None => for {
-            uid <- counterService.getNextSequence("user-sequence")
-            u = User(uid.toString, Role.USER, openId, "", UserSetting(name, sex, "", headImg, ""),
-              UserStat.DEFAULT, 0, true, "", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
-            _ <- mongo.insertOne[User](u) //创建用户并重定向到
-          } yield u
-        }.map { u =>
-          //来自QQ的
-          if (u.channels != null && u.channels.head.name.equals("QQ") && u.password == "") {
-            //QQ用户的密码没有设置过
-            Redirect(controllers.routes.UserController.setting("pass"))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
-                "loginType" -> QQ)
-          } else {
-            //密码设置过
-            Redirect(controllers.routes.Application.index("0", "/", 1))
-              .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
-                "loginType" -> QQ)
-          }
-        }
+      }
     }
     Future.successful(Ok(views.html.message("系统提示", "系统暂不支持QQ登录！")))
   }
