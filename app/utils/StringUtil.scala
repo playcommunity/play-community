@@ -30,7 +30,7 @@ object StringUtil {
    */
   def getString(body: String, key: String = "access_token"): String = {
     val map = HashMap[String, String]() //可变
-    if (body.isEmpty && !body.contains("&") && !body.contains("=")) ""
+    if (body.isEmpty || !body.contains("&") && !body.contains("=")) ""
     else {
       val params = body.split("&")
       for (p <- params) {
