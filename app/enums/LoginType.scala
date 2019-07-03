@@ -28,5 +28,5 @@ object LoginType extends Enumeration {
   }
 
 
-  implicit val enumToString = (loginType: LoginType) => loginType.toString
+  implicit def enumToString = (loginType: LoginType.Value) => loginType.toString
 }

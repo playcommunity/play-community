@@ -15,7 +15,7 @@
       <ul class="layui-tab-title" id="LAY_mine">
         <li @if(focus == "info"){class="layui-this"} lay-id="info">我的资料</li>
         <li @if(focus == "avatar"){class="layui-this"} lay-id="avatar">头像</li>
-        <li @if(focus == "pass"){class="layui-this"} lay-id="pass">密码</li>
+        <li @if(focus == "pass" && !exists(request.session("loginType"))){class="layui-this"} lay-id="pass">密码</li>
         <!--<li lay-id="bind">帐号绑定</li>-->
       </ul>
       <div class="layui-tab-content" style="padding: 20px 0;">

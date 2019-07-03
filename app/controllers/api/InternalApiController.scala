@@ -14,7 +14,8 @@ import play.api.mvc._
 import services.CommonService
 import utils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @Singleton
 class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, config: Configuration, ws: WSClient, counterService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
@@ -80,14 +81,17 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     val headers = Seq("Accept" -> "application/json", "Content-Type" -> "application/json")
     //没有设置这个就抛异常。
     IsCondition.conditionException(QQ_APPID == null || "".equals(QQ_APPID)
-      || QQ_APPKEY == null || "".equals(QQ_APPKEY) || !QQ_OPEN_ID.startsWith("https://") ||
-      !QQ_ACCESS_TOKEN.startsWith("https://") || !QQ_USER_INFO.startsWith("https://"))
+      || QQ_APPKEY == null || "".equals(QQ_APPKEY) || !QQ_OPEN_ID.startsWith("https://") || !QQ_ACCESS_TOKEN.startsWith("https://")
+      || !QQ_USER_INFO.startsWith("https://"))
     //匹配目前随意 QQ_CALL_BACK
     val accessTokenRequest = new QQAccessTokenRequest("authorization_code", QQ_APPID, QQ_APPKEY, code, QQ_CALL_BACK)
-    //通过Authorization Code获取Access Token
-    for {
+    //通过Authorization Code获取Access Token，测试时注释第一个ws调用，传入一个自己的Access Token
+    //浏览器 http://localhost/api/internal/oauth/qq/callback?code=E3342282FC5C19091693C6FFE45B20FB&state=playscala
+    //    val access_token = "************"
+    val user = for {
       access_token <- ws.url(QQ_ACCESS_TOKEN + accessTokenRequest.toString).withHttpHeaders(headers: _*).get()
         .map(x => StringUtil.getString(x.body))
+      //测试从以下开始，跳过上面的接口
       openid <- ws.url(QQ_OPEN_ID + s"access_token=$access_token").withHttpHeaders(headers: _*)
         .get().map(x => StringUtil.getJsonBody(x.body)("openid").asOpt[String].getOrElse(""))
       js <- ws.url(QQ_USER_INFO + s"access_token=$access_token&oauth_consumer_key=$QQ_APPID&openid=$openid")
@@ -99,8 +103,11 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
       if (ret < 0) {
         Future.successful(Ok(views.html.message("系统提示", msg))) //错误
       }
+
       //40*40的头像一定存在
-      val headImg = js("figureurl_qq_1").as[String]
+      //先取QQ 100大头像，若存在则取QQ空间 100大头像，若取不到，则使用40小头像。
+      val headImg = js("figureurl_qq_2").asOpt[String].getOrElse(js("figureurl_2")
+        .asOpt[String].getOrElse(js("figureurl_qq_1").as[String]))
       val name = js("nickname").as[String]
       val province = js("province").asOpt[String].getOrElse("")
       val city = js("city").asOpt[String].getOrElse("")
@@ -116,7 +123,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
       // val login = IntHash.hashOpenId(openId).asInstanceOf[String]
       //通过open作为唯一用户标识，hash成Int后的值作为用户的账号，待考虑
       // mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(login))).first.flatMap {
-      mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(openid))).first.flatMap {
+      Await.result(mongo.find[User](Json.obj("login" -> Json.toJsFieldJsValueWrapper(openid))).first.flatMap {
         case Some(u) => Future.successful(u)
         case None => for {
           uid <- counterService.getNextSequence("user-sequence")
@@ -124,16 +131,16 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
             UserStat.DEFAULT, 0, true, "", request.remoteAddress, None, List(Channel("qq", "QQ", qqUrl)), None)
           _ <- mongo.insertOne[User](u) //创建用户并重定向到
         } yield u
-      }.map { u =>
-        //来自QQ的
-        if (u.channels != null && u.channels.exists(x => x.name.equals("QQ")) && u.password == "") {
-          //TODO QQ用户的密码没有设置过处理
-          Redirect(controllers.routes.Application.index("0", "/", 1))
-            .addingToSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
-              "loginType" -> QQ)
-        }
-      }
+      }, Duration.create("3s"))
     }
-    Future.successful(Ok(views.html.message("系统提示", "系统暂不支持QQ登录！")))
+
+    //必须得到用户才能继续，否则这里无法重定向
+    user.map { u =>
+      Redirect(controllers.routes.Application.index("0", "/", 1))
+        .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1",
+          "loginType" -> enumToString(QQ))
+    }
+
+    Future.successful(Ok(views.html.message("系统提示", "系统暂不支持QQ登录！")).withNewSession)
   }
 }
