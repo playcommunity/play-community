@@ -2,4 +2,7 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /internal/oauth/github/callback                     controllers.api.InternalApiController.githubOauthCallback(code: String, state: String)
+GET        /internal/oauth/github/callback        controllers.api.InternalApiController.githubOauthCallback(code: String, state: String)
+
+
+GET        /internal/oauth/qq/callback            controllers.api.InternalApiController.qqOauthCallback(code: String, state: String)

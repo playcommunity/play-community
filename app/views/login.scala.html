@@ -39,11 +39,11 @@
 
                 <button class="layui-btn" lay-submit>立即登录</button>
               </div>
-              <div class="layui-form-item fly-form-app">
+              <div class="layui-inline">
                 <span>或者使用社交账号登入</span>
-                <a href="https://github.com/login/oauth/authorize?client_id=3b43ca992b336c5349e0&scope=user&state=play" onclick="layer.msg('正在通过GitHub登入', {icon:16, shade: 0.1, time:0})" title="GitHub登入"><img src="https://github.com/favicon.ico"></a>
-                <!--<a href="http://fly.layui.com:8098/app/qq" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-qq" title="QQ登入"></a>
-                <a href="http://fly.layui.com:8098/app/weibo/" onclick="layer.msg('正在通过微博登入', {icon:16, shade: 0.1, time:0})" class="iconfont icon-weibo" title="微博登入"></a>-->
+                <a href="https://github.com/login/oauth/authorize?client_id=3b43ca992b336c5349e0&scope=user&state=play" onclick="layer.msg('正在通过GitHub登入', {icon:16, shade: 0.1, time:0})" title="GitHub登录"><img src="https://github.com/favicon.ico"></a>
+                <a href="/oauth/qq?state=playscala&clientId=101692863" onclick="layer.msg('正在通过QQ登入', {icon:16, shade: 0.1, time:0})" title="QQ登录" >
+               <img src="/assets/images/qq.png"> </a>
               </div>
             </form>
           </div>

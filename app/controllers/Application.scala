@@ -6,6 +6,7 @@ import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
+import config.QQConfig
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.joda.time.DateTime
@@ -25,6 +26,14 @@ import play.api.libs.json.Json._
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+
+  def auth(state: String, clientId: String) = Action { implicit request: Request[AnyContent] =>
+    val code = "code"
+    if (!state.equals("playscala") || !clientId.equals(QQConfig.QQ_APPID)) {
+      Future.successful(Ok(views.html.message("系统提示", "非法登录请求")))
+    }
+    Redirect(s"${QQConfig.QQ_AUTH}response_type=$code&client_id=$clientId&redirect_uri=${QQConfig.QQ_CALL_BACK}&state=$state")
+  }
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())

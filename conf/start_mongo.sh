@@ -36,6 +36,10 @@ echo "default ip1 is $default1"
 echo "default ip2 is $default2"
 nohup mongod --port 27001 --oplogSize 100 --dbpath $path"/db1" --logpath $logPath"/log1.log" --replSet rs/$default1 --journal > ../logs/mongo.log  2>&1  &
 nohup mongod --port 27002 --oplogSize 100 --dbpath $path"/db2"  --logpath $logPath"/log2.log" --replSet rs/$default2 --journal >> ../logs/mongo.log  2>&1  &
+
+echo "please wait a few for starting mongo server"
+
+sleep 3
 mongo --port 27001
 
 

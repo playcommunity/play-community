@@ -2,6 +2,9 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+#QQ登录
+GET     /oauth/qq                                 controllers.Application.auth(state: String,clientId: String)
+
 # Cases
 GET     /corporations                             controllers.CorporationController.index(sortBy: String ?= "vote")
 POST    /corporation/add                          controllers.CorporationController.doAdd

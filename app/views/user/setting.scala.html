@@ -1,5 +1,6 @@
 @(u: User, focus: String = "info")(implicit request: RequestHeader)
 @import helper._
+@import enums.LoginType._
 @main("账户设置") {
 <div class="main fly-user-main layui-clear">
   @sidebar("setting")
@@ -14,16 +15,16 @@
       <ul class="layui-tab-title" id="LAY_mine">
         <li @if(focus == "info"){class="layui-this"} lay-id="info">我的资料</li>
         <li @if(focus == "avatar"){class="layui-this"} lay-id="avatar">头像</li>
-        <li @if(focus == "pass"){class="layui-this"} lay-id="pass">密码</li>
+        <li @if(focus == "pass" && !exists(request.session("loginType"))){class="layui-this"} lay-id="pass">密码</li>
         <!--<li lay-id="bind">帐号绑定</li>-->
       </ul>
       <div class="layui-tab-content" style="padding: 20px 0;">
         <div class="layui-form layui-form-pane layui-tab-item @if(focus == "info"){layui-show}">
           <form action="/user/setting" method="post">
             <div class="layui-form-item">
-              <label for="L_email" class="layui-form-label">邮箱</label>
+              <label for="L_email" class="layui-form-label">账号</label>
               <div class="layui-input-inline">
-                <input type="text" id="L_email" name="email" required lay-verify="email" autocomplete="off" value="@{u.login}" class="layui-input layui-disabled" disabled>
+                <input type="text" id="L_email" name="email" required lay-verify="email" autocomplete="off" value="@{u._id}" class="layui-input layui-disabled" disabled>
               </div>
               <div class="layui-form-mid layui-word-aux"></div>
             </div>
@@ -69,7 +70,8 @@
             </div>
           </div>
         </div>
-        <div class="layui-form layui-form-pane layui-tab-item @if(focus == "pass"){layui-show}">
+        <!-- 不显示使用第三方登录的用户的密码修改页面 -->
+        <div class="layui-form layui-form-pane layui-tab-item @if(focus == "pass" && !exists(request.session("loginType"))){layui-show}">
           <form action="/user/password" method="post">
             @if(u.password != ""){
             <div class="layui-form-item">

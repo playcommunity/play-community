@@ -23,7 +23,6 @@ play-community\target\universal\play-community-<version>.zip
 # 配置 MongoDB
 mongodb.uri = "mongodb://user:password@host:port/play-community?authMode=scram-sha1"
 ```
-
 需要注意的是，MongoDB需要开启ReplicaSet功能，开启方法可以参考官方文档：[Deploy Replica Set](https://docs.mongodb.com/manual/tutorial/deploy-replica-set/index.html)，也可以使用群友`梦境迷离`贡献的一键启动脚本，该脚本需要在`Git Bash`中运行。启动脚本的使用方法如下：
 - 打开`Git Bash`，切换当前目录至项目根目录；
 - 进入配置文件目录：`cd conf`
