@@ -17,6 +17,7 @@ GET     /article/edit                             controllers.ResourceController
 GET     /article/view                             controllers.ResourceController.view(_id: String)
 
 GET     /sitemap                                  controllers.ResourceController.sitemap
+GET     /sitemap.txt                              controllers.ResourceController.sitemap
 
 GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
