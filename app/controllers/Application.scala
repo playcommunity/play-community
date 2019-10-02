@@ -1,6 +1,6 @@
 package controllers
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.{ ByteArrayOutputStream, File }
 
 import javax.inject._
 import akka.stream.Materializer
@@ -11,20 +11,24 @@ import org.apache.pdfbox.pdmodel.PDDocument
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.data.Form
-import play.api.data.Forms.{tuple, _}
+import play.api.data.Forms.{ tuple, _ }
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.{CommonService, ElasticService, MailerService}
-import utils.PDFUtil.{getCatalogs, getText}
+import services.{ CommonService, ElasticService, MailerService }
+import utils.PDFUtil.{ getCatalogs, getText }
 import utils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Random
 import scala.collection.JavaConverters._
 import play.api.libs.json.Json._
+import security.PasswordEncoder
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, userAction: UserAction, config: Configuration)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService,
+                            elasticService: ElasticService, mailer: MailerService, userAction: UserAction,
+                            config: Configuration, passwordEncoder: PasswordEncoder)(implicit ec: ExecutionContext, mat: Materializer,
+                                                   parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
@@ -65,7 +69,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
         val (login, password, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
           for{
-            userOpt <- mongo.find[User](obj("login" -> login, "password" -> HashUtil.sha256(password))).first
+              userOpt <- passwordEncoder.findUserAndUpgrade(login, password)
           } yield {
             userOpt match {
               case Some(u) =>
@@ -153,9 +157,12 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
               case None =>
                 if (password == repassword) {
                   val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
+                  val newSalt = passwordEncoder.createSalt()
                   for {
                     uid <- counterService.getNextSequence("user-sequence")
-                    wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode)))
+                    wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
+                      UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
+                      salt = Option(newSalt.toString), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
                   } yield {
                     val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
                     // 发送激活码
@@ -226,11 +233,8 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
           } yield {
             userOpt match {
               case Some(u) =>
-                mongo.updateOne[User](
-            Json.obj("_id" -> u._id),
-            Json.obj(
-              "$set" -> Json.obj("password" -> enPassword)
-          ))
+                //encode password
+                passwordEncoder.updateUserPassword(u._id, enPassword)
                 Future.successful(Redirect(routes.Application.message("系统提示", "密码修改成功！")))
               case None =>
                 Future.successful(Redirect(routes.Application.message("系统提示", "用户不存在！")))
