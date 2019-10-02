@@ -73,7 +73,8 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo) extends PasswordEncoder {
         mongo.updateOne[User](
           Json.obj("_id" -> u._id),
           Json.obj(
-            "$set" -> Json.obj("salt" -> salt.toString, "argon2Hash" -> passwordHash)
+            //这里new String得到的是byte转字符后的乱码，存储后刚好不可见，如：�i$|\u0013\u0012\u0011^�Y��\u001d��
+            "$set" -> Json.obj("salt" -> new String(salt), "argon2Hash" -> passwordHash)
           ))
         Some(u)
     }
@@ -84,7 +85,7 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo) extends PasswordEncoder {
     //为了方便，无论是否已经升级，均重新生成盐。
     mongo.updateOne[User](Json.obj("_id" -> _id), Json.obj(
       "$set" -> Json.obj("password" -> password,
-        "argon2Hash" -> hash(password, newSalt), "salt" -> newSalt.toString)
+        "argon2Hash" -> hash(password, newSalt), "salt" -> new String(newSalt))
     ))
   }
 }

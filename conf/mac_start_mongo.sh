@@ -6,8 +6,8 @@ sleep 2
 
 # if need more, add after it
 host=(127.0.0.1:27001 127.0.0.1:27002)
-path=`pwd`"/log/mongo/data"
-logPath=`pwd`"/log/mongo/logs"
+path=`pwd`"/logs/mongo/data"
+logPath=`pwd`"/logs/mongo/logs"
 
 if [ ! -f $path ];then
   echo "the folder exists: ["$path"], then remove them"
