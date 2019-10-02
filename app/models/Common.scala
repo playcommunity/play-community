@@ -72,7 +72,9 @@ case class User(
   ip: String,
   ipLocation: Option[IPLocation],
   channels: List[Channel],
-  activeCode: Option[String]
+  activeCode: Option[String],
+  salt: Option[String] = None,//新加密的盐，存放16字节字符串，每个用户盐值单独生成，由argon2使用
+  argon2Hash: Option[String] = None //存放Argon2密码摘要，存在则说明已经将校验升级到argon2
 )
 case class Channel(id: String, name: String, url: String)
 

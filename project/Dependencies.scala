@@ -26,6 +26,7 @@ object Dependencies {
     val scalameta = "3.7.3"
     val contrib = "3.7.3"
     val config = "1.3.4"
+    val argon2 = "2.5"
 
   }
 
@@ -57,6 +58,8 @@ object Dependencies {
       "org.scalameta" %% "scalameta" % Versions.scalameta,
       "org.scalameta" %% "contrib" % Versions.contrib
     )
+
+    lazy val argon2 = "de.mkammerer" % "argon2-jvm" % Versions.argon2
   }
 
   import Compiles._
@@ -69,7 +72,9 @@ object Dependencies {
     roaringBitmap,
     elasticsearch,
     pdf,
+    argon2,
     jsoup,
-    guice, ws
+    guice,
+    ws
   ) ++ scalameta ++ play
 }
