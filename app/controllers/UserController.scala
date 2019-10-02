@@ -1,27 +1,25 @@
 package controllers
 
-import java.time.{Instant, OffsetDateTime}
-import javax.inject._
-
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
+import javax.inject._
 import models._
-import org.bson.types.ObjectId
-import play.api._
 import play.api.data.Form
-import play.api.mvc.{Action, _}
-import play.api.data.Forms.{tuple, _}
-import play.api.libs.json.{JsObject, Json}
-import services.{CommonService, EventService}
-
-import scala.concurrent.{ExecutionContext, Future}
-import utils.{BitmapUtil, DateTimeUtil, HashUtil, RequestHelper}
-
-import scala.concurrent.duration._
+import play.api.data.Forms.{ tuple, _ }
+import play.api.libs.json.Json
 import play.api.libs.json.Json._
+import play.api.mvc._
+import security.PasswordEncoder
+import services.{ CommonService, EventService }
+import utils.{ HashUtil, RequestHelper }
+
+import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService, commonService: CommonService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController,
+                               userAction: UserAction, eventService: EventService,
+                               commonService: CommonService, passwordEncoder: PasswordEncoder)
+                              (implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def index() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
@@ -114,7 +112,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
           obj("_id" -> request.session("uid")),
           obj(
             "$set" -> obj("setting.name" -> name, "setting.gender" -> gender.getOrElse[String](""), "setting.city" -> city, "setting.introduction" -> introduction)
-        )).map{ wr =>
+          )).map { wr =>
           Redirect(routes.UserController.setting())
             .addingToSession("name" -> name)
         }
@@ -138,7 +136,7 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
           obj("_id" -> request.session("uid")),
           obj(
             "$set" -> Json.obj("setting.headImg" -> url)
-        )).map{ wr =>
+          )).map { wr =>
           Ok(Json.obj("status" -> 0))
             .addingToSession("headImg" -> url)
         }
@@ -151,12 +149,11 @@ class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceC
       errForm => Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors.map(_.message).mkString("|"))),
       tuple => {
         val (password, password1, _) = tuple
-        if (password.isEmpty && request.user.password == "" || HashUtil.sha256(password.get) == request.user.password) {
-          mongo.updateOne[User](
-            Json.obj("_id" -> request.session("uid")),
-            Json.obj(
-              "$set" -> Json.obj("password" -> HashUtil.sha256(password1))
-          ))
+        if (password.isEmpty && request.user.password == "" || HashUtil.sha256(password.get) == request.user.password ||
+          request.user.argon2Hash.isDefined && request.user.salt.isDefined
+            && request.user.argon2Hash == passwordEncoder.hash(password.get, request.user.salt.get.getBytes)
+        ) {
+          passwordEncoder.updateUserPassword(request.session("uid"), HashUtil.sha256(password1))
           Redirect(routes.Application.message("系统提示", "密码修改成功！"))
         } else {
           Redirect(routes.Application.message("系统提示", "您的输入有误！"))
