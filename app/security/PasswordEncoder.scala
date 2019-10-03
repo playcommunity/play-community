@@ -1,5 +1,7 @@
 package security
 
+import java.nio.charset.Charset
+
 /**
  *
  * @author 梦境迷离
@@ -8,7 +10,11 @@ package security
  */
 trait PasswordEncoder extends ExtraUserEncoder {
 
+  final lazy val UTF8 = Charset.forName("UTF-8")
+
   def hash(rawPassword: CharSequence, salt: Array[Byte]): String
+
+  def hash(rawPassword: CharSequence, salt: CharSequence, charset: Charset = UTF8): String
 
   def createSalt(): Array[Byte]
 

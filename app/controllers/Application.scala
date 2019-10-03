@@ -162,7 +162,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
                     uid <- counterService.getNextSequence("user-sequence")
                     wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
                       UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
-                      salt = Option(new String(newSalt)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
+                      salt = Option(new String(newSalt, passwordEncoder.UTF8)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
                   } yield {
                     val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
                     // 发送激活码
@@ -233,7 +233,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
           } yield {
             userOpt match {
               case Some(u) =>
-                //encode password
+                //update encode password by user id
                 passwordEncoder.updateUserPassword(u._id, enPassword)
                 Future.successful(Redirect(routes.Application.message("系统提示", "密码修改成功！")))
               case None =>
