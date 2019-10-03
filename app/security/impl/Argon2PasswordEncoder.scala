@@ -39,8 +39,13 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo) extends PasswordEncoder {
    * @return hash密码
    */
   override def hash(rawPassword: CharSequence, salt: Array[Byte]) = {
-    ARGON2.hash(ITERATIONS, MEMORY, PARALLELISM, rawPassword.toString.toCharArray, Charset.forName("UTF-8"), salt)
+    ARGON2.hash(ITERATIONS, MEMORY, PARALLELISM, rawPassword.toString.toCharArray, UTF8, salt)
   }
+
+  override def hash(rawPassword: CharSequence, salt: CharSequence, charset: Charset = UTF8): String = {
+    ARGON2.hash(ITERATIONS, MEMORY, PARALLELISM, rawPassword.toString.toCharArray, UTF8, salt.toString.getBytes(charset))
+  }
+
 
   /**
    * match with password and encodedPassword
@@ -60,23 +65,25 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo) extends PasswordEncoder {
     salt
   }
 
-
   override def findUserAndUpgrade(login: String, password: String) = {
     mongo.find[User](obj("login" -> login)).first.map {
-      case None => None
+      //1.已经升级到新校验
       case Some(u) if u.argon2Hash.isDefined && u.salt.isDefined =>
         if (u.argon2Hash.get == hash(password, u.salt.get.getBytes)) Some(u) else None
+      //2.没有升级的。（这种情况表明：用户从未在本版本上线后登陆，修改密码，重置密码，注册），同步更新新校验hash值
       case Some(u) if u.argon2Hash.isEmpty && u.salt.isEmpty && u.password == HashUtil.sha256(password) =>
         val salt = createSalt()
         val passwordHash = hash(u.password, salt)
-        u.copy(salt = Option(salt.toString), argon2Hash = Option(passwordHash))
+        u.copy(salt = Option(new String(salt, UTF8)), argon2Hash = Option(passwordHash))
         mongo.updateOne[User](
           Json.obj("_id" -> u._id),
           Json.obj(
             //这里new String得到的是byte转字符后的乱码，存储后刚好不可见，如：�i$|\u0013\u0012\u0011^�Y��\u001d��
-            "$set" -> Json.obj("salt" -> new String(salt), "argon2Hash" -> passwordHash)
+            //为了保持平台一致，显示指定可能更好，已改为UTF-8
+            "$set" -> Json.obj("salt" -> new String(salt, UTF8), "argon2Hash" -> passwordHash)
           ))
         Some(u)
+      case _ => None
     }
   }
 
@@ -85,7 +92,8 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo) extends PasswordEncoder {
     //为了方便，无论是否已经升级，均重新生成盐。
     mongo.updateOne[User](Json.obj("_id" -> _id), Json.obj(
       "$set" -> Json.obj("password" -> password,
-        "argon2Hash" -> hash(password, newSalt), "salt" -> new String(newSalt))
+        "argon2Hash" -> hash(password, newSalt), "salt" -> new String(newSalt, UTF8))
     ))
   }
+
 }
