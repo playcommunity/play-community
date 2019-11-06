@@ -1,18 +1,20 @@
 import javax.inject.Inject
 import cn.playscala.mongo.Mongo
+import infrastructure.repository.mongo.MongoUserRepository
 import models.User
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
 import utils.RequestHelper
+
 import scala.concurrent.{ExecutionContext, Future}
 
 package object controllers {
 
   class UserRequest[A](val user: User, request: Request[A]) extends WrappedRequest[A](request)
-  class UserAction @Inject()(val parser: BodyParsers.Default, mongo: Mongo)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
+  class UserAction @Inject()(val parser: BodyParsers.Default, userRepo: MongoUserRepository)(implicit val ec: ExecutionContext) extends ActionBuilder[UserRequest, AnyContent] with ActionRefiner[Request, UserRequest] {
     def executionContext = ec
     def refine[A](input: Request[A]) = {
-      mongo.findById[User](input.session("uid")).map{
+      userRepo.findById(input.session("uid")).map{
         case Some(u) =>
           Right(new UserRequest(u, input))
         case None    =>

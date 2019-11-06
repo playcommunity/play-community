@@ -199,7 +199,7 @@
               </div>
             </div>
             <div class="portlet-body" style="font-size: 15px; line-height: 1.7;">
-              @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content) }
+              @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content.getOrElse("-")) }
             </div>
           </div>
           <!-- END SAMPLE FORM PORTLET-->

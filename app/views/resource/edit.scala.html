@@ -33,7 +33,7 @@
                 <input id="L_title" type="text" value="@resourceOpt.map(_.title).getOrElse("")" required lay-verify="required" autocomplete="off" class="layui-input"> </div>
             </div>
           </div>
-          <div id="quill-container">@Html(resourceOpt.map(_.content).getOrElse(""))</div>
+          <div id="quill-container">@Html(resourceOpt.map(_.content.getOrElse("-")).getOrElse(""))</div>
           <div class="layui-form layui-form-pane" style="margin-top: 15px;">
             <form id="form" action="/resource/add" method="post">
               @if(resourceOpt.nonEmpty){

@@ -1,36 +1,36 @@
-package services
+package app
 
-import javax.inject.{Inject, Singleton}
-
-import akka.stream.{Materializer, ThrottleMode}
-import play.api.libs.json.Json
-
-import scala.concurrent.{ExecutionContext, Future}
 import java.time.LocalDateTime
 
 import akka.actor.ActorSystem
+import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import com.mongodb.client.model.changestream.OperationType
+import javax.inject.{Inject, Singleton}
 import models._
 import play.api._
 import play.api.inject.ApplicationLifecycle
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
+import services.{CommonService, ElasticService, IPHelper, WatchService}
 import utils.{HashUtil, VersionComparator}
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * 执行系统初始化任务
   */
 @Singleton
-class InitializeService @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService, watchService: WatchService)(implicit ec: ExecutionContext, mat: Materializer) {
+class Initializer @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService, watchService: WatchService)(implicit ec: ExecutionContext, mat: Materializer) {
   val settingCol = mongo.collection("common-setting")
   val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
   val homeUrl = config.getOptional[String]("homeUrl").getOrElse("https://www.playscala.cn")
 
   app.Global.esEnabled = esEnabled
   app.Global.homeUrl = homeUrl
+
+  // 初始化领域服务
+  DomainRegistry.setInjector(application.injector)
 
   // 系统初始化
   for {

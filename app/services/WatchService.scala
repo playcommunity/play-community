@@ -45,13 +45,13 @@ class WatchService @Inject()(val mongo: Mongo, actorSystem: ActorSystem, env: En
           val deletes = seq.filter(c => c.getOperationType == OperationType.DELETE).map(_.getDocumentKey.getString("_id").getValue).toList
 
           inserts.foreach { r =>
-            elasticService.insert(IndexedDocument(r._id, r.resType, r.title, r.content, r.author.name, r.author._id, r.createTime.toEpochMilli, None, None, None))
+            elasticService.insert(IndexedDocument(r._id, r.resType, r.title, r.content.getOrElse("-"), r.author.name, r.author._id, r.createTime.toEpochMilli, None, None, None))
           }
 
           updates.foreach { r =>
             val obj = Json.obj(
               "title" -> r.title,
-              "content" -> r.content
+              "content" -> r.content.getOrElse[String]("-")
             )
             elasticService.update(r._id, obj)
           }

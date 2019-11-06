@@ -1,8 +1,5 @@
 package utils
 
-import java.time.format.DateTimeFormatter
-import java.time.{Duration, Instant, OffsetDateTime, ZoneOffset}
-
 import models.{Resource, VoteStat}
 
 
@@ -60,4 +57,10 @@ object AppUtil {
       VoteStat(voteStat.count - 1, BitmapUtil.toBase64String(bitmap))
     }
   }
+
+  // 解析页码
+  def parsePage(page: Int): Int = {
+    if(page < 1){ 1 } else { page }
+  }
+
 }
