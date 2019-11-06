@@ -69,24 +69,45 @@ class MongoResourceRepository @Inject() (mongo: Mongo) extends ResourceRepositor
   }
 
   /**
+    * 查询置顶的资源列表, 为提高查询效率，忽略资源内容。
+    */
+  def findTopList(count: Int): Future[List[Resource]] = {
+    mongo.find[Resource](obj("top" -> true, "visible" -> true)).sort(obj("createTime" -> -1)).limit(count).list()
+  }
+
+  /**
+    * 查询阅读量最高的资源列表, 为提高查询效率，忽略资源内容。
+    */
+  def findTopViewList(count: Int): Future[List[Resource]] = {
+    mongo.find[Resource](obj("visible" -> true), obj("content" -> 0)).sort(Json.obj("viewStat.count" -> -1)).limit(count).list()
+  }
+
+  /**
    * 查询阅读量最高的资源列表, 为提高查询效率，忽略资源内容。
    */
   def findTopViewList(resType: String, count: Int): Future[List[Resource]] = {
-    mongo.find[Resource](obj("resType" -> resType), obj("content" -> 0)).sort(Json.obj("viewStat.count" -> -1)).limit(count).list()
+    mongo.find[Resource](obj("resType" -> resType, "visible" -> true), obj("content" -> 0)).sort(Json.obj("viewStat.count" -> -1)).limit(count).list()
   }
 
   /**
     * 查询回复量最高的资源列表, 为提高查询效率，忽略资源内容。
     */
   def findTopReplyList(resType: String, count: Int): Future[List[Resource]] = {
-    mongo.find[Resource](obj("resType" -> resType), obj("content" -> 0)).sort(Json.obj("replyCount" -> -1)).limit(count).list()
+    mongo.find[Resource](obj("resType" -> resType, "visible" -> true), obj("content" -> 0)).sort(Json.obj("replyCount" -> -1)).limit(count).list()
   }
 
   /**
     * 查询资源总数。
     */
-  def findCount(resType: String): Future[Long] = {
-    mongo.collection[Resource].count(obj("resType" -> resType))
+  def count(resType: String): Future[Long] = {
+    mongo.collection[Resource].count(obj("resType" -> resType, "visible" -> true))
+  }
+
+  /**
+    * 查询资源总数。
+    */
+  def count(query: JsObject): Future[Long] = {
+    mongo.collection[Resource].count(query)
   }
 
   /**

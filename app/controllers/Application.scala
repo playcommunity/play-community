@@ -1,41 +1,43 @@
 package controllers
 
-import java.io.{ ByteArrayOutputStream, File }
+import java.io.{ByteArrayOutputStream, File}
 
 import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
+import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.joda.time.DateTime
 import play.api.Configuration
 import play.api.data.Form
-import play.api.data.Forms.{ tuple, _ }
+import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.{ CommonService, ElasticService, MailerService }
-import utils.PDFUtil.{ getCatalogs, getText }
+import services.{CommonService, ElasticService, MailerService}
+import utils.PDFUtil.{getCatalogs, getText}
 import utils._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 import scala.collection.JavaConverters._
 import play.api.libs.json.Json._
 import security.PasswordEncoder
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService,
-                            elasticService: ElasticService, mailer: MailerService, userAction: UserAction,
-                            config: Configuration, passwordEncoder: PasswordEncoder)(implicit ec: ExecutionContext, mat: Materializer,
-                                                   parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService,
+  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+
+  // 分页大小
+  val PAGE_SIZE = 15
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
   }
 
   def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
-    val cPage = if(page < 1){1}else{page}
+    val cPage = AppUtil.parsePage(page)
     var q = obj("categoryPath" -> obj("$regex" -> s"^${category}"), "visible" -> true)
     status match {
       case "0" =>
@@ -44,11 +46,11 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       case "3" => q ++= obj("recommended" -> true)
     }
     for {
-      topNews <- mongo.find[Resource](Json.obj("top" -> true, "visible" -> true)).sort(Json.obj("createTime" -> -1)).limit(5).list()
-      news <- mongo.find[Resource](q).sort(Json.obj("createTime" -> -1)).skip((cPage-1) * 15).limit(15).list()
-      total <- mongo.count[Resource](q)
-      activeUsers <- mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(12).list()
-      topViewDocs <- mongo.find[Resource](obj("resType" -> Resource.Doc, "visible" -> true)).sort(Json.obj("viewStat.count" -> -1)).limit(10).list()
+      topNews <- resourceRepo.findTopList(5)
+      news <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
+      total <- resourceRepo.count(q)
+      activeUsers <- userRepo.findActiveList(12)
+      topViewDocs <- resourceRepo.findTopViewList(10)
     } yield {
       Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
     }
@@ -68,24 +70,20 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       tuple => {
         val (login, password, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
-          for{
-              userOpt <- passwordEncoder.findUserAndUpgrade(login, password)
-          } yield {
-            userOpt match {
-              case Some(u) =>
-                if (u.activeCode.nonEmpty) {
-                  Redirect("/user/activate")
-                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0", "loginType" -> LoginType.PASSWORD)
-                } else {
-                  Redirect(s"/user/home?uid=${u._id}")
-                    .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.PASSWORD)
-                }
-              case None =>
-                Redirect(routes.Application.message("操作出错了！", "用户名或密码错误！"))
-            }
+          passwordEncoder.findUserAndUpgrade(login, password) map {
+            case Some(u) =>
+              if (u.activeCode.nonEmpty) {
+                Redirect("/user/activate")
+                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0", "loginType" -> LoginType.PASSWORD)
+              } else {
+                Redirect(s"/user/home?uid=${u._id}")
+                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.PASSWORD)
+              }
+            case None =>
+              Redirect(routes.Application.message("系统提示", "用户名或密码错误！"))
           }
         } else {
-          Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
+          Future.successful(Redirect(routes.Application.message("系统提示", "验证码输入错误！")))
         }
       }
     )
@@ -108,7 +106,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     }
   }
 
-  // FIXME 临时索引电子书
+  // FIXME: 临时索引电子书
   def indexBook = Action { implicit request: Request[AnyContent] =>
     val doc = PDDocument.load(new File("f:/Scala in Depth.pdf"))
     /*val bookId = "p-i-s-3"
@@ -144,39 +142,35 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
 
   def doRegister = Action.async { implicit request: Request[AnyContent] =>
     Form(tuple("login" -> nonEmptyText, "name" -> nonEmptyText, "password" -> nonEmptyText, "repassword" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
-      errForm => Future.successful(Redirect(routes.Application.message("注册出错了", "您的填写有误！"))),
+      errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的填写有误！"))),
       tuple => {
         val (login, name, password, repassword, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
-          (for {
-            userOpt <- mongo.find[User](obj("login" -> login)).first
-          } yield {
-            userOpt match {
-              case Some(u) =>
-                Future.successful(Redirect(routes.Application.message("注册出错了", "您已经注册过了！")))
-              case None =>
-                if (password == repassword) {
-                  val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
-                  val newSalt = passwordEncoder.createSalt()
-                  for {
-                    uid <- counterService.getNextSequence("user-sequence")
-                    wr <- mongo.insertOne(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
-                      UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
-                      salt = Option(new String(newSalt, passwordEncoder.UTF8)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
-                  } yield {
-                    val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
-                    // 发送激活码
-                    mailer.sendEmail(name, login, subject, views.html.mail.activeMail(name, activeCode).body)
-                    Redirect(routes.UserController.activate())
-                      .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
-                  }
-                } else {
-                  Future.successful(Redirect(routes.Application.message("注册出错了", "您两次输入的密码不一致！")))
+          userRepo.findById(login) flatMap {
+            case Some(u) =>
+              Future.successful(Redirect(routes.Application.message("系统提示", "您已经注册过了！")))
+            case None =>
+              if (password == repassword) {
+                val activeCode = (0 to 7).map(i => Random.nextInt(10).toString).mkString
+                val newSalt = passwordEncoder.createSalt()
+                for {
+                  uid <- counterService.getNextSequence("user-sequence")
+                  wr <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
+                    UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
+                    salt = Option(new String(newSalt, passwordEncoder.UTF8)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
+                } yield {
+                  val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
+                  // 发送激活码
+                  mailer.sendEmail(name, login, subject, views.html.mail.activeMail(name, activeCode).body)
+                  Redirect(routes.UserController.activate())
+                    .withSession("login" -> login, "uid" -> uid.toString, "name" -> name, "headImg" -> "/assets/images/head.png")
                 }
-            }
-          }).flatMap(f1 => f1)
+              } else {
+                Future.successful(Redirect(routes.Application.message("系统提示", "您两次输入的密码不一致！")))
+              }
+          }
         } else {
-          Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
+          Future.successful(Redirect(routes.Application.message("系统提示", "验证码输入错误！")))
         }
       }
     )
@@ -186,62 +180,59 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       Ok(views.html.resetPassword())
     }
 
-  def doResetPassword= Action.async { implicit request: Request[AnyContent] =>  Form(tuple("login" -> nonEmptyText,  "password" -> nonEmptyText, "repassword" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
+  def doResetPassword= Action.async { implicit request: Request[AnyContent] =>
+    Form(tuple("login" -> nonEmptyText,  "password" -> nonEmptyText, "repassword" -> nonEmptyText, "verifyCode" -> nonEmptyText)).bindFromRequest().fold(
         errForm => Future.successful(Redirect(routes.Application.message("重置密码出错了", "您的填写有误！"))),
         tuple => {
           val (login, password, repassword, verifyCode) = tuple
           if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
-            (for {
-              userOpt <- mongo.find[User](obj("login" -> login)).first
-            } yield {
-              userOpt match {
-                case Some(u) =>
-                  if (password == repassword) {
-                   val name = u.setting.name
-                    val sendTime = DateTime.now().getMillis
-                    val subject = s"请确认重置您的${app.Global.siteSetting.name}账户密码！"
-                    val p = s"${sendTime},${login},${HashUtil.sha256(password)}"
-                    //对发送的参数进行加密传输，没有配置key则默认区官网地址作为key
-                    val cryptoP = CryptoUtil.encrypt(config.getOptional[String]("resetPassword.key").getOrElse("https://www.playscala.cn"),p)
-                    mailer.sendEmail(name, login, subject, views.html.mail.resetPassword(name, cryptoP).body)
-                    Future.successful(Redirect(routes.Application.message("系统提示", "操作成功,请检查邮箱确认密码重置。")))
-                  }else{
-                    Future.successful(Redirect(routes.Application.message("注册出错了", "您两次输入的密码不一致！")))
-                  }
-                case None =>
-                  Future.successful(Redirect(routes.Application.message("重置密码出错了", "未注册的邮箱！")))
-              }
-            }).flatMap(f1 => f1)
+            userRepo.findById(login) flatMap {
+              case Some(u) =>
+                if (password == repassword) {
+                  val name = u.setting.name
+                  val sendTime = DateTime.now().getMillis
+                  val subject = s"请确认重置您的${app.Global.siteSetting.name}账户密码！"
+                  val p = s"${sendTime},${login},${HashUtil.sha256(password)}"
+
+                  //对发送的参数进行加密传输，没有配置key则默认区官网地址作为key
+                  val cryptoP = CryptoUtil.encrypt(config.getOptional[String]("resetPassword.key").getOrElse("https://www.playscala.cn"),p)
+                  mailer.sendEmail(name, login, subject, views.html.mail.resetPassword(name, cryptoP).body)
+
+                  Future.successful(Redirect(routes.Application.message("系统提示", "操作成功,请检查邮箱确认密码重置。")))
+                } else {
+                  Future.successful(Redirect(routes.Application.message("注册出错了", "您两次输入的密码不一致！")))
+                }
+              case None =>
+                Future.successful(Redirect(routes.Application.message("重置密码出错了", "未注册的邮箱！")))
+            }
           } else {
             Future.successful(Redirect(routes.Application.message("操作出错了！", "验证码输入错误！")))
           }
         }
       )}
 
-  def verifyResetPassword(p:String) = Action.async { implicit request: Request[AnyContent] =>{
+  def verifyResetPassword(p:String) = Action.async { implicit request: Request[AnyContent] =>
     val key = config.getOptional[String]("resetPassword.key").getOrElse("https://www.playscala.cn")
+
     //参数传递过程中,会把+转化成空格，所以替换回来,或者去掉playframework的安全相关的过滤器
     val decrptP = CryptoUtil.decrypt(key,p.replaceAll(" ","+"))
     val params = decrptP.split(",")
     val (sendTime,login,enPassword) =(params(0),params(1),params(2))
     val nowTime =  DateTime.now().getMillis
-      if((nowTime - sendTime.toLong) > config.getOptional[Int]("resetPassword.timeout").getOrElse(300000)){
-        Future.successful(Redirect(routes.Application.message("系统提示", "操作失败,邮件超过有效期,请重新操作。")))
-      }else{
-        (for {
-            userOpt <- mongo.find[User](obj("login" -> login)).first
-          } yield {
-            userOpt match {
-              case Some(u) =>
-                //update encode password by user id
-                passwordEncoder.updateUserPassword(u._id, enPassword)
-                Future.successful(Redirect(routes.Application.message("系统提示", "密码修改成功！")))
-              case None =>
-                Future.successful(Redirect(routes.Application.message("系统提示", "用户不存在！")))
-            }
-          }).flatMap(f1 => f1)
+
+    if((nowTime - sendTime.toLong) > config.getOptional[Int]("resetPassword.timeout").getOrElse(300000)){
+      Future.successful(Redirect(routes.Application.message("系统提示", "操作失败,邮件超过有效期,请重新操作。")))
+    } else {
+      userRepo.findById(login) flatMap {
+        case Some(u) =>
+          //update encode password by user id
+          passwordEncoder.updateUserPassword(u._id, enPassword)
+          Future.successful(Redirect(routes.Application.message("系统提示", "密码修改成功！")))
+        case None =>
+          Future.successful(Redirect(routes.Application.message("系统提示", "用户不存在！")))
       }
-    }}
+    }
+  }
 
 
 
@@ -257,7 +248,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       errForm => Redirect(routes.Application.message("系统提示", "您的填写有误！")),
       activeCode => {
         if (activeCode.trim == request.user.activeCode.getOrElse("")) {
-          mongo.updateOne[User](obj("_id" -> request.user._id), obj("$unset" -> Json.obj("activeCode" -> 1)))
+          request.user.setToActive()
           Redirect(routes.UserController.activate())
             .addingToSession("active" -> "1")
         } else {
@@ -280,7 +271,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       case None =>
         for{
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- mongo.insertOne[User](User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
+          _ <- userRepo.add(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
           Redirect(routes.Application.index("0", "/", 1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER, "active" -> "1")

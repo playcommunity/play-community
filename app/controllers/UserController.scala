@@ -16,10 +16,8 @@ import utils.{ HashUtil, RequestHelper }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton
-class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController,
-                               userAction: UserAction, eventService: EventService,
-                               commonService: CommonService, passwordEncoder: PasswordEncoder)
-                              (implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class UserController @Inject()(cc: ControllerComponents, mongo: Mongo, resourceController: GridFSController, userAction: UserAction, eventService: EventService,
+  commonService: CommonService, passwordEncoder: PasswordEncoder)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def index() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {

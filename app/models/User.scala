@@ -1,10 +1,13 @@
 package models
 
 import java.time.Instant
+
 import cn.playscala.mongo.annotations.Entity
 import org.bson.types.ObjectId
 import play.api.libs.json.Json
-import utils.{DateTimeUtil}
+import play.api.libs.json.Json.obj
+import utils.DateTimeUtil
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -63,6 +66,15 @@ case class User(
       .map{ _ => true }
   }
 
+  /**
+    * 激活用户
+    */
+  def setToActive(): Future[Boolean] = {
+    DomainRegistry.mongo
+      .updateOne[User](obj("_id" -> _id), obj("$unset" -> Json.obj("activeCode" -> 1)))
+      .map{ _ => true }
+  }
+
 }
 
 case class Channel(id: String, name: String, url: String)
@@ -73,3 +85,15 @@ case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: In
 case class IPLocation(country: String, province: String, city: String)
 
 case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
+
+// 登录类型
+object LoginType extends Enumeration {
+  type LoginType = Value
+
+  val PASSWORD  = Value(0, "password") //用户密码登录
+  val GITHUB = Value(1, "github")
+  val QQ = Value(2, "qq")
+  val WECHAT = Value(3, "wechat")
+
+  implicit def enumToString = (loginType: LoginType.Value) => loginType.toString
+}
