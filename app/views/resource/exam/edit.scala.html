@@ -1,6 +1,6 @@
 @(resourceOpt: Option[Resource])(implicit request: RequestHeader)
 @import helper._
-@main(s"${App.siteSetting.name} - 创建/编辑试题", "community", "exam") {
+@main(s"${app.Global.siteSetting.name} - 创建/编辑试题", "community", "exam") {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
 <link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
 <style>

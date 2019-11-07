@@ -2,7 +2,8 @@
 @import helper._
 @import utils.RequestHelper
 
-@main(s"${App.siteSetting.indexTitle}", "community", "index") {
+@main(s"${app.Global.siteSetting.indexTitle}", "community", "index") {
+@nav("index")
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
     <div class="layui-col-md8">
@@ -97,10 +98,12 @@
           </li>
           }
         </ul>
-        <div style="text-align: center">
+          <div style="text-align: center">
           <div class="laypage-main">
             <a href="/?status=@{status}&category=@{category}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?status=@{status}&category=@{category}&page=@{page+1}" class="laypage-next">下一页</a></div>
-        </div>
+          
+          </div>
+
       </div>
     </div>
     <div class="layui-col-md4">
@@ -212,19 +215,13 @@
       </dl>
 
       <div class="fly-panel">
-        <h3 class="fly-panel-title">温馨通道</h3>
+        <h3 class="fly-panel-title">友情链接</h3>
         <ul class="fly-panel-main fly-list-static">
-          <li>
-            <a href="/docs" target="_blank">Play For Scala 开发指南</a>
-          </li>
-          <li>
-            <a href="https://github.com/playcommunity/play-community" target="_blank">
-              Play Scala 社区源码
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/playcommunity/play-mongo" target="_blank">Play Mongo 项目源码</a>
-          </li>
+          @for(l <- app.Global.siteSetting.links) {
+            <li>
+              <a href="@l.url" target="@l.target">@l.title</a>
+            </li>
+          }
         </ul>
       </div>
       <!--<div class="fly-panel">

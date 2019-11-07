@@ -41,7 +41,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>@{docOpt.map(_.title).getOrElse("尚未完成")} - @{App.siteSetting.indexTitle}</title>
+  <title>@{docOpt.map(_.title).getOrElse("尚未完成")} - @{app.Global.siteSetting.indexTitle}</title>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta content="width=device-width, initial-scale=1" name="viewport" />
@@ -63,7 +63,7 @@
   <link href="/assets/theme/layouts/layout4/css/custom.min.css" rel="stylesheet" type="text/css" />
   <!-- END THEME LAYOUT STYLES -->
   <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
-  <link rel="shortcut icon" href="@App.siteSetting.favicon"/>
+  <link rel="shortcut icon" href="@app.Global.siteSetting.favicon"/>
   <!-- END HEAD -->
 
   <style>
@@ -87,8 +87,8 @@
   <div class="page-header-inner ">
     <!-- BEGIN LOGO -->
     <div class="page-logo">
-      <a href="@App.siteSetting.url">
-        <img src="@App.siteSetting.logo" alt="logo" class="logo-default" style="margin: 15px 0px 0;" /> </a>
+      <a href="@app.Global.siteSetting.url">
+        <img src="@app.Global.siteSetting.logo" alt="logo" class="logo-default" style="margin: 15px 0px 0;" /> </a>
       <div class="menu-toggler sidebar-toggler">
         <!-- DOC: Remove the above "hide" to enable the sidebar toggler button on header -->
       </div>
@@ -199,7 +199,7 @@
               </div>
             </div>
             <div class="portlet-body" style="font-size: 15px; line-height: 1.7;">
-              @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content) }
+              @if(docOpt.isEmpty){ TODO }else{ @Html(docOpt.get.content.getOrElse("-")) }
             </div>
           </div>
           <!-- END SAMPLE FORM PORTLET-->
@@ -214,7 +214,8 @@
 <!-- END CONTAINER -->
 <!-- BEGIN FOOTER -->
 <div class="page-footer">
-  <div class="page-footer-inner"> 2017 &copy; PlayScala社区</div>
+  <div class="page-footer-inner"> <span id="footer-copyright">2018</span> &copy; <a href="http://www.playscala.cn/" target="_blank">PlayScala 社区</a>
+          <a href="http://www.miitbeian.gov.cn" target="_blank">苏ICP备14005538号-1</a></div>
   <div class="scroll-to-top">
     <i class="icon-arrow-up"></i>
   </div>
@@ -241,6 +242,7 @@
 <script src="/assets/theme/layouts/layout4/scripts/layout.min.js" type="text/javascript"></script>
 <!-- END THEME LAYOUT SCRIPTS -->
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
+<script src="/assets/js/copyright.js"></script>
 <script>
 $(function() {
   var node = $('#@docOpt.flatMap(_.doc.map(_.catalogId)).getOrElse(catalogId)');

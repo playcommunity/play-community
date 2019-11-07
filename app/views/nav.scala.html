@@ -1,0 +1,30 @@
+@(nav: String)
+
+<div class="fly-panel fly-column">
+    <div class="layui-container">
+        <ul class="layui-clear">
+            <li class='layui-hide-xs @if(nav == "index"){layui-this}'><a href="/">首页</a></li>
+            <li class='@if(nav == "qa"){layui-this}'><a href="/qas">提问</a></li>
+            <li class='@if(nav == "article"){layui-this}'><a href="/articles">分享</a></li>
+            <li class='@if(nav == "tweet"){layui-this}'><a href="/tweets">说说</a></li>
+                <!--<li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><span class="fly-mid"></span></li>
+            <li class="layui-hide-xs layui-hide-sm layui-show-md-inline-block"><a href="/user#article">提供新闻线索</a></li>-->
+        </ul>
+
+        <div class="fly-column-right layui-hide-xs">
+            <span class="fly-search"><i class="layui-icon"></i></span>
+            @if(nav == "index" || nav == "article"){
+                <a href='/article/add' class="layui-btn">我要分享</a>
+            }else{
+                <a href='/qa/add' class="layui-btn">我要提问</a>
+            }
+        </div>
+        <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
+        @if(nav == "index" || nav == "article"){
+            <a href='/article/add' class="layui-btn">我要分享</a>
+        }else{
+            <a href='/qa/add' class="layui-btn">我要提问</a>
+        }
+        </div>
+    </div>
+</div>

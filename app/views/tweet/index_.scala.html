@@ -3,7 +3,7 @@
 @import helper._
 @import utils.RequestHelper
 @import play.api.libs.json.Json
-@main(s"${App.siteSetting.name} - 社区说说", "tweet") {
+@main(s"${app.Global.siteSetting.name} - 社区说说", "tweet") {
 <div id="app" class="main layui-clear">
   <div class="wrap">
     <div class="content">
@@ -89,7 +89,7 @@
     <div class="fly-panel fly-link">
       <h3 class="fly-panel-title">友情链接</h3>
       <dl>
-        @for(l <- App.siteSetting.links){
+        @for(l <- app.Global.siteSetting.links){
         <dd>
           <a href="@l.url" target="@l.target">@l.title</a>
         </dd>

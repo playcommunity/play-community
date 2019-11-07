@@ -29,7 +29,7 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
     for {
       opt <- settingCol.findById[SiteSetting]("siteSetting")
     } yield {
-      Ok(views.html.admin.setting.base(opt.getOrElse(App.siteSetting)))
+      Ok(views.html.admin.setting.base(opt.getOrElse(app.Global.siteSetting)))
     }
   }
 
@@ -38,7 +38,7 @@ class AdminController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
       case Some(obj) =>
         obj.validate[SiteSetting] match {
           case JsSuccess(s, _) =>
-            App.siteSetting = s
+            app.Global.siteSetting = s
             settingCol.updateOne(Json.obj("_id" -> "siteSetting"), Json.obj("$set" -> obj), upsert = true).map{ wr =>
               println(wr)
               Ok(Json.obj("status" -> 0))

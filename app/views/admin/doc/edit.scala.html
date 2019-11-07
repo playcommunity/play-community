@@ -83,7 +83,7 @@ code {
                                 </div>
                             </div>
                         </div>
-                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.map(_.content).getOrElse(""))</script>
+                        <script id="container" name="content" type="text/plain" style="height: 500px;margin-top:8px;">@Html(docOpt.flatMap(_.content).getOrElse("-"))</script>
                     </div>
                     <div class="form-actions noborder">
 

@@ -8,13 +8,13 @@
             <div style="background-color:white;border-top:2px solid #12ADDB;box-shadow:0 1px 3px #AAAAAA;line-height:180%;padding:0 15px 12px;width:500px;margin:50px auto;color:#555555;font-family:'Century Gothic','Trebuchet MS','Hiragino Sans GB',微软雅黑,'Microsoft Yahei',Tahoma,Helvetica,Arial,'SimSun',sans-serif;font-size:12px;">
                 <h2 style="border-bottom:1px solid #DDD;font-size:14px;font-weight:normal;padding:13px 0 10px 8px;">
                     <span style="color: #12ADDB;font-weight: bold;">@@</span>@{name}，感谢您注册
-                    <a style="text-decoration:none;color: #12ADDB;" href="@{App.siteSetting.url}">@{App.siteSetting.name}</a>，请按照提示激活您的账户。
+                    <a style="text-decoration:none;color: #12ADDB;" href="@{app.Global.siteSetting.url}">@{app.Global.siteSetting.name}</a>，请按照提示激活您的账户。
                 </h2>
                 <div style="padding:0 12px 0 12px;margin-top:18px">
                     <p>您的激活码是:</p>
                     <p style="background-color: #f5f5f5;border: 0px solid #DDD;padding: 10px 15px;margin:18px 0">@{activeCode}</p>
                     <p>您可以点击
-                        <a style="text-decoration:none; color:#12addb" href="@{App.siteSetting.url}/user/activate">这里</a>开始激活账户。
+                        <a style="text-decoration:none; color:#12addb" href="@{app.Global.siteSetting.url}/user/activate">这里</a>开始激活账户。
                     </p>
                 </div>
             </div>

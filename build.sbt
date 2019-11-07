@@ -1,29 +1,14 @@
-name := """play-community"""
+import Dependencies._
+import sbt._
 
+organization := "cn.playscala"
 version := "1.2.0"
+name := "play-community"
+scalaVersion := Versions.scala
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
-
-scalaVersion := "2.12.4"
+//root 也改下？
+lazy val `play-community` = Project(id = "root", base = file(".")).enablePlugins(PlayScala).settings(depend)
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
-
-libraryDependencies ++= Seq(
-  guice, ws,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "3.0.0" % Test,
-  "cn.playscala" % "play-mongo_2.12" % "0.3.0",
-  "com.hankcs" % "hanlp" % "portable-1.3.4",
-  "org.roaringbitmap" % "RoaringBitmap" % "0.6.44",
-  "pl.allegro.tech" % "embedded-elasticsearch" % "2.2.0",
-  "com.typesafe.play" %% "play-mailer" % "6.0.0",
-  "com.typesafe.play" %% "play-mailer-guice" % "6.0.0",
-  "com.lightbend.play" %% "play-socket-io" % "1.0.0-beta-2",
-  "org.apache.pdfbox" % "pdfbox" % "2.0.7",
-  "org.jsoup" % "jsoup" % "1.10.3",
-  "org.scalameta" %% "scalameta" % "3.7.3",
-  "org.scalameta" %% "contrib" % "3.7.3"
-)
-
-

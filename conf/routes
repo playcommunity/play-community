@@ -13,6 +13,9 @@ GET     /article/add                              controllers.ResourceController
 GET     /article/edit                             controllers.ResourceController.edit(_id: String)
 GET     /article/view                             controllers.ResourceController.view(_id: String)
 
+GET     /sitemap                                  controllers.ResourceController.sitemap
+GET     /sitemap.txt                              controllers.ResourceController.sitemap
+
 GET     /qas                                      controllers.ResourceController.index(resType: String = "qa", status: String ?= "0", category: String ?= "/", page: Int ?= 1)
 GET     /qa/add                                   controllers.ResourceController.add(resType: String = "qa")
 GET     /qa/edit                                  controllers.ResourceController.edit(_id: String)
@@ -44,6 +47,17 @@ GET     /tweet/json                               controllers.TweetController.ge
 POST    /tweet/add                                controllers.TweetController.doAdd
 GET     /tweet/view                               controllers.TweetController.view(_id: String)
 
+# Dict
+GET     /dict                                     controllers.DictController.index
+GET     /dict/add                                 controllers.DictController.add(_id: String ?= "")
+POST    /dict/add                                 controllers.DictController.doAdd
+GET     /dict/edit                                controllers.DictController.edit(_id: String ?= "")
+POST    /dict/edit                                controllers.DictController.doEdit
+GET     /dict/pass                                controllers.DictController.pass(_id: String ?= "")
+GET     /dict/remove                              controllers.DictController.remove(_id: String ?= "")
+GET     /dict/tag/:tag                            controllers.DictController.viewTag(tag: String)
+GET     /dict/:_id                                controllers.DictController.query(_id: String)
+
 # Common
 POST    /resource/vote                            controllers.CommonController.doVote
 POST    /resource/reply/vote                      controllers.CommonController.doVoteReply
@@ -66,6 +80,11 @@ GET     /login                                    controllers.Application.login(
 POST    /login                                    controllers.Application.doLogin
 GET     /register                                 controllers.Application.register
 POST    /register                                 controllers.Application.doRegister
+
+GET     /resetPassword                            controllers.Application.resetPassword
+POST    /resetPassword                            controllers.Application.doResetPassword
+GET     /resetVerify                              controllers.Application.verifyResetPassword(p:String)
+
 GET     /logout                                   controllers.Application.logout
 GET     /404                                      controllers.Application.notFound
 GET     /message                                  controllers.Application.message(title: String, message: String)

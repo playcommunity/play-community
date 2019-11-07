@@ -9,3 +9,4 @@ embed
 /.project
 /.settings
 /RUNNING_PID
+conf/dev.conf

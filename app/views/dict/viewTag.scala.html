@@ -1,0 +1,58 @@
+@(tag: String, words: List[Word])(implicit request: RequestHeader)
+
+@main("PlayScala社区 - 添加新词", "dict") {
+<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+<style>
+.search-input {
+    height: 48px;
+    line-height: 48px;
+    font-size: 20px;
+}
+.search-logo {
+    margin: 0px 0 0;
+    padding: 40px 0 40px;
+    text-align: center;
+}
+.play-audio {
+    background-image: url(/assets/images/sound.png);
+    background-repeat: no-repeat;
+}
+</style>
+@searchBar(tag)
+<div class="main layui-clear">
+    <div class="fly-panel" pad20 style="padding-top: 5px;">
+        <div class="layui-tab layui-tab-brief" lay-filter="user">
+            <ul class="layui-tab-title">
+                <li class="layui-this">@{tag}标签</li>
+            </ul>
+            <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
+                <div class="layui-tab-item layui-show">
+                    <div class="layui-container" style="margin-left: 0px;">
+                        <div class="layui-row  layui-col-space15">
+                            @for(w <- words) {
+                            <div class="layui-col-md6 layui-col-sm12">
+                                <span style="font-size: 20px;"><a href="/dict/@w._id">@w._id</a></span>
+                                <span style="font-size: 15px; margin-left: 5px;">@w.pronounce</span>
+                                <span style="margin-left: 5px; cursor: pointer;"><i class="play-audio" title="发音" audio-url='@w.audioUrl'>　</i></span>
+                                @for(t <- w.tags) {
+                                <span style="margin-left: 5px;"><a href="/dict/tag/@t" class="layui-btn layui-btn-xs">@t</a></span>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+}
+<script>
+$('.play-audio').click(function(){
+    //var audio = document.getElementById("word-" + word);
+    var audio = new Audio($(this).attr('audio-url'));
+    audio.currentTime = 0;
+    audio.play();
+});
+</script>

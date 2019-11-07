@@ -1,6 +1,6 @@
 package utils
 
-import models.{Author, Role}
+import models.{Author, LoginType, Role}
 import org.bson.types.ObjectId
 import play.api.mvc.RequestHeader
 
@@ -69,6 +69,10 @@ object RequestHelper {
 
   def generateId(implicit request: RequestHeader): String = {
     getUid + "-" + ObjectId.get().toHexString
+  }
+
+  def isPasswordLogin(implicit request: RequestHeader): Boolean = {
+    request.session.get("loginType").getOrElse("") == LoginType.PASSWORD.toString
   }
 
 }
