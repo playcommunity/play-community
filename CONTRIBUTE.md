@@ -38,6 +38,8 @@ https://git-scm.com/
 > 请参考：[第一个Play项目](https://www.playscala.cn/doc/catalog?_id=j1_11)
 
 ### 1.3 开始贡献
+如果你还不熟悉Play开发框架，请先阅读[Play For Scala 开发指南](https://www.playscala.cn/docs)
+
 #### 1.3.1 领取开发任务
 目前通过Github issue管理开发任务。名称以`【开发任务】`开头的issue为可认领的开发任务，其它issue为待定任务，尚未发布为`【开发任务】`。打开下方链接可以查看所有的开发任务：
 ```
