@@ -17,9 +17,10 @@
 
 ## 1. 贡献入门
 ### 1.1 加入Github开发团队
-如果你希望参与贡献代码，请在下方任选一种方式提交`Github用户名`和`邮箱`信息，
+如果你希望参与贡献代码，请先申请加入开发团队。加入开发团队是为了方便领取开发任务。 请在下方任选一种方式提交`Github用户名`和`邮箱`信息，
 - 加入社区QQ交流群(851236949)，私信`南京-金融-沐风(416861875)`
 - 发邮件至`joymufeng@163.com`
+- 加微信`huangruchun`，备注`申请加入团队`
 
 管理员在接收到提交信息后，会发送Github邀请。访问以下链接可以查看并接受邀请：
 ```
@@ -65,18 +66,18 @@ IdentityFile /Users/joymufeng/.ssh/id_rsa
 git clone git@playscala:playcommunity/play-community.git
 ```
 
-> 注意社区开发成员请直接 clone 社区的资源库，不要 clone 自己fork的资源库。
+> 注意社区开发成员请直接 clone 社区的资源库，不要 clone 自己 fork 的资源库。
 
 #### 1.3.3 开始任务
-假设你领取了一个开发任务，`Issue Id`为`10`，在开始编码前，你需要先基于`master`分支创建一个私有的开发分支，开发分支的命名规则为`issue-ID`,例如`issue-10`。首先确认当前分支是`master`分支，并且已与远程代码保持同步，然后执行如下命令创建并切换至开发分支：
+假设你领取了一个`Id`为10的`Issue`，在开始编码前，你需要先基于`master`分支创建一个私有的开发分支，开发分支的命名规则为`issue-Id`,例如`issue-10`。首先确认当前分支是`master`分支，并且已与远程代码保持同步，然后执行如下命令创建并切换至开发分支：
 ```
 git checkout -b issue-你的编号
 ```
-完成功能开发后，在开发分支上创建提交，然后将该开发分支推送至远程Github仓库，
+完成功能开发后，在开发分支上创建`Commit`, `Commit Message`格式为：`Fixes #你的Issue编号: xxx`，例如`Fixes #10: 完成微信扫码登录功能。`。 然后将该开发分支推送至远程Github仓库，
 ```
 git push -u origin issue-你的编号
 ```
-登录Github，打开社区项目地址`[https://github.com/playcommunity/play-community](https://github.com/playcommunity/play-community)`， 选择`issue-你的编号`分支，并单击右侧的`New pull request`按钮：
+登录Github，打开社区项目地址 [https://github.com/playcommunity/play-community](https://github.com/playcommunity/play-community)， 选择`issue-你的编号`分支，并单击右侧的`New pull request`按钮：
 
 ![image](https://www.playscala.cn/resource/5dc39348eeab565236ea62e5)
 
