@@ -65,30 +65,32 @@ IdentityFile /Users/joymufeng/.ssh/id_rsa
 git clone git@playscala:playcommunity/play-community.git
 ```
 
+> 注意社区开发成员请直接 clone 社区的资源库，不要 clone 自己fork的资源库。
+
 #### 1.3.3 开始任务
 假设你领取了一个开发任务，`Issue Id`为`10`，在开始编码前，你需要先基于`master`分支创建一个私有的开发分支，开发分支的命名规则为`issue-ID`,例如`issue-10`。首先确认当前分支是`master`分支，并且已与远程代码保持同步，然后执行如下命令创建并切换至开发分支：
 ```
-git checkout -b issue-10
+git checkout -b issue-你的编号
 ```
 完成功能开发后，在开发分支上创建提交，然后将该开发分支推送至远程Github仓库，
 ```
-git push -u origin issue-0
+git push -u origin issue-你的编号
 ```
-登录Github，选择`issue-0`分支，并单击右侧的`New pull request`按钮：
+登录Github，打开社区项目地址`[https://github.com/playcommunity/play-community](https://github.com/playcommunity/play-community)`， 选择`issue-你的编号`分支，并单击右侧的`New pull request`按钮：
 
 ![image](https://www.playscala.cn/resource/5dc39348eeab565236ea62e5)
 
-成功创建`pull request`后，请注意关注审查意见，并及时改进。请注意，如果在提交`pull request`后需要修改代码，请直接在`issue-0`分支上修改并推送至远程，之前的`pull request`会自动更新。
+成功创建`pull request`后，请注意关注审查意见，并及时改进。请注意，如果在提交`pull request`后需要修改代码，请直接在`issue-你的编号`分支上修改并推送至远程，之前的`pull request`会自动更新。
 
 在审查通过后，你的代码会被合并至`master`分支，恭喜你成功完成一次贡献！
 
 在完成开发任务后需要清理开发分支，首先删除本地开发分支：
 ```
-git branch -d issue-0
+git branch -d issue-你的编号
 ```
 然后删除Github上的远程开发分支：
 ```
-git push origin --delete issue-0
+git push origin --delete issue-你的编号
 ```
 
 ## 2. 开发规范
