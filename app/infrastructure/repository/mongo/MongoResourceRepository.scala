@@ -133,7 +133,7 @@ class MongoResourceRepository @Inject()(mongo: Mongo) extends ResourceRepository
   }
 
 
-  import utils.ImplicitUtils.ConvertJsValue
+  import utils.ImplicitUtils._
 
   /**
    * 根据资源的查询条件和排序条件，分页大小来查询
@@ -145,37 +145,29 @@ class MongoResourceRepository @Inject()(mongo: Mongo) extends ResourceRepository
    * @param findBy 可变长参数
    * @return
    */
-  def findResourceBy(sortBy: (String, Int), count: Int, findBy: (String, Any)*) = {
-    val tmp = func(findBy)
-    mongo.find[Resource](obj(tmp: _*)).limit(count).list
+  def findResourceBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
+    mongo.find[Resource](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
   }
 
   def countResourceBy(countBys: (String, Any)*) = {
-    val tmp = func(countBys)
-    mongo.collection[Resource].count(obj(tmp: _*))
+    mongo.collection[Resource].count(obj(countBys.toSeq.toWrapper: _*))
   }
 
-  def findStatBy(sortBy: (String, Int), count: Int, findBy: (String, Any)*) = {
-    val tmp = func(findBy)
-    mongo.find[StatCollect](obj(tmp: _*)).limit(count).list
+  def findStatBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
+    mongo.find[StatCollect](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
   }
 
   def countStatBy(countBys: (String, Any)*) = {
-    val tmp = func(countBys)
-    mongo.collection[StatCollect].count(obj(tmp: _*))
+    mongo.collection[StatCollect].count(obj(countBys.toSeq.toWrapper: _*))
   }
 
   def countEventBy(countBys: (String, Any)*) = {
-    val tmp = func(countBys)
-    mongo.collection[Event].count(obj(tmp: _*))
+    mongo.collection[Event].count(obj(countBys.toSeq.toWrapper: _*))
   }
 
-  def findEventBy(sortBy: (String, Int), count: Int, findBy: (String, Any)*) = {
-    val tmp = func(findBy)
-    mongo.find[Event](obj(tmp: _*)).limit(count).list
+  def findEventBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
+    mongo.find[Event](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
+
   }
 
-  private def func(findBy: Seq[(String, Any)]) = {
-    findBy.map(x => (x._1, x._2.toJsValue))
-  }
 }

@@ -14,4 +14,12 @@ object ImplicitUtils {
     }
   }
 
+  implicit class ConvertJsValueWrappers(findBy: Seq[(String, Any)]) {
+    def toWrapper = findBy.map(x => (x._1, x._2.toJsValue))
+  }
+
+  implicit class ConvertJsValueWrapper(findBy: (String, Any)) {
+    def toWrapper = (findBy._1, findBy._2.toJsValue)
+  }
+
 }

@@ -14,6 +14,6 @@ trait MessageRepository {
 
   def countBy(condition: (String, Any)*): Future[Long]
 
-  def findBy(sortBy: (String, Int), count: Int, findBy: (String, Any)*): Future[List[Message]]
+  def findBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*): Future[List[Message]]
 
 }

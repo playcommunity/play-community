@@ -56,7 +56,7 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
     mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(count).list()
   }
 
-  import utils.ImplicitUtils.ConvertJsValue
+  import utils.ImplicitUtils.ConvertJsValueWrappers
 
   /**
    * 更新用户，用户信息较多，不具体封装更新的状态
@@ -66,11 +66,10 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
    * @return
    */
   def updateUser(uid: String, fields: (String, Any)*) = {
-    val tmp = fields.toSeq.map(x => (x._1, x._2.toJsValue))
     mongo.updateOne[User](
       obj("_id" -> uid),
       obj(
-        "$set" -> obj(tmp: _ *)
+        "$set" -> obj(fields.toSeq.toWrapper: _ *)
       ))
   }
 

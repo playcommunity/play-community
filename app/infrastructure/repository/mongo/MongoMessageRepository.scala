@@ -18,18 +18,16 @@ import scala.concurrent.Future
 @Singleton
 class MongoMessageRepository @Inject()(mongo: Mongo) extends MessageRepository {
 
-  import utils.ImplicitUtils.ConvertJsValue
+  import utils.ImplicitUtils._
 
   //TODO type MongoParams = (String, Any)*
   override def countBy(conditions: (String, Any)*): Future[Long] = {
-    val tmp = conditions.toSeq.map(x => (x._1, x._2.toJsValue))
-    mongo.count[Message](obj(tmp: _*))
+    mongo.count[Message](obj(conditions.to.toWrapper: _*))
   }
 
   //TODO 类型不安全
-  override def findBy(sortBy: (String, Int), count: Int, findBy: (String, Any)*): Future[List[Message]] = {
-    val tmp = findBy.toSeq.map(x => (x._1, x._2.toJsValue))
-    mongo.find[Message](obj(tmp: _*)).sort(obj(sortBy._1 -> sortBy._2.toJsValue)).limit(count).list()
+  override def findBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*): Future[List[Message]] = {
+    mongo.find[Message](obj(findBy.to.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list()
   }
 
   /**
