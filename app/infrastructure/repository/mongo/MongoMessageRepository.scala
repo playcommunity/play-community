@@ -20,14 +20,14 @@ class MongoMessageRepository @Inject()(mongo: Mongo) extends MessageRepository {
 
   import utils.ImplicitUtils.ConvertJsValue
 
-  override def countBy(conditions: (String, Any)*) = {
+  override def countBy(conditions: (String, Any)*): Future[Long] = {
     val tmp = conditions.toSeq.map(x => (x._1, x._2.toJsValue))
     mongo.count[Message](obj(tmp: _*))
   }
 
 
   //TODO 类型不安全
-  override def findBy[R <: AnyRef](sortBy: (String, Int), count: Int, findBy: (String, String)*): Future[List[Message]] = {
+  override def findBy(sortBy: (String, Int), count: Int, findBy: (String, String)*): Future[List[Message]] = {
     val tmp = findBy.toSeq.map(x => (x._1, x._2.toJsValue))
     mongo.find[Message](obj(tmp: _*)).sort(obj(sortBy._1 -> sortBy._2.toJsValue)).limit(count).list()
   }
