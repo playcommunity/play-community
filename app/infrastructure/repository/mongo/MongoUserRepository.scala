@@ -38,4 +38,13 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
     mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(count).list()
   }
 
+  /**
+    * 查询渠道用户。
+    * @param id 特定渠道用户标识。
+    * @return 用户实例。
+    */
+  def findByChannelId(id: String): Future[Option[User]] = {
+    mongo.find[User](obj("channels.id"-> id)).first
+  }
+
 }
