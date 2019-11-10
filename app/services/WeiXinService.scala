@@ -18,13 +18,12 @@ class WeiXinService @Inject()(env: Environment, config: Configuration, mongo: Mo
 
   private val appId = config.getOptional[String]("oauth.weixin.appId").getOrElse("")
   private val appKey = config.getOptional[String]("oauth.weixin.appKey").getOrElse("")
-  private val callbackUrl = app.Global.homeUrl + "/api/internal/oauth/qq/callback"
 
   val headers = Seq("Accept" -> "application/json", "Content-Type" -> "application/json")
 
   def getAccessToken: Future[Option[String]] = {
     val key = "wx_access_token"
-    /*cache.get[String](key) flatMap {
+    cache.get[String](key) flatMap {
       case Some(token) => Future.successful(Some(token))
       case None =>
         ws.url("https://api.weixin.qq.com/cgi-bin/token")
@@ -33,19 +32,19 @@ class WeiXinService @Inject()(env: Environment, config: Configuration, mongo: Mo
             "grant_type" -> "client_credential",
             "appid" -> appId,
             "secret" -> appKey
-          ).get() map { resp =>
+          ).get() flatMap { resp =>
           Logger.info("WeiXinService getAccessToken: " + resp.body)
           resp.status match {
             case 200 =>
               val token = (Json.parse(resp.body) \ "access_token").as[String]
               val secs = (Json.parse(resp.body) \ "expires_in").as[Long]
               cache.set(key, token, secs.seconds).map{ _ => Some(token) }
-            case _ => None
+            case _ => Future.successful(None)
           }
         }
-    }*/
-    val token = "27_y9rCY8JL8oa4COpaQXaV3XyriLUine6yHbpWftgakWlrsARE6JlTQt-kUzpKMYg-_XnsQhxoaZMdwvaMaLSuFgS1p5QykvF2vUKae2FxUaUTXiLX0vH6MFR9kM0rpwx6FIzbw2fLXI4Oxt-fGCMjAIACYI"
-    Future.successful(Some(token))
+    }
+    //val token = "27_y9rCY8JL8oa4COpaQXaV3XyriLUine6yHbpWftgakWlrsARE6JlTQt-kUzpKMYg-_XnsQhxoaZMdwvaMaLSuFgS1p5QykvF2vUKae2FxUaUTXiLX0vH6MFR9kM0rpwx6FIzbw2fLXI4Oxt-fGCMjAIACYI"
+    //Future.successful(Some(token))
   }
 
 
