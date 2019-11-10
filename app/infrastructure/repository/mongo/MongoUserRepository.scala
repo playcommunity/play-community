@@ -4,8 +4,8 @@ import cn.playscala.mongo.Mongo
 import infrastructure.repository.UserRepository
 import javax.inject.{ Inject, Singleton }
 import models.User
-import play.api.libs.json.Json
 import play.api.libs.json.Json.obj
+import play.api.libs.json.{ JsObject, Json }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -56,8 +56,6 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
     mongo.find[User]().sort(Json.obj("stat.resCount" -> -1)).limit(count).list()
   }
 
-  import utils.ImplicitUtils.ConvertJsValueWrappers
-
   /**
    * 更新用户，用户信息较多，不具体封装更新的状态
    *
@@ -65,11 +63,11 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
    * @param fields
    * @return
    */
-  def updateUser(uid: String, fields: (String, Any)*) = {
+  def updateUser(uid: String, fields: JsObject) = {
     mongo.updateOne[User](
       obj("_id" -> uid),
       obj(
-        "$set" -> obj(fields.toSeq.toWrapper: _ *)
+        "$set" -> fields
       ))
   }
 

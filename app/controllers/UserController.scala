@@ -1,7 +1,7 @@
 package controllers
 
 import akka.stream.Materializer
-import infrastructure.repository.mongo.{ MongoMessageRepository, MongoResourceRepository, MongoUserRepository }
+import infrastructure.repository.mongo.{ MongoEventRepository, MongoMessageRepository, MongoResourceRepository, MongoUserRepository }
 import javax.inject._
 import models._
 import play.api.data.Form
@@ -13,10 +13,18 @@ import utils.{ HashUtil, RequestHelper }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+/**
+ * 用户层
+ *
+ * @author 梦境迷离
+ * @since 2019-11-10
+ * @version v1.0 DDD重构
+ */
 @Singleton
 class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
                                passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository,
-                               messageRepo: MongoMessageRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+                               messageRepo: MongoMessageRepository,
+                               mongoEventRepo: MongoEventRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   private val DEFAULT_LIMIT_SIZE_15 = 15
   private val DEFAULT_LIMIT_SIZE_30 = 30
@@ -25,12 +33,12 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
     //查询条件，下同
     val uid = request.session("uid")
     for {
-      articles <- resourceRepo.findResourceBy("timeStat.updateTime" -> -1, DEFAULT_LIMIT_SIZE_15, "resType" -> Resource.Article, "author._id" -> uid)
-      articlesCount <- resourceRepo.countResourceBy("resType" -> Resource.Article, "author._id" -> uid)
-      qas <- resourceRepo.findResourceBy("timeStat.updateTime" -> -1, DEFAULT_LIMIT_SIZE_15, "resType" -> Resource.QA, "author._id" -> uid)
-      qaCount <- resourceRepo.countResourceBy("resType" -> Resource.QA, "author._id" -> uid)
-      collectRes <- resourceRepo.findStatBy("collectTime" -> -1, DEFAULT_LIMIT_SIZE_15, "uid" -> uid)
-      collectResCount <- resourceRepo.countStatBy("uid" -> uid)
+      articles <- resourceRepo.findResourceBy(Json.obj("timeStat.updateTime" -> -1), DEFAULT_LIMIT_SIZE_15, Json.obj("resType" -> Resource.Article, "author._id" -> uid))
+      articlesCount <- resourceRepo.countResourceBy(Json.obj("resType" -> Resource.Article, "author._id" -> uid))
+      qas <- resourceRepo.findResourceBy(Json.obj("timeStat.updateTime" -> -1), DEFAULT_LIMIT_SIZE_15, Json.obj("resType" -> Resource.QA, "author._id" -> uid))
+      qaCount <- resourceRepo.countResourceBy(Json.obj("resType" -> Resource.QA, "author._id" -> uid))
+      collectRes <- resourceRepo.findStatBy(Json.obj("collectTime" -> -1), DEFAULT_LIMIT_SIZE_15, Json.obj("uid" -> uid))
+      collectResCount <- resourceRepo.countStatBy(Json.obj("uid" -> uid))
     } yield {
       Ok(views.html.user.index(articles, articlesCount.toInt, qas, qaCount.toInt, collectRes, collectResCount.toInt))
     }
@@ -40,8 +48,8 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
     uidOpt orElse RequestHelper.getUidOpt match {
       case Some(uid) =>
         for {
-          createEvents <- resourceRepo.findEventBy("createTime" -> -1, DEFAULT_LIMIT_SIZE_30, "actor._id" -> uid, "action" -> "create")
-          events <- resourceRepo.findEventBy("createTime" -> -1, DEFAULT_LIMIT_SIZE_30, "actor._id" -> uid)
+          createEvents <- mongoEventRepo.findBy(Json.obj("createTime" -> -1), DEFAULT_LIMIT_SIZE_30, Json.obj("actor._id" -> uid, "action" -> "create"))
+          events <- mongoEventRepo.findBy(Json.obj("createTime" -> -1), DEFAULT_LIMIT_SIZE_30, Json.obj("actor._id" -> uid))
           userOpt <- userRepo.findById(uid) //uid就是MongoDB中的user的_id?
         } yield {
           Ok(views.html.user.home(uidOpt, userOpt, createEvents, events))
@@ -53,15 +61,15 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
 
   def message() = checkLogin.async { implicit request: Request[AnyContent] =>
     for {
-      messages <- messageRepo.findBy("createTime" -> -1, DEFAULT_LIMIT_SIZE_15, "uid" -> request.session("uid"))
-      count <- messageRepo.countBy("uid" -> request.session("uid"))
+      messages <- messageRepo.findBy(Json.obj("createTime" -> -1), DEFAULT_LIMIT_SIZE_15, Json.obj("uid" -> request.session("uid")))
+      count <- messageRepo.countBy(Json.obj("uid" -> request.session("uid")))
     } yield {
       Ok(views.html.user.message(messages, count.toInt))
     }
   }
 
   def messageCount() = checkLogin.async { implicit request: Request[AnyContent] =>
-    messageRepo.countBy("uid" -> request.session("uid"), "read" -> false).map {
+    messageRepo.countBy(Json.obj("uid" -> request.session("uid"), "read" -> false)).map {
       count => Ok(Json.obj("status" -> 0, "count" -> count))
     }
   }
@@ -97,8 +105,8 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       tuple => {
         val (name, gender, city, introduction) = tuple
-        userRepo.updateUser(request.session("uid"), "setting.name" -> name, "setting.gender" -> gender.getOrElse[String](""),
-          "setting.city" -> city, "setting.introduction" -> introduction)
+        userRepo.updateUser(request.session("uid"), Json.obj("setting.name" -> name, "setting.gender" -> gender.getOrElse[String](""),
+          "setting.city" -> city, "setting.introduction" -> introduction))
           .map { _ =>
             Redirect(routes.UserController.setting())
               .addingToSession("name" -> name)
@@ -119,7 +127,7 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
     Form(single("avatar" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       url => {
-        userRepo.updateUser(request.session("uid"), "setting.headImg" -> url).map { _ =>
+        userRepo.updateUser(request.session("uid"), Json.obj("setting.headImg" -> url)).map { _ =>
           Ok(Json.obj("status" -> 0)).addingToSession("headImg" -> url)
         }
       }

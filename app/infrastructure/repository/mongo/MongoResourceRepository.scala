@@ -3,7 +3,7 @@ package infrastructure.repository.mongo
 import cn.playscala.mongo.Mongo
 import infrastructure.repository.ResourceRepository
 import javax.inject.{ Inject, Singleton }
-import models.{ Event, Resource, StatCollect }
+import models.{ Resource, StatCollect }
 import play.api.libs.json.Json.obj
 import play.api.libs.json.{ JsObject, Json }
 
@@ -132,42 +132,27 @@ class MongoResourceRepository @Inject()(mongo: Mongo) extends ResourceRepository
     }
   }
 
-
-  import utils.ImplicitUtils._
-
   /**
    * 根据资源的查询条件和排序条件，分页大小来查询
    *
-   * TODO 想使用泛型，发现不好处理。放在这的方法也无法自动转化JsValue，单独写了显示转化，有点复杂，想办法去掉
-   *
-   * @param sortBy
-   * @param count
-   * @param findBy 可变长参数
+   * @param sortBy Json.obj对象
+   * @param count  分页大小
+   * @param findBy Json.obj对象
    * @return
    */
-  def findResourceBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
-    mongo.find[Resource](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
+  def findResourceBy(sortBy: JsObject, count: Int, findBy: JsObject) = {
+    mongo.find[Resource](sortBy).sort(sortBy).limit(count).list
   }
 
-  def countResourceBy(countBys: (String, Any)*) = {
-    mongo.collection[Resource].count(obj(countBys.toSeq.toWrapper: _*))
+  def countResourceBy(countBys: JsObject) = {
+    mongo.collection[Resource].count(countBys)
   }
 
-  def findStatBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
-    mongo.find[StatCollect](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
+  def findStatBy(sortBy: JsObject, count: Int, findBy: JsObject) = {
+    mongo.find[StatCollect](findBy).sort(sortBy).limit(count).list
   }
 
-  def countStatBy(countBys: (String, Any)*) = {
-    mongo.collection[StatCollect].count(obj(countBys.toSeq.toWrapper: _*))
+  def countStatBy(countBys: JsObject) = {
+    mongo.collection[StatCollect].count(countBys)
   }
-
-  def countEventBy(countBys: (String, Any)*) = {
-    mongo.collection[Event].count(obj(countBys.toSeq.toWrapper: _*))
-  }
-
-  def findEventBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*) = {
-    mongo.find[Event](obj(findBy.toSeq.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list
-
-  }
-
 }

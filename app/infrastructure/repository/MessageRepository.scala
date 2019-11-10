@@ -1,6 +1,7 @@
 package infrastructure.repository
 
 import models.Message
+import play.api.libs.json.JsObject
 
 import scala.concurrent.Future
 
@@ -12,8 +13,8 @@ import scala.concurrent.Future
  */
 trait MessageRepository {
 
-  def countBy(condition: (String, Any)*): Future[Long]
+  def countBy(condition: JsObject): Future[Long]
 
-  def findBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*): Future[List[Message]]
+  def findBy(sortBy: JsObject, count: Int, findBy: JsObject): Future[List[Message]]
 
 }

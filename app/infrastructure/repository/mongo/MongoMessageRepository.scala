@@ -4,8 +4,8 @@ import cn.playscala.mongo.Mongo
 import infrastructure.repository.MessageRepository
 import javax.inject.{ Inject, Singleton }
 import models.Message
-import play.api.libs.json.Json
 import play.api.libs.json.Json.obj
+import play.api.libs.json.{ JsObject, Json }
 
 import scala.concurrent.Future
 
@@ -18,16 +18,12 @@ import scala.concurrent.Future
 @Singleton
 class MongoMessageRepository @Inject()(mongo: Mongo) extends MessageRepository {
 
-  import utils.ImplicitUtils._
-
-  //TODO type MongoParams = (String, Any)*
-  override def countBy(conditions: (String, Any)*): Future[Long] = {
-    mongo.count[Message](obj(conditions.to.toWrapper: _*))
+  override def countBy(conditions: JsObject): Future[Long] = {
+    mongo.count[Message](conditions)
   }
 
-  //TODO 类型不安全
-  override def findBy(sortBy: (String, Any), count: Int, findBy: (String, Any)*): Future[List[Message]] = {
-    mongo.find[Message](obj(findBy.to.toWrapper: _*)).sort(obj(sortBy.toWrapper)).limit(count).list()
+  override def findBy(sortBy: JsObject, count: Int, findBy: JsObject): Future[List[Message]] = {
+    mongo.find[Message](findBy).sort(sortBy).limit(count).list()
   }
 
   /**

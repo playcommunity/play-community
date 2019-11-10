@@ -7,6 +7,7 @@ import cn.playscala.mongo.Mongo
 import de.mkammerer.argon2.{ Argon2Advanced, Argon2Factory }
 import infrastructure.repository.mongo.MongoUserRepository
 import javax.inject.Inject
+import play.api.libs.json.Json
 import security.PasswordEncoder
 import utils.HashUtil
 
@@ -73,7 +74,7 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo, mongoUserRepository: MongoUs
       case Some(u) if u.argon2Hash.isEmpty && u.salt.isEmpty && u.password == HashUtil.sha256(password) =>
         val salt = createSalt()
         val passwordHash = hash(u.password, salt)
-        mongoUserRepository.updateUser(u._id, "salt" -> new String(salt, UTF8), "argon2Hash" -> passwordHash)
+        mongoUserRepository.updateUser(u._id, Json.obj("salt" -> new String(salt, UTF8), "argon2Hash" -> passwordHash))
         Some(u.copy(salt = Option(new String(salt, UTF8)), argon2Hash = Option(passwordHash)))
       case _ => None
     }
@@ -82,7 +83,7 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo, mongoUserRepository: MongoUs
   override def updateUserPassword(uid: String, password: String): Unit = {
     val newSalt = createSalt()
     //为了方便，无论是否已经升级，均重新生成盐。
-    mongoUserRepository.updateUser(uid, "password" -> password, "argon2Hash" -> hash(password, newSalt), "salt" -> new String(newSalt, UTF8))
+    mongoUserRepository.updateUser(uid, Json.obj("password" -> password, "argon2Hash" -> hash(password, newSalt), "salt" -> new String(newSalt, UTF8)))
   }
 
 }
