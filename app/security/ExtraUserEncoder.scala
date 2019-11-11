@@ -14,6 +14,6 @@ trait ExtraUserEncoder {
 
   def findUserAndUpgrade(login: String, password: String): Future[Option[User]]
 
-  def updateUserPassword(_id: String, password: String)
+  def updateUserPassword(uid: String, password: String): Unit
 
 }
