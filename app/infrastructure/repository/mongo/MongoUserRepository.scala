@@ -57,6 +57,15 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
   }
 
   /**
+    * 查询渠道用户。
+    * @param id 特定渠道用户标识。
+    * @return 用户实例。
+    */
+  def findByChannelId(id: String): Future[Option[User]] = {
+    mongo.find[User](obj("channels.id"-> id)).first
+  }
+  
+  /**
    * 更新用户，用户信息较多，不具体封装更新的状态
    *
    * @param uid

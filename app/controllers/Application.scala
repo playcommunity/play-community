@@ -9,25 +9,31 @@ import cn.playscala.mongo.Mongo
 import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.bson.BsonObjectId
+import org.bson.types.ObjectId
 import org.joda.time.DateTime
-import play.api.Configuration
+import play.api.{Configuration, Logger}
+import play.api.cache.AsyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
+import play.api.libs.concurrent.Futures
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.{CommonService, ElasticService, MailerService}
+import services.{CommonService, ElasticService, MailerService, WeiXinService}
 import utils.PDFUtil.{getCatalogs, getText}
 import utils._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.util.Random
 import scala.collection.JavaConverters._
 import play.api.libs.json.Json._
 import security.PasswordEncoder
+import play.api.libs.concurrent.Futures._
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService,
-  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
+  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
 
   // 分页大小
   val PAGE_SIZE = 15
@@ -56,8 +62,60 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     }
   }
 
+  /**
+    * 用户名密码登录
+    */
   def login(login: Option[String]) = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.login())
+  }
+
+  /**
+    * 微信小程序扫码登录
+    */
+  def weixinLogin = Action { implicit request =>
+    Ok(views.html.weixinLogin(ObjectId.get.toHexString))
+  }
+
+  /**
+    * FIXME
+    */
+  def weixinLogin1 = Action { implicit request =>
+    Ok(views.html.weixinLogin1(ObjectId.get.toHexString))
+  }
+
+  /**
+    * 生成微信小程序码
+    */
+  def renderAppCodeImage(uuid: String) = Action.async { implicit request: Request[AnyContent] =>
+    weiXinService.getAppCodeImage(uuid) map {
+      case Some(entity) => Ok.sendEntity(entity)
+      case None => NoContent
+    }
+  }
+
+  /**
+    * 生成微信小程序码
+    */
+  def waitWeiXinScanResult(uuid: String) = Action.async { implicit request: Request[AnyContent] =>
+
+    // FIXME
+    app.Global.appCodes = uuid :: app.Global.appCodes
+
+    val promise = Promise[User]()
+    cache.set(s"app_code_${uuid}", promise, 60.seconds)
+
+    // 等待扫码结果
+    promise.future.withTimeout(60.seconds).map{ u =>
+      Ok(Json.obj("code" -> 0))
+        .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.WEIXIN)
+    } recover {
+      case e: scala.concurrent.TimeoutException =>
+        Logger.error("Scan app code timeout for " + uuid)
+        Ok(Json.obj("code" -> 1, "message" -> "扫码超时！"))
+      case t: Throwable =>
+        Logger.error("Application.waitAppCodeScanResult error: " + t.getLocalizedMessage, t)
+        Ok(Json.obj("code" -> 1, "message" -> "系统繁忙，请稍后再试！"))
+    }
   }
 
   def logout = checkLogin(parser, ec) { implicit request: Request[AnyContent] =>

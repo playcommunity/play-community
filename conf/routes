@@ -78,6 +78,10 @@ GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
+GET     /weixinLogin                              controllers.Application.weixinLogin
+GET     /weixinLogin1                              controllers.Application.weixinLogin1
+GET     /weixinAppCode                            controllers.Application.renderAppCodeImage(uuid: String)
+GET     /waitWeiXinScan                           controllers.Application.waitWeiXinScanResult(uuid: String)
 GET     /register                                 controllers.Application.register
 POST    /register                                 controllers.Application.doRegister
 

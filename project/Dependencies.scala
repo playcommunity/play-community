@@ -1,4 +1,4 @@
-import play.sbt.PlayImport.{guice, ws}
+import play.sbt.PlayImport._
 import sbt.Keys.libraryDependencies
 import sbt._
 
@@ -75,6 +75,7 @@ object Dependencies {
     argon2,
     jsoup,
     guice,
-    ws
+    ws,
+    ehcache
   ) ++ scalameta ++ play
 }

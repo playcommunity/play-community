@@ -1,0 +1,44 @@
+@(uuid: String)(implicit request: RequestHeader)
+@import helper._
+@main("欢迎来到社区！") {
+<div class="main layui-clear">
+
+  <div class="fly-panel fly-panel-user" pad20 style="margin: 75px auto 0; width:560px; height: 450px;">
+    <div class="layui-tab layui-tab-brief" style="margin: 40px auto 0; width:430px;">
+      <ul class="layui-tab-title">
+        <li><a href="/login">账户密码登录</a></li>
+        <li class="layui-this">微信扫码登录</li>
+        <li><a href="/register">新用户注册</a></li>
+        <li><a href="/resetPassword">重置密码</a></li>
+      </ul>
+      <div class="layui-form layui-tab-content" id="LAY_ucm">
+        <div class="layui-tab-item layui-show">
+          <a id="code-link" style="display:block;" href="javascript:void(0);">
+            <img id="code-image" style="display:block; margin: 50px auto;" src="/weixinAppCode?uuid=@{uuid}">
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+}
+<script>
+$(document).ready(function() {
+  $.ajax({
+     dataType: 'json',
+     url: '/waitWeiXinScan?uuid=@{uuid}',
+     success: function(res){
+       if(res.code != 0){
+         console.log("error: " + res.message);
+         $('#code-link').attr('href', '/weixinLogin');
+         $('#code-image').attr('src', '/assets/images/expired-code.png');
+       } else {
+         window.location.href = '/';
+       }
+     }, error: function(e){
+       console.log("error");
+       console.log(e);
+     }
+  });
+});
+</script>
