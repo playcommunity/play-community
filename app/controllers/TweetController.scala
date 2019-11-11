@@ -24,7 +24,7 @@ class TweetController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
     val cPage = if(page < 1){1}else{page}
     val sort = if (nav == "0") { Json.obj("createTime" -> -1) } else { Json.obj("voteStat.count" -> -1) }
     for {
-      tweets <- tweetRepo.findLatestList(sort,(cPage-1) * PAGE_SIZE,PAGE_SIZE)
+      tweets <- tweetRepo.findList(sort ,(cPage-1) * PAGE_SIZE, PAGE_SIZE)
       hotTweets <- tweetRepo.findHotList(PAGE_SIZE)
       total <- tweetRepo.count()
     } yield {
@@ -38,7 +38,7 @@ class TweetController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
 
   def getLatestAndHot(count: Int) = Action.async { implicit request: Request[AnyContent] =>
     for {
-      tweets <- tweetRepo.findLatestList(Json.obj("voteStat.count" -> -1),1,count)
+      tweets <- tweetRepo.findLatestList(count)
       hotTweets <- tweetRepo.findHotList(count)
     } yield {
       val js1 = tweets.map(_.toJson)

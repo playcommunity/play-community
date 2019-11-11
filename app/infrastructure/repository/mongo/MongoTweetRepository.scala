@@ -32,8 +32,15 @@ class MongoTweetRepository @Inject()(mongo: Mongo) extends TweetRepository {
   /**
     * 查询最新说说
     */
-  def findLatestList(sort:JsObject,skip: Int, limit: Int):Future[List[Tweet]] ={
+  def findList(sort:JsObject, skip: Int, limit: Int):Future[List[Tweet]] ={
     mongo.find[Tweet]().sort(sort).skip(skip).limit(limit).list()
+  }
+
+  /**
+    * 查询最新说说
+    */
+  def findLatestList(limit: Int):Future[List[Tweet]] ={
+    mongo.find[Tweet]().sort(Json.obj("createTime" -> -1)).limit(limit).list()
   }
 
   /**
