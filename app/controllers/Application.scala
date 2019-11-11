@@ -215,7 +215,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
                   uid <- counterService.getNextSequence("user-sequence")
                   _ <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
                     UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
-                    salt = Option(new String(newSalt, passwordEncoder.UTF8)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
+                    salt = Option(newSalt), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
                 } yield {
                   val subject = s"请激活您的${app.Global.siteSetting.name}账户！"
                   // 发送激活码

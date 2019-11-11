@@ -141,7 +141,7 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
         val (password, password1, _) = tuple
         if (password.isEmpty && request.user.password == "" || HashUtil.sha256(password.get) == request.user.password ||
           request.user.argon2Hash.isDefined && request.user.salt.isDefined
-            && request.user.argon2Hash == passwordEncoder.hash(password.get, request.user.salt.get.getBytes)
+            && request.user.argon2Hash == passwordEncoder.hash(password.get, request.user.salt.get)
         ) {
           passwordEncoder.updateUserPassword(request.session("uid"), HashUtil.sha256(password1))
           Redirect(routes.Application.message("系统提示", "密码修改成功！"))
