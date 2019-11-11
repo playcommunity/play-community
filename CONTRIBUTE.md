@@ -49,6 +49,8 @@ https://github.com/playcommunity/play-community/issues
 单击感兴趣的开发任务进入详情页面，单击右侧的`assign yourself`按钮领取任务，并将任务的`Labels`改成`Developing`如下图：
 ![image](https://www.playscala.cn/resource/5dc3b5f9eeab565236ea6985)
 
+> 小提示：如果右侧`Assignees`下方已经有人了，就不可以再认领了哦！
+
 #### 1.3.2 克隆社区代码
 如果你本地还没有SSH Key，则执行如下命令生成，
 ```
@@ -66,7 +68,7 @@ IdentityFile /Users/joymufeng/.ssh/id_rsa
 git clone git@playscala:playcommunity/play-community.git
 ```
 
-> 注意社区开发成员请直接 clone 社区的资源库，不要 clone 自己 fork 的资源库。
+> 注意社区开发成员请直接 clone 社区的资源库(`git@github.com:playcommunity/play-community.git`)，不要 clone 自己 fork 的资源库。
 
 #### 1.3.3 开始任务
 假设你领取了一个`Id`为10的`Issue`，在开始编码前，你需要先基于`master`分支创建一个私有的开发分支，开发分支的命名规则为`issue-Id`,例如`issue-10`。首先确认当前分支是`master`分支，并且已与远程代码保持同步，然后执行如下命令创建并切换至开发分支：
