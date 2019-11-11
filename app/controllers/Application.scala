@@ -155,7 +155,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
                 val newSalt = passwordEncoder.createSalt()
                 for {
                   uid <- counterService.getNextSequence("user-sequence")
-                  wr <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
+                  _ <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
                     UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
                     salt = Option(new String(newSalt, passwordEncoder.UTF8)), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
                 } yield {
