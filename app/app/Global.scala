@@ -27,4 +27,7 @@ object Global {
     "PlayScala社区是一个以Scala和Play Framework为中心的开发社区，为Play Framework开发者提供一个学习和交流平台。通过社区的力量，不断地沉淀、整理Play Framework相关知识，让初学者更快地融入Play Framework大家庭。"
   )
 
+  // FIXME: to be removed.
+  var appCodes: List[String] = List.empty[String]
+
 }

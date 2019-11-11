@@ -2,20 +2,23 @@ package controllers.api
 
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
+import infrastructure.repository.mongo.MongoUserRepository
 import javax.inject._
 import models._
+import play.api.cache.AsyncCacheApi
 import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import services.{CommonService, QQService}
+import services.{CommonService, QQService, WeiXinService}
 import utils._
 
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
 @Singleton
-class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, config: Configuration, ws: WSClient, counterService: CommonService, qqService: QQService)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, config: Configuration, ws: WSClient, counterService: CommonService, qqService: QQService,
+  weixinService: WeiXinService, userRepository: MongoUserRepository, cache: AsyncCacheApi)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   private val githubClientId = config.getOptional[String]("oauth.github.clientId").getOrElse("")
   private val githubClientSecret = config.getOptional[String]("oauth.github.clientSecret").getOrElse("")
@@ -91,6 +94,117 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
       case t: Throwable =>
         Logger.error("QQ登录异常：" + t.getMessage, t)
         Ok(views.html.message("系统提示", "很抱歉，QQ登录异常！"))
+    }
+  }
+
+  /**
+    * 扫码微信小程序码，成功获取授权码后回调接口
+    */
+  def weixinOauthCallback = Action.async { implicit request =>
+    request.body.asJson match {
+      case Some(json) =>
+        val code = json("code").as[String]
+        val uuid = json("uuid").as[String]
+        val nickName = json("nickName").as[String]
+        val city = json("city").as[String]
+        val gender = json("gender").as[Int]
+        val country = json("country").as[String]
+        val province = json("province").as[String]
+        val avatarUrl = json("avatarUrl").as[String]
+
+        Logger.info(s"weixinOauthCallback - code: ${code}, uuid: ${uuid}, nickName:${nickName}")
+
+        // FIXME: 使用下面注释代码
+        weixinService.getSessionByCode(code).flatMap{
+          case Some((openid, unionid, session_key)) =>
+            userRepository.findByChannelId(openid) flatMap {
+              // 用户已存在
+              case Some(user) =>
+                Logger.info("weixinOauthCallback: find existing user for " + openid)
+                //promise.success(user)
+
+                // FIXME
+                ("undefined" :: "123" :: uuid :: app.Global.appCodes).distinct.foreach{ id =>
+                  cache.get[Promise[User]](s"app_code_${id}") foreach {
+                    case Some(p) => p.success(user)
+                    case None => Logger.error("Expired uuid: " + id)
+                  }
+                }
+                app.Global.appCodes = List.empty[String]
+
+                Future.successful(Ok(Json.obj("code" -> 0, "openid" -> openid)))
+
+              // 创建用户
+              case None =>
+                Logger.info("weixinOauthCallback: create user for " + openid)
+                for {
+                  uid <- counterService.getNextSequence("user-sequence")
+                  user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
+                  wr <- mongo.insertOne[User](user)
+                } yield {
+                  //promise.success(user)
+
+                  // FIXME
+                  ("undefined" :: "123" :: uuid :: app.Global.appCodes).distinct.foreach{ id =>
+                    cache.get[Promise[User]](s"app_code_${id}") foreach {
+                      case Some(p) => p.success(user)
+                      case None => Logger.error("Expired uuid: " + id)
+                    }
+                  }
+                  app.Global.appCodes = List.empty[String]
+
+
+                  Ok(Json.obj("code" -> 0, "openid" -> openid, "unionid" -> unionid))
+                }
+            }
+          case None =>
+            Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Get session failed.")))
+        }.recover{
+          case t: Throwable =>
+            Logger.error("WeiXin登录异常：" + t.getMessage, t)
+            Ok(Json.obj("code" -> 1, "message" -> "Please retry later."))
+        }
+
+        /*cache.get[Promise[User]](s"app_code_${uuid}").flatMap{
+          case Some(promise) =>
+            weixinService.getSessionByCode(code).flatMap{
+              case Some((openid, unionid, session_key)) =>
+                userRepository.findByChannelId(openid) flatMap {
+                  // 用户已存在
+                  case Some(user) =>
+                    Logger.info("weixinOauthCallback: find existing user for " + openid)
+                    promise.success(user)
+                    Future.successful(Ok(Json.obj("code" -> 0, "openid" -> openid)))
+
+                  // 创建用户
+                  case None =>
+                    Logger.info("weixinOauthCallback: create user for " + openid)
+                    for {
+                      uid <- counterService.getNextSequence("user-sequence")
+                      user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
+                      wr <- mongo.insertOne[User](user)
+                    } yield {
+                      promise.success(user)
+                      Ok(Json.obj("code" -> 0, "openid" -> openid, "unionid" -> unionid))
+                    }
+                }
+              case None =>
+                Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Get session failed.")))
+            }
+
+          // 未扫码导致过期
+          case None =>
+            Logger.error("weixinOauthCallback: Session expired.")
+            Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Session expired.")))
+        }.recover{
+          case t: Throwable =>
+            Logger.error("WeiXin登录异常：" + t.getMessage, t)
+            Ok(Json.obj("code" -> 1, "message" -> "Please retry later."))
+        }*/
+
+      case None =>
+        Logger.error("weixinOauthCallback: Invalid request data.")
+        Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Invalid request data.")))
     }
   }
 }

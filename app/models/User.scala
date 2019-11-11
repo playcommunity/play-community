@@ -93,7 +93,7 @@ object LoginType extends Enumeration {
   val PASSWORD  = Value(0, "password") //用户密码登录
   val GITHUB = Value(1, "github")
   val QQ = Value(2, "qq")
-  val WECHAT = Value(3, "wechat")
+  val WEIXIN = Value(3, "weixin")
 
   implicit def enumToString = (loginType: LoginType.Value) => loginType.toString
 }

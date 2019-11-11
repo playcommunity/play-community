@@ -2,6 +2,10 @@
 
 PlayCommunity 社区系统基于 [Play Framework 2.6.x](https://www.playframework.com/documentation/2.6.x/Home) 开发而成，目前正在运营[PlayScala社区](http://www.playscala.cn)。
 
+## 参与贡献
+[Play For Scala 开发指南](https://www.playscala.cn/docs)   
+[PlayScala社区贡献指南](https://github.com/playcommunity/play-community/blob/master/CONTRIBUTE.md)   
+
 ## 下载&编译
 ```
 git clone https://github.com/playcommunity/play-community.git

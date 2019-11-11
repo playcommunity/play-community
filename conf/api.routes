@@ -4,5 +4,6 @@
 
 GET        /internal/oauth/github/callback        controllers.api.InternalApiController.githubOauthCallback(code: String, state: String)
 
-
 GET        /internal/oauth/qq/callback            controllers.api.InternalApiController.qqOauthCallback(code: String, state: String)
+
+POST       /internal/oauth/weixin/callback            controllers.api.InternalApiController.weixinOauthCallback
