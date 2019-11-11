@@ -41,7 +41,7 @@ class ExamController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
           mongo.insertOne[Resource](Resource(
             _id = ObjectId.get().toHexString,
             title = titleText,
-            content = "<p><br></p>",
+            content = Some("<p><br></p>"),
             author = user,
             resType = "exam",
             categoryPath = "/scala",
