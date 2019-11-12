@@ -1,128 +1,39 @@
 @(resourceOpt: Option[Resource])(implicit request: RequestHeader)
 @import helper._
-@main(s"${app.Global.siteSetting.name} - 创建/编辑试题", "community", "exam") {
-<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
-<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
-<style>
-/* Set default font-family */
-#quill-container {
-  font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
-  font-size: 14px;
-  height: 500px;
-}
-.layui-upload-file, .layui-upload-button { display: none;}
+@main(s"${App.siteSetting.name} - 创建/编辑试题", "community", "exam") {
+  <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
+  <link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+  <style>
+          /* Set default font-family */
+          #quill-container {
+            font-family: "Helvetica Neue", Helvetica, "PingFang SC", 微软雅黑, "STHeiti Light", Tahoma, Arial, sans-serif;
+            font-size: 14px;
+            height: 500px;
+          }
+          .layui-upload-file, .layui-upload-button { display: none;}
 
-.ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
-    margin: 5px 0px 5px;
-    padding: 10px 0px 5px;
-}
-</style>
-<div class="main layui-clear">
-  <div class="fly-panel" pad20 style="padding-top: 5px;">
-    <div class="layui-tab layui-tab-brief" lay-filter="user">
-      <ul class="layui-tab-title">
-        <li class="layui-this">@resourceOpt.map(_ => "编辑试题").getOrElse("创建试题")</li>
-      </ul>
-      <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
-        <div class="layui-tab-item layui-show">
-          <div class="layui-form-item">
-            <div class="layui-input-block">
-              <button class="layui-btn layui-btn-primary"  lay-filter="formDemo" id="addOpt" value="0">添加选项</button>
-            </div>
-          </div>
-          <div class="layui-form layui-form-pane" id="form">
-            <div class="layui-form-item">
-              <label class="layui-form-label">试题名称</label>
-              <div class="layui-input-block">
-                <input type="text" name="title" required="" lay-verify="required" placeholder="请输入标题" autocomplete="off" class="layui-input">
-              </div>
-            </div>
-            <div id="answer">
-            </div>
-            <div class="layui-form-item">
-              <label class="layui-form-label">答案</label>
-              <div class="layui-input-block">
-                <input type="text" name="answer" required  lay-verify="required" placeholder="请输入答案，多个选项使用逗号分隔；如 1,2" autocomplete="off" class="layui-input">
-              </div>
-            </div>
-            <div class="layui-form-item">
-              <div class="layui-input-block">
-                <button id="submit" class="layui-btn" lay-submit>提交</button>
-                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
-              </div>
-            </div>
+          .ql-editor p, .ql-editor ol, .ql-editor ul, .ql-editor pre, .ql-editor blockquote, .ql-editor h1, .ql-editor h2, .ql-editor h3, .ql-editor h4, .ql-editor h5, .ql-editor h6 {
+            margin: 5px 0px 5px;
+            padding: 10px 0px 5px;
+          }
+  </style>
+  <div class="main layui-clear">
+    <div class="fly-panel" pad20 style="padding-top: 5px;">
+      <div class="layui-tab layui-tab-brief" lay-filter="user">
+        <ul class="layui-tab-title">
+          <li class="layui-this">@resourceOpt.map(_ => "编辑试题").getOrElse("创建试题")</li>
+        </ul>
+        <div class="layui-tab-content" id="LAY_ucm" style="padding: 20px 0;">
+          <div class="layui-tab-item layui-show">
+
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 }
 
 <script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
 <script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
 <script>
-
-  $("#addOpt").click(function (e) {
-      var index = parseInt($("#addOpt").attr("value")) + 1;
-      if (index < 7) {
-        $("#addOpt").attr("value", index);
-        $("#answer").append(" <div class=\"layui-form-item\">\n" +
-                "             <label class=\"layui-form-label\"><i class=\"layui-icon\" style='color:red;' onclick='delCurrentItem(this)'>&#x1006;</i>&nbsp;&nbsp;选项"+index+"</label>\n" +
-                "             <div class=\"layui-input-block\">\n" +
-                "             <input type=\"text\" name='option' required=\"\" placeholder=\"请输入答案\" autocomplete=\"off\" class=\"layui-input\">\n" +
-                "             </div>\n" +
-                "             </div>");
-      } else {
-          layer.alert("最多可添加6个选项！");
-      }
-  });
-
-  function delCurrentItem(e) {
-      e.parentElement.parentElement.remove();
-      $("#checkAnswer").innerHTML = "";
-      var obj = $("#answer").children();
-      for (var i = 0; i < obj.length;i++) {
-        var text = "<i class=\"layui-icon\" style='color:red;' onclick='delCurrentItem(this)'>&#x1006;</i>&nbsp;&nbsp;选项"+(i+1);
-        obj[i].getElementsByClassName("layui-form-label")[0].innerHTML = text;
-      }
-    $("#addOpt").attr("value", obj.length);
-  };
-
-  $('#submit').click(function (e) {
-    var title = $("input[name='title']").val();
-    var answer = $("input[name='answer']").val().replace(/，/ig,',');
-    var option = $("input[name='option']").map(function(){return this.value;}).get().join(",");
-    var flag = 0;
-    $.each(answer.split(","),function (index , value) {
-      if ( value > parseInt($("#addOpt").attr("value")) && value > 0 ){
-          flag = 1;
-          return;
-      }
-    });
-    if (flag === 0){
-      $.ajax({
-        type: 'post',
-        dataType: 'json',
-        contentType: 'application/x-www-form-urlencoded',
-        url: '/exam/edit',
-        data: {title: title, option: option, answer: answer},
-        success: function(res){
-          if(res.status != 0){
-            layer.msg(res.msg);
-          } else {
-            layer.msg(res.msg, {
-              icon: 1,
-              time: 1000
-            }, function(){
-              window.location.reload(true);
-            });
-          }
-        }, error: function(e){
-        }
-      });
-    } else {
-      layer.msg("答案选项不存在，请填写正确的选项！");
-    }
-  });
 </script>
