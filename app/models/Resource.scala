@@ -67,9 +67,7 @@ case class Resource (
             "$set" -> Json.obj("viewStat.bitmap" -> BitmapUtil.toBase64String(viewBitmap)),
             "$inc" -> Json.obj("viewStat.count" -> 1)
           )
-        ).map{ ur =>
-          if(ur.getModifiedCount == 1){ true } else { false }
-        }
+        ).map(_.getModifiedCount == 1)
 
     }
   }
@@ -105,9 +103,7 @@ case class Resource (
             "$set" -> Json.obj("collectStat.bitmap" -> BitmapUtil.toBase64String(viewBitmap)),
             "$inc" -> Json.obj("collectStat.count" -> 1)
           )
-        ).map{ ur =>
-          if(ur.getModifiedCount == 1){ true } else { false }
-        }
+        ).map(_.getModifiedCount == 1)
 
     }
   }
@@ -129,10 +125,7 @@ case class Resource (
             "$set" -> Json.obj("collectStat.bitmap" -> BitmapUtil.toBase64String(viewBitmap)),
             "$inc" -> Json.obj("collectStat.count" -> -1)
           )
-        ).map{ ur =>
-          if(ur.getModifiedCount == 1){ true } else { false }
-        }
-
+        ).map(_.getModifiedCount == 1)
     }
   }
 
@@ -143,9 +136,7 @@ case class Resource (
     DomainRegistry.mongo.updateOne[Resource](
       Json.obj("_id" -> _id),
       Json.obj("$set" -> Json.obj("replyStat.bestReply" -> reply))
-    ).map{ r =>
-      if(r.getModifiedCount == 1){ true } else { false }
-    }
+    ).map(_.getModifiedCount == 1)
   }
 
 }

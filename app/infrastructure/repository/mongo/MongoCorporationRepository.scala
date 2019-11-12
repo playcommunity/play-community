@@ -26,9 +26,7 @@ class MongoCorporationRepository @Inject()(mongo: Mongo) extends CorporationRepo
     * 更新资源
     */
   def update(id: String, update: JsObject): Future[Boolean] = {
-    mongo.updateOne[Corporation](Json.obj("_id" -> id), update).map{ ur =>
-      if(ur.getModifiedCount == 1){ true } else { false }
-    }
+    mongo.updateOne[Corporation](Json.obj("_id" -> id), update).map(_.getModifiedCount == 1)
   }
 
   /**
