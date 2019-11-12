@@ -120,16 +120,6 @@ class DictController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSer
         Ok("无待审核单词")
       }
     }
-    for {
-    _ <- wordRepository.deleteById(_id)
-    list <- wordRepository.findReviewedList(1)
-    } yield {
-      if (list.nonEmpty) {
-        Redirect(routes.DictController.query(list.head._id))
-      } else {
-        Ok("无待审核单词")
-      }
-    }
   }
 
   def query(_id: String) = Action.async { implicit request: Request[AnyContent] =>

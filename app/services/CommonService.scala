@@ -41,6 +41,14 @@ class CommonService @Inject()(mongo: Mongo) {
     projection.map(dictCol.find[JsObject](q).projection(_).sort(sort).limit(count).list()).getOrElse(dictCol.find[JsObject](q).sort(sort).limit(count).list())
   }
 
+  /**
+  * 查询Word资源
+   * @param q
+   * @param projection
+   * @param sort
+   * @param count
+   * @return
+   */
   def getWordListByDictCol(q: JsObject, projection: Option[JsObject] = None, sort: JsObject, count: Int): Future[List[Word]] = {
     projection.map(dictCol.find[Word](q).projection(_).sort(sort).limit(count).list()).getOrElse(dictCol.find[Word](q).sort(sort).limit(count).list())
   }
