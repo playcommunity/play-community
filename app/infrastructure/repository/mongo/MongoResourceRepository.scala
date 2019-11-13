@@ -27,13 +27,8 @@ class MongoResourceRepository @Inject()(mongo: Mongo) extends ResourceRepository
    * 更新资源
    */
   def update(id: String, update: JsObject): Future[Boolean] = {
-    mongo.updateOne[Resource](Json.obj("_id" -> id), update).map { ur =>
-      if (ur.getModifiedCount == 1) {
-        true
-      } else {
-        false
-      }
-    }
+    mongo.updateOne[Resource](Json.obj("_id" -> id), update).map(_.getModifiedCount == 1)
+
   }
 
   /**
