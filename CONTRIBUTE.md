@@ -78,11 +78,12 @@ git clone git@playscala:playcommunity/play-community.git
 ```
 git checkout -b 用户标识-issue-任务编号
 ```
-完成功能开发后，在开发分支上创建`Commit`, `Commit Message`格式为：`Fixes #任务编号: xxx`，例如`Fixes #10: 完成微信扫码登录功能。`。 然后将该开发分支推送至远程Github仓库，
+完成功能开发后，在开发分支上创建`Commit`, `Commit Message`格式为：`Fixes #任务编号: xxx`，例如`Fixes #10: 完成微信扫码登录功能。`。 然后将该开发分支推送至远程Github仓库，如果你使用IntelliJ IDEA，
+依次单击菜单 `VCS`-`Git`-`Push...`即可。 另外，你也可以通过命令行方式手动推送：
 ```
 git push -u origin 用户标识-issue-任务编号
 ```
-登录Github，打开社区项目地址 [https://github.com/playcommunity/play-community](https://github.com/playcommunity/play-community)， 选择`用户标识-issue-任务编号`分支，并单击右侧的`New pull request`按钮：
+推送成功后，登录Github，打开社区项目地址 [https://github.com/playcommunity/play-community](https://github.com/playcommunity/play-community)， 选择`用户标识-issue-任务编号`分支，并单击右侧的`New pull request`按钮：
 
 ![image](https://www.playscala.cn/resource/5dc39348eeab565236ea62e5)
 
