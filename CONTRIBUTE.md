@@ -73,6 +73,7 @@ git clone git@playscala:playcommunity/play-community.git
 #### 1.3.3 开始任务
 假设你领取了一个`Id`为10的`Issue`，在开始编码前，你需要先基于`master`分支创建一个私有的开发分支，开发分支的命名规则为`用户标识-issue-任务编号`, 
 其中`用户标识`可以使用姓名首字母缩写或是英文昵称，`任务编号`固定为`issue id`，例如对于开发者`joymufeng`来说，针对`Issue 10`的开发分支可以命名为`joymufeng-issue-10`。   
+
 首先确认当前分支是`master`分支，并且已与远程代码保持同步，然后执行如下命令创建并切换至开发分支：
 ```
 git checkout -b 用户标识-issue-任务编号
