@@ -87,11 +87,15 @@ git push -u origin issue-你的编号
 
 在审查通过后，你的代码会被合并至`master`分支，恭喜你成功完成一次贡献！
 
-在完成开发任务后需要清理开发分支，首先删除本地开发分支：
+在完成开发任务后需要清理开发分支，首先切换至`master`分支，
+```
+git checkout master
+```
+然后删除本地开发分支,
 ```
 git branch -d issue-你的编号
 ```
-然后删除Github上的远程开发分支：
+最后删除Github上的远程开发分支，
 ```
 git push origin --delete issue-你的编号
 ```
