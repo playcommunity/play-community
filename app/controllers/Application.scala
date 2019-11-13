@@ -6,7 +6,7 @@ import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
+import infrastructure.repository.mongo.{MongoBoardRepository, MongoResourceRepository, MongoUserRepository}
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.bson.BsonObjectId
@@ -33,13 +33,23 @@ import play.api.libs.concurrent.Futures._
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
-  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
+  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, boardRepo: MongoBoardRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
 
   // 分页大小
   val PAGE_SIZE = 15
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
+  }
+
+  def test = Action.async { implicit request =>
+    boardRepo.findById("0").map{
+      case Some(b) =>
+        println(b)
+        Ok("ok")
+      case None => Ok("error")
+    }
+
   }
 
   def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>

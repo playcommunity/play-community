@@ -2,6 +2,8 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+GET     /test                                   controllers.Application.test
+
 # Cases
 GET     /corporations                             controllers.CorporationController.index(sortBy: String ?= "vote")
 POST    /corporation/add                          controllers.CorporationController.doAdd
