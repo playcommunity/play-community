@@ -285,6 +285,15 @@ body .layui-edit-face  .layui-layer-content{padding:0; background-color:#fff; co
 .fly-signin-main{position: relative; height: 38px; padding: 24px 15px; text-align: center;}
 .fly-signin-main span{padding-left: 10px;}
 
+/* 版块 */
+.fly-board {padding-bottom: 10px;}
+.fly-board dl{position: relative; overflow: hidden; margin-left: 20px; text-align: center; font-size: 0;}
+.fly-board dd{position: relative; width: 55px; height: 75px; margin: 10px 25px 5px 0; display:inline-block; *display:inline; *zoom:1; vertical-align:top; font-size:12px;}
+.fly-board dd a img{width: 55px; height: 55px; border-radius: 2px;}
+.fly-board dd a cite{ position:absolute; bottom: 20px; left: 0; width: 100%; height:20px; line-height:20px; text-align:center; background-color:rgba(0,0,0,.2); color:#fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.fly-board dd a:hover cite{display: block;}
+.fly-board dd a i{position:absolute; bottom: 0; left: 0; width: 100%; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-style: normal;}
+
 /* 榜单 */
 .fly-rank{padding-bottom: 10px;}
 .fly-rank dl{position: relative; overflow: hidden; margin-left: 20px; text-align: center; font-size: 0;}
@@ -293,6 +302,7 @@ body .layui-edit-face  .layui-layer-content{padding:0; background-color:#fff; co
 .fly-rank dd a cite{ position:absolute; bottom: 20px; left: 0; width: 100%; height:20px; line-height:20px; text-align:center; background-color:rgba(0,0,0,.2); color:#fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .fly-rank dd a:hover cite{display: block;}
 .fly-rank dd a i{position:absolute; bottom: 0; left: 0; width: 100%; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: normal;}
+
 
 /* 静态列表 */
 .fly-list-static li{line-height: 26px; list-style-position: inside; list-style-type: disc; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}

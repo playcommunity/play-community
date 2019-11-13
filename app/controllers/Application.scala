@@ -67,8 +67,9 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       total <- resourceRepo.count(q)
       activeUsers <- userRepo.findActiveList(12)
       topViewDocs <- resourceRepo.findTopViewList(10)
+      boards <- boardRepo.findTop(11)
     } yield {
-      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
+      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, boards, cPage, total.toInt))
     }
   }
 

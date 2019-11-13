@@ -137,6 +137,10 @@ git push origin --delete 用户标识-issue-任务编号
 
 ![image](https://www.playscala.cn/resource/5dc2b10beeab565236ea4633)
 
+### 3.2 版块(Board)设计
+社区所有资源都挂在一颗分类树上（即common-category表），该树的第0层为根节点(/)，第1层节点为版块节点，第2层及以下为分类节点。社区所有资源，包括文档、问答、分享等都可以挂到某个分类节点上。
+Board实体和Category实体共用common-category表。
+
 ### 3.2 核心资源抽象
 目前社区核心资源主要包括：
 - 分享

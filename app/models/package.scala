@@ -8,8 +8,6 @@ package object models {
   @JsonFormat("models")
   implicit val formats = ???
 
-  type Board = Category
-
 }
 
 
