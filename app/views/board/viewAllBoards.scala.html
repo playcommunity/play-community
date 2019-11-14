@@ -1,0 +1,33 @@
+@(list: List[Board])(implicit request: RequestHeader)
+
+@import utils._
+@main(s"${app.Global.siteSetting.name} - 社区版块", "board", "index") {
+<div class="fly-main" style="overflow: hidden;">
+    <div class="layui-tab layui-tab-brief">
+        <ul class="layui-tab-title">
+            <li class="layui-this"><a href="/corporations?sortBy=vote">所有版块</a></li>
+            <li><a href="/corporations?sortBy=time">竞选版主</a></li>
+        </ul>
+    </div>
+    <ul class="fly-case-list" style="padding-top: 30px;">
+        @for(c <- list){
+        <li data-id="c._id">
+            <a class="fly-case-img" href="/boards" target="_blank" >
+                <img src="https://www.playscala.cn/123/book.png" alt="c.title">
+                <cite class="layui-btn layui-btn-primary layui-btn-small">去围观</cite>
+            </a>
+            <h2 title="prettyGrade(c.grade)"><a href="c.url" target="_blank">@c.name</a></h2>
+            <p class="fly-case-desc" title="c.description">c.description</p>
+            <div class="fly-case-info">
+                <a href="/user/home?uid={c.author._id}" class="fly-case-user" target="_blank"><img src="c.author.headImg"></a>
+                <p class="layui-elip" style="font-size: 12px;"><span style="color: #666;">c.author.name</span> createTime</p>
+                <p>
+                    获得<a class="fly-case-nums fly-case-active" href="javascript:;" style=" padding:0 5px; color: #01AAED;">0</a>个赞
+                </p>
+                <button class="layui-btn layui-btn-primary fly-case-active" data-type="praise">点赞</button>
+            </div>
+        </li>
+        }
+    </ul>
+</div>
+}

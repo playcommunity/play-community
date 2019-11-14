@@ -5,6 +5,8 @@
 GET     /test                                   controllers.Application.test
 
 # Board
+GET     /boards                                   controllers.BoardController.index(category: String ?= "/", resType: String = "article", status: String ?= "0", page: Int ?= 1)
+GET     /board/all                                controllers.BoardController.viewAllBoards()
 POST    /board/recordTraffic                      controllers.BoardController.recordTraffic(boardPath: String)
 
 # Cases
