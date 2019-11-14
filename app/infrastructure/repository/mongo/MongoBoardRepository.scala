@@ -1,10 +1,13 @@
 package infrastructure.repository.mongo
 
+import java.time.Instant
+
 import cn.playscala.mongo.Mongo
 import infrastructure.repository.{BoardRepository, TweetRepository}
 import javax.inject.Inject
-import models.{Board, Tweet}
+import models.{Board, StatBoardTraffic, Tweet}
 import play.api.libs.json.Json._
+import utils.DateTimeUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -29,6 +32,21 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
 
   def findTop(count: Int): Future[List[Board]] = {
     mongo.find[Board](obj("parentPath" -> "/")).sort(obj("index" -> 1)).limit(count).list()
+  }
+
+  /**
+   * 记录版块的访客信息
+   */
+  def recordTraffic(boardPath: String, uid: String): Future[Boolean] = {
+    val dayStr = DateTimeUtil.toString(DateTimeUtil.now(), "yyyy-MM-dd")
+    mongo.collection[StatBoardTraffic].updateOne(
+      obj("boardPath" -> boardPath, "uid" -> uid, "dayStr" -> dayStr),
+      obj(
+        "$inc" -> obj("count" -> 1),
+        "$setOnInsert" -> obj("createTime" -> Instant.now(), "updateTime" -> Instant.now())
+      ),
+      true
+    ).map(_.getModifiedCount == 1)
   }
 
 }

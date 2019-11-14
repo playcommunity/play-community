@@ -18,3 +18,6 @@ case class StatIP(_id: String, ip: String, hourStr: String,  count: Long, userCo
 
 @Entity("stat-visitor")
 case class StatVisitor(_id: String, uid: String, isVisitor: Boolean, hourStr: String, count: Long, createTime: Instant, updateTime: Instant)
+
+@Entity("stat-board-traffic")
+case class StatBoardTraffic(boardPath: String, uid: String, dayStr: String, count: Long, createTime: Instant, updateTime: Instant)

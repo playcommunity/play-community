@@ -28,7 +28,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   /**
     * 按分页查看资源
     */
-  def index(resType: String, status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(category: String, resType: String, status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = AppUtil.parsePage(page)
     var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${category}"))
     status match {
@@ -51,7 +51,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
         Redirect(s"/${resType}s")
       } else {
-        Ok(views.html.resource.index(resType, status, category, resources, topViewResources, topReplyResources, cPage, total.toInt))
+        Ok(views.html.resource.index(category, resType, status, resources, topViewResources, topReplyResources, cPage, total.toInt))
       }
     }
   }

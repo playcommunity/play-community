@@ -1,8 +1,15 @@
-@(resType: String, status: String, category: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(category: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${app.Global.siteSetting.name} - 社区分享", "community", resType) {
-@nav(resType)
+
+<span class="layui-breadcrumb">
+  <a href="">首页</a>
+  <a href="">国际新闻</a>
+  <a href="">亚太地区</a>
+  <a><cite>正文</cite></a>
+</span>
+
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
     <div class="layui-col-md8">
@@ -11,15 +18,11 @@
         <div class="fly-panel-title fly-filter">
           <a href="/@{resType}s" @if(status == "0"){class="layui-this"}>所有</a>
           <span class="fly-mid"></span>
-          <a @if(status == "1"){class="layui-this"} href="/@{resType}s?status=1">未结</a>
+          <a href="/@{resType}s" @if(status == "0"){class="layui-this"}>分享</a>
           <span class="fly-mid"></span>
-          <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">已结</a>
+          <a @if(status == "1"){class="layui-this"} href="/@{resType}s?status=1">提问</a>
           <span class="fly-mid"></span>
-          <a @if(status == "3"){class="layui-this"} href="/@{resType}s?status=3">精华</a>
-          @if(category != "/"){
-          <span class="fly-mid"></span>
-          <a class="layui-this" href="javascript:;">按分类查看</a>
-          }
+          <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">题库</a>
         </div>
 
         <ul class="fly-list">
