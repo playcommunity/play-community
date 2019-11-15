@@ -8,13 +8,13 @@ import cn.playscala.mongo.annotations.Entity
 case class Board (
   _id: String,
   name: String,
+  description: String,
+  avatarUrl: String,
   path: String,
   parentPath: String,
   index: Int,
   disabled: Boolean,
-  ownerId: Option[String],
-  ownerName: Option[String],
-  ownerAvatarUrl: Option[String],
+  owner: Option[Owner],
   createTime: Instant,
   updateTime: Instant
 ) {

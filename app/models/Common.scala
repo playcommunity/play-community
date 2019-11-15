@@ -2,6 +2,8 @@ package models
 
 import java.time.Instant
 
+case class Owner(_id: String, login: String, name: String, headImg: String, description: String)
+
 case class Author(_id: String, login: String, name: String, headImg: String)
 
 case class Reply(_id: String, content: String, editorType: String, author: Author, at: List[String], createTime: Instant, updateTime: Instant, voteStat: VoteStat, comments: List[Comment])

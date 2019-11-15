@@ -5,7 +5,8 @@ import java.time.Instant
 import cn.playscala.mongo.Mongo
 import infrastructure.repository.{BoardRepository, TweetRepository}
 import javax.inject.Inject
-import models.{Board, StatBoardTraffic, Tweet}
+import models.{Board, Category, StatBoardTraffic, Tweet}
+import play.api.libs.json.Json
 import play.api.libs.json.Json._
 import utils.DateTimeUtil
 
@@ -24,6 +25,13 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
 
   def findById(id: String): Future[Option[Board]] = {
     mongo.findById[Board](id)
+  }
+
+  /**
+    * 根据path查询分类
+    */
+  def findByPath(path: String): Future[Option[Board]] = {
+    mongo.find[Board](Json.obj("path" -> path)).first
   }
 
   def findAll(): Future[List[Board]] = {

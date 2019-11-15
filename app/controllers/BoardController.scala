@@ -23,9 +23,15 @@ class BoardController @Inject()(cc: ControllerComponents, boardRepo: MongoBoardR
   /**
     * 按分页查看资源
     */
-  def index(category: String, resType: String, status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(path: String, resType: String, status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = AppUtil.parsePage(page)
-    var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${category}"))
+    var q = Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))
+
+    resType match {
+      case t if t.trim != "" => q ++= Json.obj("resType" -> t.trim)
+      case _ =>
+    }
+
     status match {
       case "0" =>
       case "1" =>
@@ -37,17 +43,22 @@ class BoardController @Inject()(cc: ControllerComponents, boardRepo: MongoBoardR
       case _ =>
     }
 
-    for {
-      resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
-      topViewResources <- resourceRepo.findTopViewList(resType, 10)
-      topReplyResources <- resourceRepo.findTopReplyList(resType, 10)
-      total <- resourceRepo.count(q)
-    } yield {
-      if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
-        Redirect(s"/${resType}s")
-      } else {
-        Ok(views.html.resource.index(category, resType, status, resources, topViewResources, topReplyResources, cPage, total.toInt))
-      }
+    boardRepo.findByPath(path) flatMap {
+      case Some(board) =>
+        for {
+          resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
+          topViewResources <- resourceRepo.findTopViewList(resType, 10)
+          topReplyResources <- resourceRepo.findTopReplyList(resType, 10)
+          categoryList <- categoryRepo.findAllChildren(path)
+          total <- resourceRepo.count(q)
+        } yield {
+          if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
+            Redirect(s"/${resType}s")
+          } else {
+            Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, topReplyResources, categoryList, cPage, total.toInt))
+          }
+        }
+      case None => Future.successful(Ok(views.html.message("系统提示", "该版块不存在！")))
     }
   }
 

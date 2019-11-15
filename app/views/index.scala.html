@@ -113,15 +113,15 @@
         <dl>
           @for(board <- boards){
           <dd>
-            <a href="/boards">
-              <img src="https://www.playscala.cn/123/book.png" width="50" height="50">
+            <a href="/boards?path=@board.path">
+              <img src="@board.avatarUrl" width="50" height="50">
               <i>@board.name</i>
             </a>
           </dd>
           }
           <dd>
-            <a href="user/home.html">
-              <img src="https://www.playscala.cn/123/book.png" width="50" height="50">
+            <a href="/board/all">
+              <img src="https://www.playscala.cn/123/scala-icon.png" width="50" height="50">
               <i>更多版块</i>
             </a>
           </dd>

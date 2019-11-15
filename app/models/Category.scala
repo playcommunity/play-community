@@ -8,6 +8,7 @@ import cn.playscala.mongo.annotations.Entity
 case class Category(
   _id: String,
   name: String,
+  description: String,
   path: String,
   parentPath: String,
   index: Int,
