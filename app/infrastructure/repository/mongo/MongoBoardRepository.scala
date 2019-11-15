@@ -8,7 +8,7 @@ import javax.inject.Inject
 import models.{Board, Category, StatBoardTraffic, Tweet}
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
-import utils.DateTimeUtil
+import utils.{BoardUtil, DateTimeUtil}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,6 +40,15 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
 
   def findTop(count: Int): Future[List[Board]] = {
     mongo.find[Board](obj("parentPath" -> "/")).sort(obj("index" -> 1)).limit(count).list()
+  }
+
+  def findBoardCategoryList(path: String): Future[List[Category]] = {
+    BoardUtil.getBoardPath(path) match {
+      case Some(boardPath) =>
+        mongo.find[Category](Json.obj("path" -> Json.obj("$regex" -> s"^${boardPath}"))).list()
+      case None =>
+        Future.successful(Nil)
+    }
   }
 
   /**

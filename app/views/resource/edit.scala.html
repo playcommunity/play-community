@@ -1,4 +1,4 @@
-@(resType: String, resourceOpt: Option[Resource], categoryList: List[Category])(implicit request: RequestHeader)
+@(resType: String, resourceOpt: Option[Resource])(implicit request: RequestHeader)
 @import helper._
 @main(s"${app.Global.siteSetting.name} - 创建${_root_.utils.AppUtil.prettyResource(resType)}", "community", resType) {
 <link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
@@ -49,12 +49,12 @@
               <div class="layui-form-item">
                 <div class="layui-inline">
                   <label class="layui-form-label">所在类别</label>
-                  <div class="layui-input-block">
-                    <select lay-verify="required" name="categoryPath">
-                      @for(c <- categoryList.sortBy(_.index)){
-                      <option value="@c.path" @if(resourceOpt.map(_.categoryPath).getOrElse("") == c.path){selected}>@c.name</option>
-                      }
-                    </select>
+                  <div class="layui-input-inline" style="width: 300px;">
+                    <input id="categoryName" type="text" autocomplete="off" class="layui-input" readonly>
+                    <input id="categoryPath" type="hidden" name="categoryPath">
+                  </div>
+                  <div class="layui-input-inline" style="width: 100px;">
+                    <button id="category-btn" class="layui-btn" type="button">选择分类</button>
                   </div>
                 </div>
               </div>
@@ -133,4 +133,11 @@ layui.use('upload', function(upload){
     }
   });
 });
+
+$('#category-btn').click(function(){
+    CommonUtil.chooseCategory("0", function(data){
+      $('#categoryPath').val(data.path);
+      $('#categoryName').val(data.name);
+    });
+  });
 </script>

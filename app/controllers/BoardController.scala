@@ -6,16 +6,16 @@ import javax.inject._
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsArray, Json, Writes}
 import play.api.libs.json.Json.obj
 import play.api.mvc._
-import services.{CommonService, EventService}
-import utils.{AppUtil, RequestHelper}
+import services.{CategoryService, CommonService, EventService}
+import utils.{AppUtil, BoardUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BoardController @Inject()(cc: ControllerComponents, boardRepo: MongoBoardRepository, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, categoryRepo: MongoCategoryRepository)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class BoardController @Inject()(cc: ControllerComponents, categoryService: CategoryService, boardRepo: MongoBoardRepository, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, categoryRepo: MongoCategoryRepository)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   // 分页大小
   val PAGE_SIZE = 15
@@ -74,6 +74,62 @@ class BoardController @Inject()(cc: ControllerComponents, boardRepo: MongoBoardR
       case true => Ok(Json.obj("code" -> 0))
       case true => Ok(Json.obj("code" -> 1, "message" -> "error"))
     }
+  }
+
+  def categoryTree(defaultSelected: String, callback: String) = Action.async { implicit request: Request[AnyContent] =>
+    for{
+      categories <- categoryRepo.findAllList()
+    } yield {
+      implicit val categoryWrites = new Writes[Category] {
+        def writes(c: Category) = Json.obj(
+          "id"  -> c.path,
+          "data"  -> Json.obj("path" -> c.path, "parentPath" -> c.parentPath, "disabled" -> c.disabled),
+          "text"  -> c.name,
+          "type"  -> (if(c.disabled){"gray"} else {"default"}),
+          "state" -> Json.obj(
+            "opened" -> (if(c._id == "root"){ "opened" } else { "" })
+          ),
+          "children" -> categories.filter(_.parentPath == c.path).map(n => writes(n))
+        )
+      }
+
+      val data = JsArray(categories.map(c => Json.toJson(c)(categoryWrites)))
+      Ok(views.html.board.categoryTree(defaultSelected, data, callback))
+    }
+  }
+
+  def categoryTreeJson() = Action.async { implicit request: Request[AnyContent] =>
+    for{
+      categories <- categoryRepo.findAllList()
+    } yield {
+      implicit val categoryWrites = new Writes[Category] {
+        def writes(c: Category) = Json.obj(
+          "id"  -> c._id,
+          "data"  -> Json.obj("path" -> c.path, "parentPath" -> c.parentPath, "disabled" -> c.disabled),
+          "text"  -> c.name,
+          "type"  -> (if(c.disabled){"gray"} else {"default"}),
+          "state" -> Json.obj(
+            "opened" -> (if(c._id == "root"){ "opened" } else { "" })
+          ),
+          "children" -> categories.filter(_.parentPath == c.path).map(n => writes(n))
+        )
+      }
+
+      Ok(JsArray(categories.map(c => Json.toJson(c)(categoryWrites))))
+        .as("application/json; charset=utf-8")
+    }
+  }
+
+  /**
+   *  根据分类路径查询分类名称
+   */
+  def getPathName(path: String) = Action.async { implicit request =>
+    boardRepo.findBoardCategoryList(path) map { categories =>
+      println(path + ": " + categories)
+      val idPathToNamePathMap = categoryService.getIdPathToNamePathMap(categories)
+      Ok(idPathToNamePathMap.get(path).getOrElse("-")).as("text/plain; charset=UTF-8")
+    }
+
   }
 
 }

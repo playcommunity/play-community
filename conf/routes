@@ -8,6 +8,9 @@ GET     /test                                   controllers.Application.test
 GET     /boards                                   controllers.BoardController.index(path: String, resType: String = "", status: String ?= "0", page: Int ?= 1)
 GET     /board/all                                controllers.BoardController.viewAllBoards()
 POST    /board/recordTraffic                      controllers.BoardController.recordTraffic(boardPath: String)
+GET     /board/tree                               controllers.BoardController.categoryTree(defaultSelected: String, callback: String)
+GET     /board/tree/json                          controllers.BoardController.categoryTreeJson()
+GET     /board/path/name                          controllers.BoardController.getPathName(path: String)
 
 # Cases
 GET     /corporations                             controllers.CorporationController.index(sortBy: String ?= "vote")

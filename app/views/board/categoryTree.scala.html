@@ -1,0 +1,61 @@
+@(defaultSelected: String, data: play.api.libs.json.JsArray, callback: String)
+
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width" />
+    <!--[if lt IE 9]><script src="//static.jstree.com/3.3.8/assets/html5.js"></script><![endif]-->
+    <!--[if lt IE 9]><script src="//static.jstree.com/3.3.8/assets/respond.js"></script><![endif]-->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
+
+    <style>
+      .folder {
+        background: url(/assets/images/board/file_sprite.png) right bottom no-repeat;
+      }
+    </style>
+</head>
+<body>
+  <div id="tree"></div>
+  <div style="text-align:center;">
+    <button id="test">Test</button>
+  </div>
+</body>
+<script>
+var index = parent.layer.getFrameIndex(window.name);
+var selectedPath = '@defaultSelected';
+var selectedName = '';
+
+$('#tree').on('changed.jstree', function (e, data) {
+    if(data.action == "select_node"){
+        selectedPath = data.node.data.path;
+        $.get("/board/path/name?path=" + selectedPath, function(data){
+            selectedName = data;
+        });
+    }
+}).jstree({
+    'core' : {
+        'data' : @Html(data.toString)
+    },
+    "plugins" : ["types", "state"]
+});
+
+$("#tree").bind('ready.jstree',function (obj, e) {
+    $("#tree").jstree('deselect_all', true);
+    $("#tree").jstree('select_node', '@defaultSelected');
+})
+
+$('#test').click(function(){
+    parent['@{callback}']({"path": selectedPath, "name": selectedName});
+    parent.layer.close(index);
+});
+</script>
+</html>

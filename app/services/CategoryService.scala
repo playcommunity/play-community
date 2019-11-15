@@ -53,7 +53,7 @@ class CategoryService @Inject() (mongo: Mongo) {
   def getNamePathToIdPathMap(categoryList: List[Category]): Map[String, String] = {
     val categoryIdToNameMap = categoryList.map(c => c._id -> c.name).toMap[String, String]
     categoryList.map{ category =>
-      val namePath = category.path.split("/").map( id => if(id == ""){ "" } else { categoryIdToNameMap(id) }).mkString("/")
+      val namePath = category.path.split("/").map( id => if(id == ""){ "" } else { categoryIdToNameMap.get(id).getOrElse("-") }).mkString("/")
       namePath -> category.path
     }.toMap
   }
@@ -61,7 +61,7 @@ class CategoryService @Inject() (mongo: Mongo) {
   def getIdPathToNamePathMap(categoryList: List[Category]): Map[String, String] = {
     val categoryIdToNameMap = categoryList.map(c => c._id -> c.name).toMap[String, String]
     categoryList.map{ category =>
-      val namePath = category.path.split("/").map( id => if(id == ""){ "" } else { categoryIdToNameMap(id) }).mkString("/")
+      val namePath = category.path.split("/").map( id => if(id == ""){ "" } else { categoryIdToNameMap.get(id).getOrElse("-") }).mkString("/")
       category.path -> namePath
     }.toMap
   }
