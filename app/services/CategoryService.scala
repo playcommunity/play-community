@@ -50,6 +50,11 @@ class CategoryService @Inject() (mongo: Mongo) {
     categoryList ++ newCreatedCategoryList
   }
 
+  /**
+   * 构建分类名称路径和分类Id路径的映射。例如将 /scala/basic 映射到其中文路径 /Scala编程语言/基础知识
+   * @param categoryList 待映射的分类列表
+   * @return Map[String, String]
+   */
   def getNamePathToIdPathMap(categoryList: List[Category]): Map[String, String] = {
     val categoryIdToNameMap = categoryList.map(c => c._id -> c.name).toMap[String, String]
     categoryList.map{ category =>
@@ -58,6 +63,11 @@ class CategoryService @Inject() (mongo: Mongo) {
     }.toMap
   }
 
+  /**
+    * 构建分类Id路径和分类名称路径的映射。例如将中文路径 /Scala编程语言/基础知识 映射到 /scala/basic
+    * @param categoryList 待映射的分类列表
+    * @return Map[String, String]
+    */
   def getIdPathToNamePathMap(categoryList: List[Category]): Map[String, String] = {
     val categoryIdToNameMap = categoryList.map(c => c._id -> c.name).toMap[String, String]
     categoryList.map{ category =>
@@ -74,11 +84,25 @@ class CategoryService @Inject() (mongo: Mongo) {
     }.toMap
   }
 
+  /**
+    * 从分类路径中取出第1层路径
+    */
+  def getBoardPath(path: String): Option[String] = {
+    if (path.startsWith("/") && path != "/") {
+      Some(path.split("/").take(2).mkString("/") + "/")
+    } else {
+      None
+    }
+  }
+
+  /**
+    * 获取父路径，以斜杠结尾
+    */
   def getParentPath(path: String): String = {
-    if(path == "/" || path.count(_ == '/') == 1){
+    if (path.startsWith("/") && path != "/") {
       "/"
     } else {
-      path.split("/").dropRight(1).mkString("/")
+      path.split("/").dropRight(1).mkString("/") + "/"
     }
   }
 

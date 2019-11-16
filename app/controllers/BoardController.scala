@@ -49,7 +49,7 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
           resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
           topViewResources <- resourceRepo.findTopViewList(resType, 10)
           topReplyResources <- resourceRepo.findTopReplyList(resType, 10)
-          categoryList <- categoryRepo.findAllChildren(path)
+          categoryList <- categoryRepo.findAllList()
           total <- resourceRepo.count(q)
         } yield {
           if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
