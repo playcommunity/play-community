@@ -2,8 +2,6 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /test                                   controllers.Application.test
-
 # Board
 GET     /boards                                   controllers.BoardController.index(path: String, resType: String = "", status: String ?= "0", page: Int ?= 1)
 GET     /board/all                                controllers.BoardController.viewAllBoards()

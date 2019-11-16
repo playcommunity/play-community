@@ -134,8 +134,10 @@ layui.use('upload', function(upload){
   });
 });
 
+var defaultSelected = '@resourceOpt.map(_.categoryPath).getOrElse("")';
 $('#category-btn').click(function(){
-    CommonUtil.chooseCategory("0", function(data){
+    CommonUtil.chooseCategory(defaultSelected, function(data){
+      defaultSelected = data.path;
       $('#categoryPath').val(data.path);
       $('#categoryName').val(data.name);
     });

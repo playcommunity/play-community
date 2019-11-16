@@ -13,6 +13,7 @@
     <!--[if lt IE 9]><script src="//static.jstree.com/3.3.8/assets/respond.js"></script><![endif]-->
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" />
+    <link rel="stylesheet" href="/assets/fly3/res/layui/css/layui.css">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
@@ -26,7 +27,7 @@
 <body>
   <div id="tree"></div>
   <div style="text-align:center;">
-    <button id="test">Test</button>
+      <button id="confirm-btn" type="button" class="layui-btn">选择分类</button>
   </div>
 </body>
 <script>
@@ -53,7 +54,7 @@ $("#tree").bind('ready.jstree',function (obj, e) {
     $("#tree").jstree('select_node', '@defaultSelected');
 })
 
-$('#test').click(function(){
+$('#confirm-btn').click(function(){
     parent['@{callback}']({"path": selectedPath, "name": selectedName});
     parent.layer.close(index);
 });

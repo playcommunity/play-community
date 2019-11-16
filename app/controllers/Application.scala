@@ -17,7 +17,7 @@ import play.api.cache.AsyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.concurrent.Futures
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import services.{CommonService, ElasticService, MailerService, WeiXinService}
 import utils.PDFUtil.{getCatalogs, getText}
@@ -40,16 +40,6 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
 
   def icons = Action { implicit request: Request[AnyContent] =>
     Ok(views.html.icons())
-  }
-
-  def test = Action.async { implicit request =>
-    boardRepo.findById("0").map{
-      case Some(b) =>
-        println(b)
-        Ok("ok")
-      case None => Ok("error")
-    }
-
   }
 
   def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
