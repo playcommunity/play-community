@@ -1,8 +1,112 @@
-@(resType: String, status: String, category: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
+@(category: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${app.Global.siteSetting.name} - 社区分享", "community", resType) {
-@nav(resType)
+
+<style>
+  .black a {
+    color:#000000!important;
+  }
+  .fly-column {
+    height: 60px!important;
+    line-height: 60px!important;
+  }
+  .fly-column ul li {
+    position: relative;
+    display: inline-block;
+    height: 60px!important;
+  }
+  .layui-nav-more {
+    content: '';
+    width: 0;
+    height: 0;
+    border-style: solid dashed dashed;
+    border-color: #000 transparent transparent!important;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .2s;
+    -webkit-transition: all .2s;
+    position: absolute;
+    top: 50%;
+    right: 3px;
+    margin-top: -3px;
+    border-width: 6px;
+    border-top-color: rgba(0,0,0,.7)!important;
+  }
+  .layui-nav-mored {
+    margin-top: -9px;
+    border-style: dashed dashed solid;
+    border-color: transparent transparent #000!important;
+  }
+  .layui-bg-white {
+    background-color: #FFFFFF!important
+  }
+  .layadmin-homepage-pad-img {
+    box-shadow: 0 0 0 4px rgba(0,0,0,.1);
+    border-radius: 50%;
+  }
+  .layadmin-homepage-font {
+    font-weight: 600;
+    color: #2b425b;
+    font-size: 1.2em;
+  }
+  h4 {
+    display: block;
+    margin-block-start: 0.6em;
+    margin-block-end: 0.5em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    font-weight: bold;
+}
+</style>
+
+<div class="fly-panel fly-column">
+  <div class="layui-container">
+    <ul class="layui-nav layui-bg-white" lay-filter="" style="padding:0;">
+      <li class="layui-nav-item black">
+        <a href="javascript:;">函数式编程</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+          <dd><a href="">移动模块</a></dd>
+          <dd><a href="">后台模版</a></dd>
+          <dd><a href="">电商平台</a></dd>
+        </dl>
+      </li>
+      <li class="layui-nav-item black">
+        <a href="javascript:;">解决方案</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+          <dd><a href="">移动模块</a></dd>
+          <dd><a href="">后台模版</a></dd>
+          <dd><a href="">电商平台</a></dd>
+        </dl>
+      </li>
+      <li class="layui-nav-item black">
+        <a href="javascript:;">解决方案</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+          <dd><a href="">移动模块</a></dd>
+          <dd><a href="">后台模版</a></dd>
+          <dd><a href="">电商平台</a></dd>
+        </dl>
+      </li>
+    </ul>
+
+    <div class="fly-column-right layui-hide-xs">
+      <span class="fly-search"><i class="layui-icon"></i></span>
+      @if(nav == "index" || nav == "article"){
+      <a href='/article/add' class="layui-btn">我要分享</a>
+      }else{
+      <a href='/qa/add' class="layui-btn">我要提问</a>
+      }
+    </div>
+    <div class="layui-hide-sm layui-show-xs-block" style="margin-top: -10px; padding-bottom: 10px; text-align: center;">
+      @if(nav == "index" || nav == "article"){
+      <a href='/article/add' class="layui-btn">我要分享</a>
+      }else{
+      <a href='/qa/add' class="layui-btn">我要提问</a>
+      }
+    </div>
+  </div>
+</div>
+
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
     <div class="layui-col-md8">
@@ -74,6 +178,26 @@
       </div>
     </div>
     <div class="layui-col-md4">
+      <div class="layui-card">
+        <div class="layui-card-header">版块介绍</div>
+        <div class="layui-card-body" style="text-align: center;">
+          <div class="layadmin-homepage-pad-ver">
+            <img class="layadmin-homepage-pad-img" src="https://www.layui.com/admin/std/dist/layuiadmin/style/res/template/portrait.png" width="96" height="96">
+          </div>
+          <h4 class="layadmin-homepage-font">胡歌</h4>
+          <p class="layadmin-homepage-min-font">中国知名演员，奥斯卡积分升到， 收到各类科技收到反馈了 水电费空间十多个第三个，</p>
+        </div>
+      </div>
+      <div class="layui-card">
+        <div class="layui-card-header">版主介绍</div>
+        <div class="layui-card-body" style="text-align: center;">
+          <div class="layadmin-homepage-pad-ver">
+            <img class="layadmin-homepage-pad-img" src="https://www.layui.com/admin/std/dist/layuiadmin/style/res/template/portrait.png" width="96" height="96">
+          </div>
+          <h4 class="layadmin-homepage-font">胡歌</h4>
+          <p class="layadmin-homepage-min-font">中国知名演员，奥斯卡积分升到， 收到各类科技收到反馈了 水电费空间十多个第三个，</p>
+        </div>
+      </div>
       <dl class="fly-panel fly-list-one">
         <dt class="fly-panel-title">热点@if(resType == "qa"){问题}else{文章}</dt>
         @for(a <- topViewResources){

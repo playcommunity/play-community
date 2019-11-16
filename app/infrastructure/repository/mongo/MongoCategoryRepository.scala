@@ -15,10 +15,24 @@ import scala.concurrent.Future
 class MongoCategoryRepository @Inject()(mongo: Mongo) extends CategoryRepository {
 
   /**
+    * 查询分类列表
+    */
+  def findAllList(): Future[List[Category]] = {
+    mongo.find[Category]().list()
+  }
+
+  /**
     * 查询子分类列表
     */
   def findChildren(parentPath: String): Future[List[Category]] = {
     mongo.find[Category](Json.obj("parentPath" -> parentPath)).list()
+  }
+
+  /**
+    * 查询子分类列表
+    */
+  def findAllChildren(path: String): Future[List[Category]] = {
+    mongo.find[Category](Json.obj("categoryPath" -> Json.obj("$regex" -> s"^${path}"))).list()
   }
 
   /**

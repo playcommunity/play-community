@@ -1,0 +1,119 @@
+@(board: Board, path: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], categoryList: List[Category], page: Int, total: Int)(implicit request: RequestHeader)
+
+@import utils.RequestHelper
+@main(s"${app.Global.siteSetting.name} - 社区分享", "board", "") {
+
+@views.html.board.nav(path, categoryList)
+
+<div class="layui-container">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md8">
+      <div class="fly-panel" style="margin-bottom: 0;">
+
+        <div class="fly-panel-title fly-filter">
+          <a href="/@{resType}s" @if(status == "0"){class="layui-this"}>所有</a>
+          <span class="fly-mid"></span>
+          <a @if(status == "1"){class="layui-this"} href="/@{resType}s?status=1">未结</a>
+          <span class="fly-mid"></span>
+          <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">已结</a>
+          <span class="fly-mid"></span>
+          <a @if(status == "3"){class="layui-this"} href="/@{resType}s?status=3">精华</a>
+        </div>
+
+        <ul class="fly-list">
+          @for(a <- resources){
+          <li>
+            <a href="/user/home?uid=@{a.author._id}" class="fly-avatar">
+              <img src="@a.author.headImg" alt="">
+            </a>
+            <h2>
+              <a class="layui-badge">@utils.AppUtil.prettyResource(resType)</a>
+              <a href="/@{resType}/view?_id=@a._id">@a.title</a>
+            </h2>
+            <div class="fly-list-info">
+              <a href="/user/home?uid=@{a.author._id}" link>
+                <cite>@a.author.name</cite>
+                <!--
+                <i class="iconfont icon-renzheng" title="认证信息：XXX"></i>
+                <i class="layui-badge fly-badge-vip">VIP3</i>
+                -->
+              </a>
+              <span>@utils.DateTimeUtil.toPrettyString(a.createTime)</span>
+              <a href="/@{resType}s?status=@{status}&category=@{a.categoryPath}" link>@a.categoryName</a>
+
+              <!--<span class="fly-list-kiss layui-hide-xs" title="悬赏飞吻"><i class="iconfont icon-kiss"></i> 60</span>-->
+              @if(a.closed){
+              <span class="layui-badge fly-badge-accept layui-hide-xs">已结</span>
+              }
+              <span class="fly-list-nums">
+                <i class="iconfont icon-pinglun1" title="回答"></i> @a.replyStat.replies.size
+                <i class="iconfont icon-zan" title="点赞"></i> @a.voteStat.count
+              </span>
+            </div>
+            <div class="fly-list-badge">
+              @if(a.top){
+              <span class="layui-badge layui-bg-black">置顶</span>
+              }
+              @if(a.recommended){
+              <span class="layui-badge layui-bg-red">精帖</span>
+              }
+            </div>
+          </li>
+          }
+        </ul>
+
+        <!-- <div class="fly-none">没有相关数据</div> -->
+
+        <div style="text-align: center">
+          <div class="laypage-main">
+            <a href="/boards?path=@{path}&resType=@{resType}status=@{status}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(resources.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/boards?path=@{path}&resType=@{resType}status=@{status}&page=@{page+1}" class="laypage-next">下一页</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="layui-col-md4">
+      <div class="layui-card">
+        <div class="layui-card-header">版块介绍</div>
+        <div class="layui-card-body" style="text-align: center;">
+          <div class="layadmin-homepage-pad-ver">
+            <img class="layadmin-homepage-pad-img" src="@board.avatarUrl" width="96" height="96">
+          </div>
+          <h4 class="layadmin-homepage-font">@board.name</h4>
+          <p class="layadmin-homepage-min-font">@board.description</p>
+        </div>
+      </div>
+      <div class="layui-card">
+        <div class="layui-card-header">版主介绍</div>
+        <div class="layui-card-body" style="text-align: center;">
+          <div class="layadmin-homepage-pad-ver">
+            <img class="layadmin-homepage-pad-img" src='@board.owner.map(_.headImg).getOrElse("https://www.layui.com/admin/std/dist/layuiadmin/style/res/template/portrait.png")' width="96" height="96">
+          </div>
+          <h4 class="layadmin-homepage-font">@board.owner.map(_.headImg).getOrElse("-")</h4>
+          <p class="layadmin-homepage-min-font">@board.owner.map(_.description).getOrElse("-")</p>
+        </div>
+      </div>
+      <dl class="fly-panel fly-list-one">
+        <dt class="fly-panel-title">热点@if(resType == "qa"){问题}else{文章}</dt>
+        @for(a <- topViewResources){
+        <dd>
+          <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
+          <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
+        </dd>
+        }
+      </dl>
+      <dl class="fly-panel fly-list-one">
+        <dt class="fly-panel-title">热议@if(resType == "qa"){问题}else{文章}</dt>
+        @for(a <- topReplyResources){
+        <dd>
+          <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
+          <span><i class="iconfont icon-pinglun1"></i> @a.replyStat.replyCount</span>
+        </dd>
+        }
+      </dl>
+    </div>
+  </div>
+</div>
+}
+
+<script>
+</script>

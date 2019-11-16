@@ -28,7 +28,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   /**
     * 按分页查看资源
     */
-  def index(resType: String, status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(category: String, resType: String, status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = AppUtil.parsePage(page)
     var q = Json.obj("resType" -> resType, "categoryPath" -> Json.obj("$regex" -> s"^${category}"))
     status match {
@@ -51,30 +51,21 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
       if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
         Redirect(s"/${resType}s")
       } else {
-        Ok(views.html.resource.index(resType, status, category, resources, topViewResources, topReplyResources, cPage, total.toInt))
+        Ok(views.html.resource.index(category, resType, status, resources, topViewResources, topReplyResources, cPage, total.toInt))
       }
     }
   }
 
-  def add(resType: String) = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
-    for {
-      categoryList <- categoryRepo.findChildren("/", false)
-    } yield {
-      Ok(views.html.resource.edit(resType, None, categoryList))
-    }
+  def add(resType: String) = (checkLogin andThen checkActive) { implicit request: Request[AnyContent] =>
+    Ok(views.html.resource.edit(resType, None))
   }
 
   def edit(_id: String) = checkAdminOrOwner("_id").async { implicit request: Request[AnyContent] =>
-    (for {
-      resource <- resourceRepo.findById(_id)
-      categoryList <- categoryRepo.findChildren("/", false)
-    } yield {
-      resource match {
-        case Some(r) =>
-          Ok(views.html.resource.edit(r.resType, Some(r), categoryList))
-        case None => Redirect(routes.Application.notFound)
-      }
-    }).recover{ case NonFatal(t) =>
+    resourceRepo.findById(_id) map {
+      case Some(r) =>
+        Ok(views.html.resource.edit(r.resType, Some(r)))
+      case None => Redirect(routes.Application.notFound)
+    } recover { case NonFatal(t) =>
       Logger.error(t.getMessage, t)
       Ok(views.html.message("系统提示", "很抱歉，请稍后再试！"))
     }

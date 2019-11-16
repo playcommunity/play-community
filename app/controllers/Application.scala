@@ -6,7 +6,7 @@ import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
+import infrastructure.repository.mongo.{MongoBoardRepository, MongoResourceRepository, MongoUserRepository}
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.bson.BsonObjectId
@@ -17,7 +17,7 @@ import play.api.cache.AsyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.concurrent.Futures
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import services.{CommonService, ElasticService, MailerService, WeiXinService}
 import utils.PDFUtil.{getCatalogs, getText}
@@ -33,7 +33,7 @@ import play.api.libs.concurrent.Futures._
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
-  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
+  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, boardRepo: MongoBoardRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
 
   // 分页大小
   val PAGE_SIZE = 15
@@ -57,8 +57,9 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       total <- resourceRepo.count(q)
       activeUsers <- userRepo.findActiveList(12)
       topViewDocs <- resourceRepo.findTopViewList(10)
+      boards <- boardRepo.findTop(11)
     } yield {
-      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, cPage, total.toInt))
+      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, boards, cPage, total.toInt))
     }
   }
 
