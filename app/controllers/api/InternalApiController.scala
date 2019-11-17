@@ -2,9 +2,11 @@ package controllers.api
 
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.MongoUserRepository
+import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
 import javax.inject._
 import models._
+import org.jsoup.Jsoup
+import org.jsoup.safety.Whitelist
 import play.api.cache.AsyncCacheApi
 import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
@@ -18,7 +20,7 @@ import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
 @Singleton
 class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, config: Configuration, ws: WSClient, counterService: CommonService, qqService: QQService,
-  weixinService: WeiXinService, userRepository: MongoUserRepository, cache: AsyncCacheApi)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
+  weixinService: WeiXinService, userRepository: MongoUserRepository, resourceRepo: MongoResourceRepository, cache: AsyncCacheApi)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   private val githubClientId = config.getOptional[String]("oauth.github.clientId").getOrElse("")
   private val githubClientSecret = config.getOptional[String]("oauth.github.clientSecret").getOrElse("")
@@ -101,6 +103,8 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     * 扫码微信小程序码，成功获取授权码后回调接口
     */
   def weixinOauthCallback = Action.async { implicit request =>
+    Logger.info("recive weixinOauthCallback request: " + request.body.asJson.toString)
+
     request.body.asJson match {
       case Some(json) =>
         val code = json("code").as[String]
@@ -207,4 +211,23 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
         Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Invalid request data.")))
     }
   }
+
+  def getArticles(page: Int) = Action.async { implicit request =>
+    val PAGE_SIZE = 15
+    val cPage = AppUtil.parsePage(page)
+    resourceRepo.findList(Json.obj(), Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE) map { list =>
+      Ok(Json.toJson(list))
+    }
+  }
+
+  def getArticle(id: String) = Action.async { implicit request =>
+    resourceRepo.findById(id) map {
+      case Some(res) =>
+        val content = res.content.getOrElse("")
+        val cleanedHTML = Jsoup.clean(content, Whitelist.basic());
+        Ok(Json.toJson(res.copy(content = Some(cleanedHTML))))
+      case None => Ok(Json.obj("code" -> -1, "message" -> "not_found"))
+    }
+  }
+
 }
