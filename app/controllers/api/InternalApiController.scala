@@ -212,10 +212,14 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     }
   }
 
-  def getArticles(page: Int) = Action.async { implicit request =>
+  def getArticles(page: Int, resType: String) = Action.async { implicit request =>
     val PAGE_SIZE = 15
     val cPage = AppUtil.parsePage(page)
-    resourceRepo.findList(Json.obj(), Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE) map { list =>
+    var q = Json.obj()
+    if(resType != ""){
+      q ++= Json.obj("resType" -> resType)
+    }
+    resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE) map { list =>
       Ok(Json.toJson(list))
     }
   }

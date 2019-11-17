@@ -10,5 +10,5 @@ POST       /internal/oauth/weixin/callback            controllers.api.InternalAp
 
 GET        /internal/article                        controllers.api.InternalApiController.getArticle(id: String)
 
-GET        /internal/article/list                 controllers.api.InternalApiController.getArticles(page: Int ?= 1)
+GET        /internal/article/list                 controllers.api.InternalApiController.getArticles(page: Int ?= 1, resType: String ?= "")
 
