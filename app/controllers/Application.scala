@@ -1,35 +1,36 @@
 package controllers
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.{ ByteArrayOutputStream, File }
 
 import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoBoardRepository, MongoResourceRepository, MongoUserRepository}
+import infrastructure.repository.mongo.{ MongoBoardRepository, MongoResourceRepository, MongoUserRepository }
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.bson.BsonObjectId
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
-import play.api.{Configuration, Logger}
+import play.api.{ Configuration, Logger }
 import play.api.cache.AsyncCacheApi
 import play.api.data.Form
-import play.api.data.Forms.{tuple, _}
+import play.api.data.Forms.{ tuple, _ }
 import play.api.libs.concurrent.Futures
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{ JsObject, Json }
 import play.api.mvc._
-import services.{CommonService, ElasticService, MailerService, WeiXinService}
-import utils.PDFUtil.{getCatalogs, getText}
+import services.{ CommonService, ElasticService, MailerService, WeiXinService }
+import utils.PDFUtil.{ getCatalogs, getText }
 import utils._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
+import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
 import scala.util.Random
 import scala.collection.JavaConverters._
 import play.api.libs.json.Json._
 import security.PasswordEncoder
 import play.api.libs.concurrent.Futures._
+import vcode.GIFCaptcha
 
 @Singleton
 class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
@@ -343,12 +344,12 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
   }
 
   def verifyCode() = Action { implicit request: Request[AnyContent] =>
-    val verifyCode = VerifyCodeUtils.generateVerifyCode(4)
+    val captcha = new GIFCaptcha(200, 80, 6)
     val out: ByteArrayOutputStream = new ByteArrayOutputStream
-    VerifyCodeUtils.outputImage(200, 80, out, verifyCode)
+    captcha.out(out)
     Ok(ByteString(out.toByteArray))
       .as("image/jpeg")
-      .addingToSession("verifyCode" -> HashUtil.sha256(verifyCode.toLowerCase()))
+      .addingToSession("verifyCode" -> HashUtil.sha256(captcha.text().toLowerCase))
   }
 
 }
