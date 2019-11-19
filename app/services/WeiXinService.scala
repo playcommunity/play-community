@@ -61,7 +61,7 @@ class WeiXinService @Inject()(env: Environment, config: Configuration, mongo: Mo
           .addQueryStringParameters(
             "access_token" -> token
           ).post(Json.obj(
-            "scene" -> uuid,
+            "scene" -> s"scan-${uuid}",
             //"page" -> "pages/index/index",
             "width" -> 280
           )) map { wsResp =>
