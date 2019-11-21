@@ -79,7 +79,6 @@ GET     /search                                   controllers.Application.search
 GET     /login                                    controllers.Application.login(login: Option[String])
 POST    /login                                    controllers.Application.doLogin
 GET     /weixinLogin                              controllers.Application.weixinLogin
-GET     /weixinLogin1                              controllers.Application.weixinLogin1
 GET     /weixinAppCode                            controllers.Application.renderAppCodeImage(uuid: String)
 GET     /waitWeiXinScan                           controllers.Application.waitWeiXinScanResult(uuid: String)
 GET     /register                                 controllers.Application.register
@@ -98,7 +97,7 @@ POST    /activate                                 controllers.Application.doActi
 POST    /activate/email                           controllers.Application.doSendActiveMail
 
 # FIXME
-GET     /temp/indexBook                           controllers.Application.indexBook
+# GET     /temp/indexBook                           controllers.Application.indexBook
 
 # User
 GET     /user                                     controllers.UserController.index
