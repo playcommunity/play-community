@@ -116,73 +116,22 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
         val province = json("province").as[String]
         val avatarUrl = json("avatarUrl").as[String]
 
-        Logger.info(s"weixinOauthCallback - code: ${code}, uuid: ${uuid}, nickName:${nickName}")
+        Logger.info(s"WeiXin scan login, uuid: ${uuid}, code: ${code}, nickName:${nickName}")
 
-        // FIXME: 使用下面注释代码
-        weixinService.getSessionByCode(code).flatMap{
-          case Some((openid, unionid, session_key)) =>
-            userRepository.findByChannelId(openid) flatMap {
-              // 用户已存在
-              case Some(user) =>
-                Logger.info("weixinOauthCallback: find existing user for " + openid)
-                //promise.success(user)
-
-                // FIXME
-                ("undefined" :: "123" :: uuid :: app.Global.appCodes).distinct.foreach{ id =>
-                  cache.get[Promise[User]](s"app_code_${id}") foreach {
-                    case Some(p) => p.success(user)
-                    case None => Logger.error("Expired uuid: " + id)
-                  }
-                }
-                app.Global.appCodes = List.empty[String]
-
-                Future.successful(Ok(Json.obj("code" -> 0, "openid" -> openid)))
-
-              // 创建用户
-              case None =>
-                Logger.info("weixinOauthCallback: create user for " + openid)
-                for {
-                  uid <- counterService.getNextSequence("user-sequence")
-                  user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
-                  wr <- mongo.insertOne[User](user)
-                } yield {
-                  //promise.success(user)
-
-                  // FIXME
-                  ("undefined" :: "123" :: uuid :: app.Global.appCodes).distinct.foreach{ id =>
-                    cache.get[Promise[User]](s"app_code_${id}") foreach {
-                      case Some(p) => p.success(user)
-                      case None => Logger.error("Expired uuid: " + id)
-                    }
-                  }
-                  app.Global.appCodes = List.empty[String]
-
-
-                  Ok(Json.obj("code" -> 0, "openid" -> openid, "unionid" -> unionid))
-                }
-            }
-          case None =>
-            Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Get session failed.")))
-        }.recover{
-          case t: Throwable =>
-            Logger.error("WeiXin登录异常：" + t.getMessage, t)
-            Ok(Json.obj("code" -> 1, "message" -> "Please retry later."))
-        }
-
-        /*cache.get[Promise[User]](s"app_code_${uuid}").flatMap{
+        cache.get[Promise[User]](s"app_code_${uuid}").flatMap{
           case Some(promise) =>
             weixinService.getSessionByCode(code).flatMap{
               case Some((openid, unionid, session_key)) =>
                 userRepository.findByChannelId(openid) flatMap {
                   // 用户已存在
                   case Some(user) =>
-                    Logger.info("weixinOauthCallback: find existing user for " + openid)
+                    Logger.info("WeiXin scan login, find existing user for " + openid)
                     promise.success(user)
                     Future.successful(Ok(Json.obj("code" -> 0, "openid" -> openid)))
 
                   // 创建用户
                   case None =>
-                    Logger.info("weixinOauthCallback: create user for " + openid)
+                    Logger.info("WeiXin scan login, create user for " + openid)
                     for {
                       uid <- counterService.getNextSequence("user-sequence")
                       user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
@@ -198,16 +147,16 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
 
           // 未扫码导致过期
           case None =>
-            Logger.error("weixinOauthCallback: Session expired.")
+            Logger.error("WeiXin scan login, Session expired.")
             Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Session expired.")))
         }.recover{
           case t: Throwable =>
-            Logger.error("WeiXin登录异常：" + t.getMessage, t)
+            Logger.error("WeiXin scan login error：" + t.getMessage, t)
             Ok(Json.obj("code" -> 1, "message" -> "Please retry later."))
-        }*/
+        }
 
       case None =>
-        Logger.error("weixinOauthCallback: Invalid request data.")
+        Logger.error("WeiXin scan login: Invalid request data.")
         Future.successful(Ok(Json.obj("code" -> 1, "message" -> "Invalid request data.")))
     }
   }

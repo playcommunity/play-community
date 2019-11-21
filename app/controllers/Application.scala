@@ -75,14 +75,8 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     * 微信小程序扫码登录
     */
   def weixinLogin = Action { implicit request =>
-    Ok(views.html.weixinLogin(ObjectId.get.toHexString))
-  }
-
-  /**
-    * FIXME
-    */
-  def weixinLogin1 = Action { implicit request =>
-    Ok(views.html.weixinLogin1(ObjectId.get.toHexString))
+    val uuid = "scan-" + ObjectId.get.toHexString
+    Ok(views.html.weixinLogin(uuid))
   }
 
   /**
@@ -96,18 +90,15 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
   }
 
   /**
-    * 生成微信小程序码
+    * 等待微信扫码并处理
     */
   def waitWeiXinScanResult(uuid: String) = Action.async { implicit request: Request[AnyContent] =>
 
-    // FIXME
-    app.Global.appCodes = uuid :: app.Global.appCodes
-
     val promise = Promise[User]()
-    cache.set(s"app_code_${uuid}", promise, 60.seconds)
+    cache.set(s"app_code_${uuid}", promise, 180.seconds)
 
     // 等待扫码结果
-    promise.future.withTimeout(60.seconds).map{ u =>
+    promise.future.withTimeout(180.seconds).map{ u =>
       Ok(Json.obj("code" -> 0))
         .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.WEIXIN)
     } recover {
