@@ -2,10 +2,10 @@ package infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
 import infrastructure.repository.UserRepository
-import javax.inject.{ Inject, Singleton }
-import models.User
+import javax.inject.{Inject, Singleton}
+import models.{Resource, User}
 import play.api.libs.json.Json.obj
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{JsObject, Json}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,6 +46,12 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
     mongo.find[User](obj("login" -> login)).first
   }
 
+  /**
+    * 查询资用户列表。
+    */
+  def findList(query: JsObject, sort: JsObject, skip: Int, limit: Int): Future[List[User]] = {
+    mongo.find[User](query, obj("content" -> 0)).sort(sort).skip(skip).limit(limit).list()
+  }
   /**
    * 查询阅读量最高的资源列表, 为提高查询效率，忽略资源内容。
    *

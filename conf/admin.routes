@@ -20,3 +20,6 @@ GET     /doc/setting                        controllers.admin.AdminDocController
 POST    /doc/setting                        controllers.admin.AdminDocController.doDocSetting
 GET     /doc/catalog/view                   controllers.admin.AdminDocController.chooseCatalog(select: Option[String])
 GET     /doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
+
+# User
+GET     /user/list                          controllers.admin.AdminUserController.findUserList(page: Int ?= 1)
