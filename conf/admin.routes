@@ -1,14 +1,18 @@
 # Admin
 GET     /                                   controllers.admin.AdminController.index
+
+GET     /notices                            controllers.admin.AdminController.notices
+GET     /currentUser                            controllers.admin.AdminController.currentUser
+
 GET     /setting/base                       controllers.admin.AdminController.base
 POST    /setting/base                       controllers.admin.AdminController.doBaseSetting
 
-# Admin Category
+# Category
 GET     /category                          controllers.admin.AdminController.category
 POST    /category                          controllers.admin.AdminController.doAddCategory
 POST    /category/remove                   controllers.admin.AdminController.doRemoveCategory
 
-# Admin Doc
+# Doc
 GET     /docs                               controllers.admin.AdminDocController.index(page: Int ?= 1)
 GET     /doc/catalog                        controllers.admin.AdminDocController.catalog
 POST    /doc/catalog                        controllers.admin.AdminDocController.doSetCatalog
@@ -22,4 +26,4 @@ GET     /doc/catalog/view                   controllers.admin.AdminDocController
 GET     /doc/catalog/:catalogId             controllers.admin.AdminDocController.getCatalogName(catalogId: String)
 
 # User
-GET     /user/list                          controllers.admin.AdminUserController.findUserList(page: Int ?= 1)
+GET     /user/list                          controllers.admin.AdminUserController.findUserList(currentPage: Int ?= 1, pageSize: Int ?= 10)

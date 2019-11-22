@@ -47,11 +47,19 @@ class MongoUserRepository @Inject()(mongo: Mongo) extends UserRepository {
   }
 
   /**
-    * 查询资用户列表。
+    * 查询用户列表。
     */
   def findList(query: JsObject, sort: JsObject, skip: Int, limit: Int): Future[List[User]] = {
     mongo.find[User](query, obj("content" -> 0)).sort(sort).skip(skip).limit(limit).list()
   }
+
+  /**
+    * 查询用户总数。
+    */
+  def count(query: JsObject): Future[Long] = {
+    mongo.count[User](query)
+  }
+
   /**
    * 查询阅读量最高的资源列表, 为提高查询效率，忽略资源内容。
    *
