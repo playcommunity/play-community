@@ -5,6 +5,7 @@
 # Board
 GET     /boards                                   controllers.BoardController.index(path: String, resType: String = "", status: String ?= "0", page: Int ?= 1)
 GET     /board/all                                controllers.BoardController.viewAllBoards()
+GET     /board/view                               controllers.ResourceController.view(_id: String)
 POST    /board/recordTraffic                      controllers.BoardController.recordTraffic(boardPath: String)
 GET     /board/tree                               controllers.BoardController.categoryTree(defaultSelected: String, callback: String)
 GET     /board/tree/json                          controllers.BoardController.categoryTreeJson()

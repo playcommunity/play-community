@@ -4,6 +4,8 @@
 @main(s"${app.Global.siteSetting.name} - 社区分享", "board", "") {
 
 @views.html.board.nav(path, categoryList)
+<style>
+</style>
 
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
@@ -28,7 +30,7 @@
             </a>
             <h2>
               <a class="layui-badge">@utils.AppUtil.prettyResource(resType)</a>
-              <a href="/@{resType}/view?_id=@a._id">@a.title</a>
+              <a href="/board/view?_id=@a._id">@a.title</a>
             </h2>
             <div class="fly-list-info">
               <a href="/user/home?uid=@{a.author._id}" link>
@@ -73,23 +75,31 @@
     </div>
     <div class="layui-col-md4">
       <div class="layui-card">
-        <div class="layui-card-header">版块介绍</div>
         <div class="layui-card-body" style="text-align: center;">
           <div class="layadmin-homepage-pad-ver">
-            <img class="layadmin-homepage-pad-img" src="@board.avatarUrl" width="96" height="96">
+            <img class="layadmin-homepage-pad-img" src="@board.avatarUrl" width="50" height="50">
           </div>
-          <h4 class="layadmin-homepage-font">@board.name</h4>
-          <p class="layadmin-homepage-min-font">@board.description</p>
-        </div>
-      </div>
-      <div class="layui-card">
-        <div class="layui-card-header">版主介绍</div>
-        <div class="layui-card-body" style="text-align: center;">
-          <div class="layadmin-homepage-pad-ver">
-            <img class="layadmin-homepage-pad-img" src='@board.owner.map(_.headImg).getOrElse("https://www.layui.com/admin/std/dist/layuiadmin/style/res/template/portrait.png")' width="96" height="96">
+          <h4 class="layadmin-homepage-font"><a href="" style="color:#009688;">沐风(版主)</a></h4>
+          <div class="layui-fluid" style="padding-top:10px;">
+            <div class="layui-row" style="font-size:16px!important; color: #999!important;">
+              <div class="layui-col-md3">
+                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+              </div>
+              <div class="layui-col-md3">
+                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+              </div>
+              <div class="layui-col-md3">
+                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+              </div>
+              <div class="layui-col-md3">
+                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+              </div>
+            </div>
           </div>
-          <h4 class="layadmin-homepage-font">@board.owner.map(_.headImg).getOrElse("-")</h4>
-          <p class="layadmin-homepage-min-font">@board.owner.map(_.description).getOrElse("-")</p>
+          <!--<p class="layadmin-homepage-min-font">@board.description</p>-->
+          <div class="layui-btn-group" style="padding:30px 0 20px;">
+            <button type="button" class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe608;</i> 关注</button>
+          </div>
         </div>
       </div>
       <dl class="fly-panel fly-list-one">
