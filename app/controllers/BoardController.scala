@@ -1,5 +1,7 @@
 package controllers
 
+import java.time.{Instant, LocalDateTime, LocalTime, ZoneOffset}
+
 import cn.playscala.mongo.Mongo
 import infrastructure.repository.mongo.{MongoBoardRepository, MongoCategoryRepository, MongoResourceRepository, MongoUserRepository}
 import javax.inject._
@@ -45,17 +47,23 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
 
     boardRepo.findByPath(path) flatMap {
       case Some(board) =>
+        val minTime = LocalDateTime.now().`with`(LocalTime.MIN).toInstant(ZoneOffset.UTC)
+        val maxTime = LocalDateTime.now().`with`(LocalTime.MAX).toInstant(ZoneOffset.UTC)
         for {
           resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
           topViewResources <- resourceRepo.findTopViewList(resType, 10)
           topReplyResources <- resourceRepo.findTopReplyList(resType, 10)
+          newResCount <- resourceRepo.count(Json.obj("categoryPath" -> path, "createTime" -> obj("$gte" -> minTime, "$lte" -> maxTime)))
+          totalResCount <- resourceRepo.count(obj("categoryPath" -> path))
+          todayTraffic <- boardRepo.getTodayTraffic(path)
+          totalTraffic <- boardRepo.getTotalTraffic(path)
           categoryList <- categoryRepo.findAllList()
           total <- resourceRepo.count(q)
         } yield {
           if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
             Redirect(s"/${resType}s")
           } else {
-            Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, topReplyResources, categoryList, cPage, total.toInt))
+            Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, topReplyResources, categoryList, (todayTraffic, totalTraffic, newResCount, totalResCount), cPage, total.toInt))
           }
         }
       case None => Future.successful(Ok(views.html.message("系统提示", "该版块不存在！")))
@@ -68,11 +76,28 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
     }
   }
 
+  def getRelateStatus(boardPath: String) = checkLogin.async { implicit request: Request[AnyContent] =>
+    val uid = RequestHelper.getUid
+    for {
+      follows <- boardRepo.getFollowers(boardPath)
+    } yield {
+      Ok(obj("code" -> 0, "isFollowed" -> follows.contains(uid)))
+    }
+  }
+
   def recordTraffic(boardPath: String) = checkLogin.async { implicit request: Request[AnyContent] =>
     val uid = RequestHelper.getUid
     boardRepo.recordTraffic(boardPath, uid).map {
       case true => Ok(Json.obj("code" -> 0))
-      case true => Ok(Json.obj("code" -> 1, "message" -> "error"))
+      case false => Ok(Json.obj("code" -> 1, "message" -> "error"))
+    }
+  }
+
+  def followBoard(boardPath: String, isFollow: Boolean) = checkLogin.async { implicit request: Request[AnyContent] =>
+    val uid = RequestHelper.getUid
+    boardRepo.followBoard(boardPath, uid, isFollow).map {
+      case true => Ok(Json.obj("code" -> 0))
+      case false => Ok(Json.obj("code" -> 1, "message" -> "error"))
     }
   }
 

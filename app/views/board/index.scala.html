@@ -1,10 +1,17 @@
-@(board: Board, path: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], categoryList: List[Category], page: Int, total: Int)(implicit request: RequestHeader)
+@(board: Board, path: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], categoryList: List[Category], statTup:(Long, Long, Long, Long), page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${app.Global.siteSetting.name} - 社区分享", "board", "") {
 
 @views.html.board.nav(path, categoryList)
 <style>
+.board-owner-avatar {
+    margin-right: 5px;
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 500rem;
+}
 </style>
 
 <div class="layui-container">
@@ -79,29 +86,45 @@
           <div class="layadmin-homepage-pad-ver">
             <img class="layadmin-homepage-pad-img" src="@board.avatarUrl" width="50" height="50">
           </div>
-          <h4 class="layadmin-homepage-font"><a href="" style="color:#009688;">沐风(版主)</a></h4>
+          <h4 class="layadmin-homepage-font"><a href="" style="color:#009688;">@board.name</a></h4>
           <div class="layui-fluid" style="padding-top:10px;">
             <div class="layui-row" style="font-size:16px!important; color: #999!important;">
               <div class="layui-col-md3">
-                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+                <i class="layui-icon layui-icon-username" style="margin: 0 5px 0; font-size:20px!important;" title="今日访问次数"></i> @statTup._1
               </div>
               <div class="layui-col-md3">
-                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+                <i class="layui-icon layui-icon-user" style="margin: 0 5px 0; font-size:20px!important;" title="总计访问次数"></i> @statTup._2
               </div>
               <div class="layui-col-md3">
-                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+                <i class="layui-icon layui-icon-chat" style="margin: 0 5px 0; font-size:20px!important;" title="今日新帖数量"></i> @statTup._3
               </div>
               <div class="layui-col-md3">
-                <i class="iconfont icon-pinglun1" style="margin: 0 5px 0; font-size:20px!important;" title="回答"></i>10
+                <i class="layui-icon layui-icon-dialogue" style="margin: 0 5px 0; font-size:20px!important;" title="总计帖子数量"></i> @statTup._4
               </div>
             </div>
           </div>
           <!--<p class="layadmin-homepage-min-font">@board.description</p>-->
           <div class="layui-btn-group" style="padding:30px 0 20px;">
-            <button type="button" class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe608;</i> 关注</button>
+            <button id="follow-btn" type="button" class="layui-btn layui-btn-primary"><i class="layui-icon">&#xe608;</i> <span id="follow-btn-text">立即关注</span></button>
           </div>
         </div>
       </div>
+
+      <div class="layui-card">
+        <div class="layui-card-header">社区版主</div>
+        <div class="layui-card-body" style="">
+          @if(board.owner.nonEmpty){
+            <a href="" style="color:#009688;vertical-align: middle!important;line-height:28px;">
+                <img class="board-owner-avatar" src="@board.owner.get.headImg">
+            </a>
+            <a href="" style="color:#636b6f;vertical-align: middle!important;line-height:28px;font-size:14px;">@board.owner.get.name</a>
+            <span class="layui-badge layui-bg-gray">码农</span>
+          }else{
+          暂无版主
+          }
+        </div>
+      </div>
+
       <dl class="fly-panel fly-list-one">
         <dt class="fly-panel-title">热点@if(resType == "qa"){问题}else{文章}</dt>
         @for(a <- topViewResources){
@@ -126,4 +149,38 @@
 }
 
 <script>
+var isFollowed = false;
+
+$(function () {
+
+@if(RequestHelper.isLogin){
+  // 访问计数
+  $.get('/board/recordTraffic?boardPath=@board.path');
+
+  // 读取状态
+  $.get('/board/getRelateStatus?boardPath=@board.path', function(data){
+    isFollowed = data.isFollowed;
+    renderFollowBtn();
+  });
+}
+
+});
+
+function renderFollowBtn(){
+  if(isFollowed){
+    $('#follow-btn-text').text("取消关注");
+  } else {
+    $('#follow-btn-text').text("立即关注");
+  }
+}
+
+$('#follow-btn').click(function(){
+ isFollowed = !isFollowed;
+ renderFollowBtn();
+ $.get('/board/followBoard?boardPath=@board.path&isFollow=' + isFollowed, function(data){
+    if(data.code != 0){
+      window.location.href.reload();
+    }
+  });
+});
 </script>

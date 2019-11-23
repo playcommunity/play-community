@@ -3,10 +3,12 @@ package infrastructure.repository.mongo
 import java.time.Instant
 
 import cn.playscala.mongo.Mongo
+import cn.playscala.mongo.internal.AsyncResultHelper
 import infrastructure.repository.{BoardRepository, TweetRepository}
 import javax.inject.Inject
-import models.{Board, Category, StatBoardTraffic, Tweet}
-import play.api.libs.json.Json
+import models.{Board, Category, StatBoard, StatBoardTraffic, Tweet}
+import org.bson.BsonDocument
+import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.Json._
 import utils.{BoardUtil, DateTimeUtil}
 
@@ -62,6 +64,55 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
         "$inc" -> obj("count" -> 1),
         "$setOnInsert" -> obj("createTime" -> Instant.now(), "updateTime" -> Instant.now())
       ),
+      true
+    ).map(_.getModifiedCount == 1)
+  }
+
+  def getTodayTraffic(boardPath: String): Future[Long] = {
+    val dayStr = DateTimeUtil.toString(DateTimeUtil.now(), "yyyy-MM-dd")
+    mongo.find[StatBoardTraffic](obj("boardPath" -> boardPath, "dayStr" -> dayStr)).first map {
+      case Some(t) => t.count
+      case None => 0
+    }
+  }
+
+  def getTotalTraffic(boardPath: String): Future[Long] = {
+    val it = mongo.collection[StatBoardTraffic].aggregate[BsonDocument](
+      Seq(
+        obj("$match" -> obj("boardPath" -> boardPath)),
+        obj(
+          "$group" -> obj(
+            "_id" -> "dayStr",
+            "totalCount" -> obj("$sum" -> "$count")
+          )
+        )
+      ))
+    AsyncResultHelper.toFuture(it) map { list =>
+      list.headOption match {
+        case Some(bs) => bs.getInt32("totalCount").getValue
+        case None => 0L
+      }
+    }
+  }
+
+  def getFollowers(boardPath: String): Future[Seq[String]] = {
+    mongo.find[StatBoard](obj("boardPath" -> boardPath)).first map {
+      case Some(sb) => sb.followers.getOrElse(Seq.empty[String])
+      case None => Seq.empty[String]
+    }
+  }
+
+  /**
+    * 关注版块
+    */
+  def followBoard(boardPath: String, uid: String, isFollow: Boolean): Future[Boolean] = {
+    val addOrPull = isFollow match {
+      case true => "$addToSet"
+      case false => "$pull"
+    }
+    mongo.updateOne[StatBoard](
+      obj("boardPath" -> boardPath),
+      obj(addOrPull -> obj("followers" -> uid)),
       true
     ).map(_.getModifiedCount == 1)
   }
