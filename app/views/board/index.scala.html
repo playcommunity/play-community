@@ -1,4 +1,4 @@
-@(board: Board, path: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], topReplyResources: List[Resource], categoryList: List[Category], statTup:(Long, Long, Long, Long), page: Int, total: Int)(implicit request: RequestHeader)
+@(board: Board, path: String, resType: String, status: String, resources: List[Resource], topViewResources: List[Resource], categoryList: List[Category], statTup:(Long, Long, Long, Long), page: Int, total: Int)(implicit request: RequestHeader)
 
 @import utils.RequestHelper
 @main(s"${app.Global.siteSetting.name} - 社区分享", "board", "") {
@@ -126,20 +126,11 @@
       </div>
 
       <dl class="fly-panel fly-list-one">
-        <dt class="fly-panel-title">热点@if(resType == "qa"){问题}else{文章}</dt>
+        <dt class="fly-panel-title">热门资源</dt>
         @for(a <- topViewResources){
         <dd>
           <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
           <span><i class="iconfont">&#xe60b;</i> @a.viewStat.count</span>
-        </dd>
-        }
-      </dl>
-      <dl class="fly-panel fly-list-one">
-        <dt class="fly-panel-title">热议@if(resType == "qa"){问题}else{文章}</dt>
-        @for(a <- topReplyResources){
-        <dd>
-          <a href="/@{a.resType}/view?_id=@{a._id}">@a.title</a>
-          <span><i class="iconfont icon-pinglun1"></i> @a.replyStat.replyCount</span>
         </dd>
         }
       </dl>

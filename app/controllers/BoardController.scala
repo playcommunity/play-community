@@ -45,29 +45,33 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
       case _ =>
     }
 
-    boardRepo.findByPath(path) flatMap {
-      case Some(board) =>
-        val minTime = LocalDateTime.now().`with`(LocalTime.MIN).toInstant(ZoneOffset.UTC)
-        val maxTime = LocalDateTime.now().`with`(LocalTime.MAX).toInstant(ZoneOffset.UTC)
-        for {
-          resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
-          topViewResources <- resourceRepo.findTopViewList(resType, 10)
-          topReplyResources <- resourceRepo.findTopReplyList(resType, 10)
-          newResCount <- resourceRepo.count(Json.obj("categoryPath" -> path, "createTime" -> obj("$gte" -> minTime, "$lte" -> maxTime)))
-          totalResCount <- resourceRepo.count(obj("categoryPath" -> path))
-          todayTraffic <- boardRepo.getTodayTraffic(path)
-          totalTraffic <- boardRepo.getTotalTraffic(path)
-          categoryList <- categoryRepo.findAllList()
-          total <- resourceRepo.count(q)
-        } yield {
-          if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
-            Redirect(s"/${resType}s")
-          } else {
-            Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, topReplyResources, categoryList, (todayTraffic, totalTraffic, newResCount, totalResCount), cPage, total.toInt))
-          }
+    BoardUtil.getBoardPath(path) match {
+      case Some(boardPath) =>
+        boardRepo.findByPath(boardPath) flatMap {
+          case Some(board) =>
+            val minTime = LocalDateTime.now().`with`(LocalTime.MIN).toInstant(ZoneOffset.UTC)
+            val maxTime = LocalDateTime.now().`with`(LocalTime.MAX).toInstant(ZoneOffset.UTC)
+            for {
+              resources <- resourceRepo.findList(q, Json.obj("createTime" -> -1), (cPage-1) * PAGE_SIZE, PAGE_SIZE)
+              topViewResources <- boardRepo.findTopViewList(boardPath, 10)
+              newResCount <- resourceRepo.count(Json.obj("categoryPath" -> boardPath, "createTime" -> obj("$gte" -> minTime, "$lte" -> maxTime)))
+              totalResCount <- resourceRepo.count(obj("categoryPath" -> boardPath))
+              todayTraffic <- boardRepo.getTodayTraffic(boardPath)
+              totalTraffic <- boardRepo.getTotalTraffic(boardPath)
+              categoryList <- categoryRepo.findAllList()
+              total <- resourceRepo.count(q)
+            } yield {
+              if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
+                Redirect(s"/${resType}s")
+              } else {
+                Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, categoryList, (todayTraffic, totalTraffic, newResCount, totalResCount), cPage, total.toInt))
+              }
+            }
+          case None => Future.successful(Ok(views.html.message("系统提示", "该版块不存在！")))
         }
-      case None => Future.successful(Ok(views.html.message("系统提示", "该版块不存在！")))
+      case None =>   Future.successful(Ok(views.html.message("系统提示", "该版块不存在！")))
     }
+
   }
 
   def viewAllBoards() = Action.async { implicit request: Request[AnyContent] =>

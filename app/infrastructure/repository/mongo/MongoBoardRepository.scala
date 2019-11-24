@@ -6,7 +6,7 @@ import cn.playscala.mongo.Mongo
 import cn.playscala.mongo.internal.AsyncResultHelper
 import infrastructure.repository.{BoardRepository, TweetRepository}
 import javax.inject.Inject
-import models.{Board, Category, StatBoard, StatBoardTraffic, Tweet}
+import models.{Board, Category, Resource, StatBoard, StatBoardTraffic, Tweet}
 import org.bson.BsonDocument
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.Json._
@@ -32,8 +32,8 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
   /**
     * 根据path查询分类
     */
-  def findByPath(path: String): Future[Option[Board]] = {
-    mongo.find[Board](Json.obj("path" -> path)).first
+  def findByPath(boardPath: String): Future[Option[Board]] = {
+    mongo.find[Board](Json.obj("path" -> boardPath)).first
   }
 
   def findAll(): Future[List[Board]] = {
@@ -42,6 +42,13 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
 
   def findTop(count: Int): Future[List[Board]] = {
     mongo.find[Board](obj("parentPath" -> "/")).sort(obj("index" -> 1)).limit(count).list()
+  }
+
+  /**
+    * 查询阅读量最高的资源列表, 为提高查询效率，忽略资源内容。
+    */
+  def findTopViewList(boardPath: String, count: Int): Future[List[Resource]] = {
+    mongo.find[Resource](obj("categoryPath" -> Json.obj("$regex" -> s"^${boardPath}"), "visible" -> true), obj("content" -> 0)).sort(Json.obj("viewStat.count" -> -1)).limit(count).list()
   }
 
   def findBoardCategoryList(path: String): Future[List[Category]] = {

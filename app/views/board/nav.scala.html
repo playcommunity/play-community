@@ -1,5 +1,6 @@
 @(path: String, categoryList: List[Category])
 
+@import utils.BoardUtil
 <style>
   .black a {
     color:#000000!important;
@@ -54,36 +55,31 @@
     margin-inline-start: 0px;
     margin-inline-end: 0px;
     font-weight: bold;
-}
+  }
+
+  .layui-bg-white .layui-this:after {
+    display:none!important;
+  }
+
 </style>
 
 <div class="fly-panel fly-column">
     <div class="layui-container">
         <ul class="layui-nav layui-bg-white" lay-filter="" style="padding:0;">
+            @BoardUtil.getAllLevelPaths(path).map{ levelPath =>
             <li class="layui-nav-item black">
-                <a href="javascript:;">函数式编程</a>
+                <a href="javascript:;">@{if(levelPath == "/") "所有版块" else categoryList.find(_.path == levelPath).map(_.name).getOrElse("-")}</a>
+                @defining(BoardUtil.getChildren(levelPath, categoryList)){ children =>
+                @if(children.nonEmpty){
                 <dl class="layui-nav-child"> <!-- 二级菜单 -->
-                    <dd><a href="">移动模块</a></dd>
-                    <dd><a href="">后台模版</a></dd>
-                    <dd><a href="">电商平台</a></dd>
+                    @children.map{ c =>
+                    <dd><a href="/boards?path=@c.path">@c.name</a></dd>
+                    }
                 </dl>
+                }
+                }
             </li>
-            <li class="layui-nav-item black">
-                <a href="javascript:;">解决方案</a>
-                <dl class="layui-nav-child"> <!-- 二级菜单 -->
-                    <dd><a href="">移动模块</a></dd>
-                    <dd><a href="">后台模版</a></dd>
-                    <dd><a href="">电商平台</a></dd>
-                </dl>
-            </li>
-            <li class="layui-nav-item black">
-                <a href="javascript:;">解决方案</a>
-                <dl class="layui-nav-child"> <!-- 二级菜单 -->
-                    <dd><a href="">移动模块</a></dd>
-                    <dd><a href="">后台模版</a></dd>
-                    <dd><a href="">电商平台</a></dd>
-                </dl>
-            </li>
+            }
         </ul>
 
         <div class="fly-column-right layui-hide-xs">
