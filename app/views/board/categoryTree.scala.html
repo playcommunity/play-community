@@ -22,11 +22,20 @@
       .folder {
         background: url(/assets/images/board/file_sprite.png) right bottom no-repeat;
       }
+      .node-type-default {
+        color: #009688;
+      }
+      .node-type-gray {
+        color: #c6c6c6;
+      }
+      .icon-lg {
+        font-size: 16px !important;
+      }
     </style>
 </head>
-<body>
+<body style="padding:20px 10px 15px;">
   <div id="tree"></div>
-  <div style="text-align:center;">
+  <div style="text-align:center;padding-top:15px;">
       <button id="confirm-btn" type="button" class="layui-btn">选择分类</button>
   </div>
 </body>
@@ -46,7 +55,15 @@ $('#tree').on('changed.jstree', function (e, data) {
     'core' : {
         'data' : @Html(data.toString)
     },
-    "plugins" : ["types", "state"]
+    "plugins" : ["types", "state"],
+    "types" : {
+        "default" : {
+            "icon" : "layui-icon layui-icon-radio node-type-default icon-lg"
+        },
+        "gray" : {
+            "icon" : "layui-icon layui-icon-radio node-type-gray icon-lg"
+        }
+    }
 });
 
 $("#tree").bind('ready.jstree',function (obj, e) {

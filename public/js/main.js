@@ -7,7 +7,7 @@ window.CommonUtil = {
           layer.open({
               type: 2,
               title: ["选择分类", 'font-size:18px;'],
-              area: ['600px', '400px'],
+              area: ['500px', '600px'],
               fixed: true,
               resize: false,
               offset: '100px',
