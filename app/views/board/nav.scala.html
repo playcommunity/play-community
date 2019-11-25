@@ -72,7 +72,7 @@
                 @defining(BoardUtil.getChildren(levelPath, categoryList)){ children =>
                 @if(children.nonEmpty){
                 <dl class="layui-nav-child"> <!-- 二级菜单 -->
-                    @children.map{ c =>
+                    @children.sortBy(_.index).map{ c =>
                     <dd><a href="/boards?path=@c.path">@c.name</a></dd>
                     }
                 </dl>
