@@ -1,9 +1,9 @@
-@(status: String, category: String, topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], boards: List[Board], page: Int, total: Int)(implicit request: RequestHeader)
+@(resType: String, status: String, topNews: List[Resource], news: List[Resource], activeUsers: List[User], topViewResources: List[Resource], boards: List[Board], page: Int, total: Int)(implicit request: RequestHeader)
 @import helper._
 @import utils.RequestHelper
 
 @main(s"${app.Global.siteSetting.indexTitle}", "community", "index") {
-@nav("index")
+@nav(resType)
 <div class="layui-container">
   <div class="layui-row layui-col-space15">
     <div class="layui-col-md8">
@@ -58,10 +58,6 @@
           <a @if(status == "2"){class="layui-this"} href="/?status=2">已结</a>
           <span class="fly-mid"></span>
           <a @if(status == "3"){class="layui-this"} href="/?status=3">精华</a>
-          @if(category != "/"){
-          <span class="fly-mid"></span>
-          <a class="layui-this" href="javascript:;">按分类查看</a>
-          }
         </div>
 
         <ul class="fly-list">
@@ -100,7 +96,7 @@
         </ul>
           <div style="text-align: center">
           <div class="laypage-main">
-            <a href="/?status=@{status}&category=@{category}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?status=@{status}&category=@{category}&page=@{page+1}" class="laypage-next">下一页</a></div>
+            <a href="/?status=@{status}&resType=@{resType}&page=@{page-1}" class="laypage-prev">上一页</a><span>@{if(news.isEmpty && total == 0){0}else{page}}/@{math.ceil(total/15.0).toInt}</span><a href="/?status=@{status}&resType=@{resType}&page=@{page+1}" class="laypage-next">下一页</a></div>
           
           </div>
 

@@ -106,12 +106,17 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
       errForm => Future.successful(Redirect(routes.Application.message("系统提示", "您的输入有误！" + errForm.errors))),
       tuple => {
         val (name, gender, city, introduction) = tuple
-        userRepo.updateUser(request.session("uid"), Json.obj("setting.name" -> name, "setting.gender" -> gender.getOrElse[String](""),
-          "setting.city" -> city, "setting.introduction" -> introduction))
-          .map { _ =>
+        userRepo.updateUser(
+          request.session("uid"),
+          Json.obj(
+            "setting.name" -> name,
+            "setting.pinyin" -> HanLPUtil.convertToPinyin(name),
+            "setting.gender" -> gender.getOrElse[String](""),
+            "setting.city" -> city, "setting.introduction" -> introduction)
+        ).map { _ =>
             Redirect(routes.UserController.setting())
               .addingToSession("name" -> name)
-          }
+        }
       }
     )
   }

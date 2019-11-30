@@ -43,9 +43,12 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     Ok(views.html.icons())
   }
 
-  def index(status: String, category: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
+  def index(resType: String, status: String, page: Int) = Action.async { implicit request: Request[AnyContent] =>
     val cPage = AppUtil.parsePage(page)
-    var q = obj("categoryPath" -> obj("$regex" -> s"^${category}"), "visible" -> true)
+    var q = obj("visible" -> true)
+    if(resType != ""){
+      q ++= obj("resType" -> resType)
+    }
     status match {
       case "0" =>
       case "1" => q ++= obj("closed" -> false)
@@ -60,7 +63,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       topViewDocs <- resourceRepo.findTopViewList(10)
       boards <- boardRepo.findTop(11)
     } yield {
-      Ok(views.html.index(status, category, topNews, news, activeUsers, topViewDocs, boards, cPage, total.toInt))
+      Ok(views.html.index(resType, status, topNews, news, activeUsers, topViewDocs, boards, cPage, total.toInt))
     }
   }
 

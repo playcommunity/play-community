@@ -20,13 +20,13 @@
       <div class="fly-panel" style="margin-bottom: 0;">
 
         <div class="fly-panel-title fly-filter">
-          <a href="/@{resType}s" @if(status == "0"){class="layui-this"}>所有</a>
+          <a @if(status == "0"){class="layui-this"} href="/boards?status=0&path=@path">所有</a>
           <span class="fly-mid"></span>
-          <a @if(status == "1"){class="layui-this"} href="/@{resType}s?status=1">未结</a>
+          <a @if(status == "1"){class="layui-this"} href="/boards?status=1&path=@path">未结</a>
           <span class="fly-mid"></span>
-          <a @if(status == "2"){class="layui-this"} href="/@{resType}s?status=2">已结</a>
+          <a @if(status == "2"){class="layui-this"} href="/boards?status=2&path=@path">已结</a>
           <span class="fly-mid"></span>
-          <a @if(status == "3"){class="layui-this"} href="/@{resType}s?status=3">精华</a>
+          <a @if(status == "3"){class="layui-this"} href="/boards?status=3&path=@path">精华</a>
         </div>
 
         <ul class="fly-list">
@@ -36,7 +36,7 @@
               <img src="@a.author.headImg" alt="">
             </a>
             <h2>
-              <a class="layui-badge">@utils.AppUtil.prettyResource(resType)</a>
+              <a class="layui-badge">@utils.AppUtil.prettyResource(a.resType)</a>
               <a href="/board/view?_id=@a._id">@a.title</a>
             </h2>
             <div class="fly-list-info">

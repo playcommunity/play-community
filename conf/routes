@@ -45,6 +45,7 @@ GET     /doc/catalog                              controllers.DocController.view
 
 
 # Exam
+GET     /exams                                    controllers.ResourceController.index(category: String ?= "/", resType: String = "exam", status: String ?= "0", page: Int ?= 1)
 GET     /exam/view                                controllers.ResourceController.view(_id: String)
 GET     /exam/add                                 controllers.ExamController.add
 GET     /exam/edit                                controllers.ExamController.edit(_id: String)
@@ -84,7 +85,7 @@ GET     /socket.io/                              play.engineio.EngineIOControlle
 POST    /socket.io/                              play.engineio.EngineIOController.endpoint(transport)
 
 # Application
-GET     /                                         controllers.Application.index(status: String ?= "0", category: String ?= "/", page: Int ?= 1)
+GET     /                                         controllers.Application.index(resType: String ?= "", status: String ?= "0", page: Int ?= 1)
 GET     /icons                                    controllers.Application.icons
 GET     /search                                   controllers.Application.search(q: String ?= "", plate: String ?= "", page: Int ?= 1)
 GET     /login                                    controllers.Application.login(login: Option[String])

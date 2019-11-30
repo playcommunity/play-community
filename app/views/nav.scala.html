@@ -3,10 +3,10 @@
 <div class="fly-panel fly-column">
     <div class="layui-container">
         <ul class="layui-clear">
-            <li class='layui-hide-xs @if(nav == "index"){layui-this}'><a href="/">首页</a></li>
-            <li class='@if(nav == "qa"){layui-this}'><a href="/qas">提问</a></li>
-            <li class='@if(nav == "article"){layui-this}'><a href="/articles">分享</a></li>
-            <li class='@if(nav == "tweet"){layui-this}'><a href="/tweets">题库</a></li>
+            <li class='layui-hide-xs @if(nav == ""){layui-this}'><a href="/">首页</a></li>
+            <li class='@if(nav == "qa"){layui-this}'><a href="/?resType=qa">提问</a></li>
+            <li class='@if(nav == "article"){layui-this}'><a href="/?resType=article">分享</a></li>
+            <li class='@if(nav == "exam"){layui-this}'><a href="/?resType=exam">题库</a></li>
         </ul>
 
         <div class="fly-column-right layui-hide-xs">
