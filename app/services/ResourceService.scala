@@ -52,4 +52,18 @@ class ResourceService @Inject()(mongo: Mongo, system: ActorSystem, ws: WSClient)
       doc.outerHtml();
     }
   }
+
+  /**
+    * 将输入的HTML内容中解析被提及的用户Id。
+    * @param html
+    * @return 被提及的用户Id列表。
+    */
+  def parseMentionedUsers(html: String): List[String] = {
+    val doc = Jsoup.parse(html)
+    doc.select("span.mention").asScala.toList.map{ e =>
+      val id = e.attr("data-id")
+      if(id != null && id.trim != "") id.trim else ""
+    } filter(_ != "")
+  }
+
 }

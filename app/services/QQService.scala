@@ -9,6 +9,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.{Configuration, Environment, Logger}
+import utils.HanLPUtil
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -93,7 +94,7 @@ class QQService @Inject()(env: Environment, config: Configuration, mongo: Mongo,
 
               for {
                 uid <- counterService.getNextSequence("user-sequence")
-                u = User(uid.toString, Role.USER, openId, "", UserSetting(name, sex, "", headImg, province + " " + city),
+                u = User(uid.toString, Role.USER, openId, "", UserSetting(name, HanLPUtil.convertToPinyin(name), sex, "", headImg, province + " " + city),
                          UserStat.DEFAULT, 0, true, "", "", None, List(Channel("qq", "QQ", "qq.com")), None)
                 _ <- mongo.insertOne[User](u) //创建用户并重定向到
               } yield Some(u)

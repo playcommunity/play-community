@@ -1,17 +1,18 @@
 package controllers
 
 import akka.stream.Materializer
-import infrastructure.repository.mongo.{ MongoEventRepository, MongoMessageRepository, MongoResourceRepository, MongoUserRepository }
+import infrastructure.repository.mongo.{MongoEventRepository, MongoMessageRepository, MongoResourceRepository, MongoUserRepository}
 import javax.inject._
 import models._
 import play.api.data.Form
-import play.api.data.Forms.{ tuple, _ }
+import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
+import play.api.libs.json.Json.obj
 import play.api.mvc._
 import security.PasswordEncoder
-import utils.{ HashUtil, RequestHelper }
+import utils.{AppUtil, HanLPUtil, HashUtil, RequestHelper}
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * 用户层
@@ -151,4 +152,23 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
       }
     )
   }
+
+  def findUserList(searchTerm: String, limit: Int) = Action.async { implicit request: Request[AnyContent] =>
+    val queries = searchTerm.mkString(".*", ".*", ".*")
+    for {
+      list <- userRepo.findList(obj("setting.pinyin" -> obj("$regex" -> queries)), obj("setting.name" -> 1), 0, limit)
+    } yield {
+      val json = list map { u =>
+        obj(
+          "id" -> u._id,
+          "value" -> u.setting.name,
+          "link" -> s"/user/home?uid=${u._id}",
+          "data" -> ""
+        )
+      }
+
+      Ok(obj("code" -> 0, "data" -> json))
+    }
+  }
+
 }

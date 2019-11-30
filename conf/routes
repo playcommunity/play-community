@@ -123,6 +123,7 @@ GET     /user/setting                             controllers.UserController.set
 POST    /user/setting                             controllers.UserController.doSetting
 POST    /user/password                            controllers.UserController.doSetPassword
 POST    /user/head                                controllers.UserController.doSetHeadImg()
+GET     /user/find                                controllers.UserController.findUserList(searchTerm: String ?= "", limit: Int ?= 10)
 
 GET     /todo                                     controllers.Default.todo
 

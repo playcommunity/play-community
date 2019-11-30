@@ -206,7 +206,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
                 val newSalt = passwordEncoder.createSalt()
                 for {
                   uid <- counterService.getNextSequence("user-sequence")
-                  _ <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, "", "", "/assets/images/head.png", ""),
+                  _ <- userRepo.add(User(uid.toString, Role.USER, login, HashUtil.sha256(password), UserSetting(name, HanLPUtil.convertToPinyin(name), "", "", "/assets/images/head.png", ""),
                     UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, Nil, Some(activeCode),
                     salt = Option(newSalt), argon2Hash = Option(passwordEncoder.hash(password, newSalt))))
                 } yield {
@@ -322,7 +322,7 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       case None =>
         for{
           uid <- counterService.getNextSequence("user-sequence")
-          _ <- userRepo.add(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
+          _ <- userRepo.add(User(uid.toString, Role.USER, RequestHelper.getLogin, "", UserSetting(RequestHelper.getName, HanLPUtil.convertToPinyin(RequestHelper.getName), "", "", RequestHelper.getHeadImg, ""), UserStat.DEFAULT, 0, true, request.session.get("from").getOrElse(""), request.remoteAddress, None, Nil, None))
         } yield {
           Redirect(routes.Application.index("0", "/", 1))
             .addingToSession("uid" -> uid.toString, "role" -> Role.USER, "active" -> "1")

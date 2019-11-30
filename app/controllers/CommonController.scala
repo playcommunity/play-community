@@ -1,22 +1,21 @@
 package controllers
 
 import javax.inject._
-
 import cn.playscala.mongo.Mongo
-import models.{ Author, Corporation, Message, Reply, Resource, User, VoteStat}
+import models.{Author, Corporation, Message, Reply, Resource, User, VoteStat}
 import org.bson.types.ObjectId
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
 import play.api.mvc._
-import services.{CommonService, EventService}
+import services.{CommonService, EventService, ResourceService}
 import utils.{AppUtil, DateTimeUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService, resourceService: ResourceService)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
   def doVote = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "resTitle" -> nonEmptyText)).bindFromRequest().fold(
@@ -76,11 +75,11 @@ class CommonController @Inject()(cc: ControllerComponents, mongo: Mongo, commonS
   }
 
   def doReply = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
-    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "resTitle" -> nonEmptyText, "content" -> nonEmptyText, "at" -> text)).bindFromRequest().fold(
+    Form(tuple("resId" -> nonEmptyText, "resType" -> nonEmptyText, "resTitle" -> nonEmptyText, "content" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok("err")),
       tuple => {
-        val (resId, resType, resTitle, content, at) = tuple
-        val atIds = at.split(",").filter(_.trim != "").toList
+        val (resId, resType, resTitle, content) = tuple
+        val atIds = resourceService.parseMentionedUsers(content)
         val reply = Reply(RequestHelper.generateId, content, "quill", RequestHelper.getAuthor, atIds, DateTimeUtil.now(), DateTimeUtil.now(), VoteStat(0, ""), Nil)
         val idObj = resType match {
           case "tweet" => obj("_id" -> resId)

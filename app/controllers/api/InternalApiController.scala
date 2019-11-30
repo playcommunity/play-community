@@ -51,7 +51,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
           case Some(u) => Future.successful(u)
           case None => for {
             uid <- counterService.getNextSequence("user-sequence")
-            u = User(uid.toString, Role.USER, email, "", UserSetting(name, "", bio, headImg, location), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel("github", "GitHub", githubUrl)), None)
+            u = User(uid.toString, Role.USER, email, "", UserSetting(name, HanLPUtil.convertToPinyin(name), "", bio, headImg, location), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel("github", "GitHub", githubUrl)), None)
             wr <- mongo.insertOne[User](u)
           } yield u
         }.map { u =>
@@ -134,7 +134,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
                     Logger.info("WeiXin scan login, create user for " + openid)
                     for {
                       uid <- counterService.getNextSequence("user-sequence")
-                      user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
+                      user = User(uid.toString, Role.USER, openid, "", UserSetting(nickName, HanLPUtil.convertToPinyin(nickName), gender.toString, "", avatarUrl, city), UserStat.DEFAULT, 0, true, "register", request.remoteAddress, None, List(Channel(openid, "WeiXin", "")), None)
                       wr <- mongo.insertOne[User](user)
                     } yield {
                       promise.success(user)

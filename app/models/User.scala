@@ -84,7 +84,7 @@ case class UserStat(resCount: Int, docCount: Int, articleCount: Int, qaCount: In
 
 case class IPLocation(country: String, province: String, city: String)
 
-case class UserSetting(name: String, gender: String, introduction: String, headImg: String, city: String)
+case class UserSetting(name: String, pinyin:String, gender: String, introduction: String, headImg: String, city: String)
 
 // 登录类型
 object LoginType extends Enumeration {
