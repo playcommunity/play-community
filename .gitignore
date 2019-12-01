@@ -2,6 +2,8 @@ logs
 play-community-log
 target
 embed
+.idea
+*/.idea
 .DS_Store
 */.DS_Store
 /conf/reference.conf
