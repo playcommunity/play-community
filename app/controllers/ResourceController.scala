@@ -110,7 +110,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
           }
         } yield {
           if(success){
-            Redirect(routes.ResourceController.index(resType, "0", categoryPath, 1))
+            Redirect(routes.ResourceController.index(categoryPath, resType, "0", 1))
           } else {
             Ok(views.html.message("系统提示", "请稍后再试！"))
           }

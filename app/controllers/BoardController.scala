@@ -154,7 +154,7 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
    */
   def getPathName(path: String) = Action.async { implicit request =>
     boardRepo.findBoardCategoryList(path) map { categories =>
-      println(path + ": " + categories)
+      //println(path + ": " + categories)
       val idPathToNamePathMap = categoryService.getIdPathToNamePathMap(categories)
       Ok(idPathToNamePathMap.get(path).getOrElse("-")).as("text/plain; charset=UTF-8")
     }

@@ -13,6 +13,7 @@ import security.PasswordEncoder
 import utils.{AppUtil, HanLPUtil, HashUtil, RequestHelper}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 
 /**
  * 用户层
@@ -174,6 +175,16 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
 
       Ok(obj("code" -> 0, "data" -> json))
     }
+
+    /*Source.fromFile("D:/name.txt", "utf-8").getLines().foreach{ line =>
+      val arr = line.split("###")
+      if(arr.length == 2) {
+        userRepo.updateUser(arr(0), obj("setting.name" -> arr(1)))
+        println(arr(0), arr(1))
+      }
+
+    }*/
+
   }
 
 }

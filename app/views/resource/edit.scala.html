@@ -52,7 +52,7 @@
                   <label class="layui-form-label">所在类别</label>
                   <div class="layui-input-inline" style="width: 300px;">
                     <input id="categoryName" type="text" autocomplete="off" class="layui-input" readonly>
-                    <input id="categoryPath" type="hidden" name="categoryPath">
+                    <input id="categoryPath" type="hidden" name="categoryPath" value='@{resourceOpt.map(_.categoryPath).getOrElse("")}'>
                   </div>
                   <div class="layui-input-inline" style="width: 100px;">
                     <button id="category-btn" class="layui-btn" type="button">选择分类</button>
@@ -170,4 +170,10 @@ $('#category-btn').click(function(){
       $('#categoryName').val(data.name);
     });
   });
+
+@if(resourceOpt.nonEmpty){
+$.get("/board/path/name?path=@{resourceOpt.get.categoryPath}", function(data){
+    $('#categoryName').val(data);
+});
+}
 </script>
