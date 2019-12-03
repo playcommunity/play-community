@@ -4,7 +4,7 @@ import java.time.Instant
 
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoCategoryRepository, MongoResourceRepository, MongoUserRepository}
+import domain.infrastructure.repository.mongo.{MongoCategoryRepository, MongoResourceRepository, MongoUserRepository}
 import javax.inject._
 import models._
 import org.bson.types.ObjectId

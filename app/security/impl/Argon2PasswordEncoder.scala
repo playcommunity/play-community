@@ -6,7 +6,7 @@ import java.util.Base64
 
 import cn.playscala.mongo.Mongo
 import de.mkammerer.argon2.{Argon2Advanced, Argon2Factory}
-import infrastructure.repository.mongo.MongoUserRepository
+import domain.infrastructure.repository.mongo.MongoUserRepository
 import javax.inject.Inject
 import play.api.libs.json.Json
 import security.PasswordEncoder

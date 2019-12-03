@@ -31,6 +31,13 @@ case class User(
 ){
 
   /**
+   *  获取管理版块列表
+   */
+  def getOwnedBoards(): Future[List[Board]] = {
+    DomainRegistry.boardRepo.findBoardsByOwnerId(_id)
+  }
+
+  /**
    * 增加文章数量
    */
   def incArticleCount(count: Int): Future[Boolean] = {

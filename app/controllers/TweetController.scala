@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.MongoTweetRepository
+import domain.infrastructure.repository.mongo.MongoTweetRepository
 import models._
 import play.api.data.Form
 import play.api.data.Forms.{tuple, _}

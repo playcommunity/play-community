@@ -1,4 +1,4 @@
-package infrastructure.repository
+package domain.infrastructure.repository
 
 import models.Message
 import play.api.libs.json.JsObject

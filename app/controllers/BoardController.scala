@@ -3,7 +3,7 @@ package controllers
 import java.time.{Instant, LocalDateTime, LocalTime, ZoneOffset}
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoBoardRepository, MongoCategoryRepository, MongoResourceRepository, MongoUserRepository}
+import domain.infrastructure.repository.mongo.{MongoBoardRepository, MongoCategoryRepository, MongoResourceRepository, MongoUserRepository}
 import javax.inject._
 import models._
 import play.api.data.Form

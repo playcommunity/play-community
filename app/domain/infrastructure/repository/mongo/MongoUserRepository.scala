@@ -1,7 +1,7 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.UserRepository
+import domain.infrastructure.repository.UserRepository
 import javax.inject.{Inject, Singleton}
 import models.{Resource, User}
 import play.api.libs.json.Json.obj

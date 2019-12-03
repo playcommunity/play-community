@@ -1,7 +1,7 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.WordRepository
+import domain.infrastructure.repository.WordRepository
 import javax.inject.{Inject, Singleton}
 import models.Word
 import play.api.libs.json.Json.obj

@@ -2,7 +2,7 @@ package controllers.admin
 
 import akka.stream.Materializer
 import controllers._
-import infrastructure.repository.mongo.{MongoEventRepository, MongoMessageRepository, MongoResourceRepository, MongoUserRepository}
+import domain.infrastructure.repository.mongo.{MongoEventRepository, MongoMessageRepository, MongoResourceRepository, MongoUserRepository}
 import javax.inject._
 import models._
 import play.api.data.Form

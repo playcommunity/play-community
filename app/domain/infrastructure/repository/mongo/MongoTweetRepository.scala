@@ -1,7 +1,7 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.TweetRepository
+import domain.infrastructure.repository.TweetRepository
 import javax.inject.Inject
 import models.Tweet
 import play.api.libs.json.{JsObject, Json}

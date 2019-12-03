@@ -1,7 +1,7 @@
 package models
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{MongoResourceRepository, MongoUserRepository}
+import domain.infrastructure.repository.mongo.{MongoBoardRepository, MongoResourceRepository, MongoUserRepository}
 import play.api.inject.Injector
 
 /**
@@ -15,6 +15,8 @@ object DomainRegistry {
   lazy val userRepo = _injector.instanceOf(classOf[MongoUserRepository])
 
   lazy val resourceRepo = _injector.instanceOf(classOf[MongoResourceRepository])
+
+  lazy val boardRepo = _injector.instanceOf(classOf[MongoBoardRepository])
 
   def setInjector(injector: Injector): Unit = {
     this._injector = injector

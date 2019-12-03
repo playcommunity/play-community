@@ -1,10 +1,10 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import java.time.Instant
 
 import cn.playscala.mongo.Mongo
 import cn.playscala.mongo.internal.AsyncResultHelper
-import infrastructure.repository.{BoardRepository, TweetRepository}
+import domain.infrastructure.repository.{BoardRepository, TweetRepository}
 import javax.inject.Inject
 import models.{Board, Category, Resource, StatBoard, StatBoardTraffic, Tweet}
 import org.bson.BsonDocument
@@ -100,6 +100,13 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
         case None => 0L
       }
     }
+  }
+
+  /**
+    *  获取管理版块列表
+    */
+  def findBoardsByOwnerId(uid: String): Future[List[Board]] = {
+    mongo.find[Board](obj("owner._id" -> uid)).list()
   }
 
   def getFollowers(boardPath: String): Future[Seq[String]] = {

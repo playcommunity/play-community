@@ -4,7 +4,7 @@ import java.time.Instant
 
 import akka.stream.Materializer
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.MongoWordRepository
+import domain.infrastructure.repository.mongo.MongoWordRepository
 import javax.inject._
 import models._
 import play.api.libs.json.{JsNull, JsObject, Json}

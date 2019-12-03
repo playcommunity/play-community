@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.MongoCorporationRepository
+import domain.infrastructure.repository.mongo.MongoCorporationRepository
 import models.{Corporation, ViewStat, VoteStat}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._

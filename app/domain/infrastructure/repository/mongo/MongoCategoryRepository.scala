@@ -1,7 +1,7 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.CategoryRepository
+import domain.infrastructure.repository.CategoryRepository
 import javax.inject.{Inject, Singleton}
 import models.Category
 import play.api.libs.json.Json

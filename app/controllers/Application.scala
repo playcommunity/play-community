@@ -1,40 +1,42 @@
 package controllers
 
-import java.io.{ ByteArrayOutputStream, File }
+import java.io.{ByteArrayOutputStream, File}
 
 import javax.inject._
 import akka.stream.Materializer
 import akka.util.ByteString
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.{ MongoBoardRepository, MongoResourceRepository, MongoUserRepository }
+import domain.core.AuthenticateManager
+import domain.infrastructure.repository.mongo.{MongoBoardRepository, MongoResourceRepository, MongoUserRepository}
 import models._
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.bson.BsonObjectId
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
-import play.api.{ Configuration, Logger }
+import play.api.{Configuration, Logger}
 import play.api.cache.AsyncCacheApi
 import play.api.data.Form
-import play.api.data.Forms.{ tuple, _ }
+import play.api.data.Forms.{tuple, _}
 import play.api.libs.concurrent.Futures
-import play.api.libs.json.{ JsObject, Json }
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
-import services.{ CommonService, ElasticService, MailerService, WeiXinService }
-import utils.PDFUtil.{ getCatalogs, getText }
+import services.{CommonService, ElasticService, MailerService, WeiXinService}
+import utils.PDFUtil.{getCatalogs, getText}
 import utils._
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 import scala.util.Random
 import scala.collection.JavaConverters._
 import play.api.libs.json.Json._
 import security.PasswordEncoder
 import play.api.libs.concurrent.Futures._
 import vcode.GIFCaptcha
+import domain.core.LoginResult
 
 @Singleton
-class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
-  userAction: UserAction, config: Configuration, passwordEncoder: PasswordEncoder, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, boardRepo: MongoBoardRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
+class Application @Inject()(cc: ControllerComponents, passwordEncoder: PasswordEncoder, mongo: Mongo, counterService: CommonService, elasticService: ElasticService, mailer: MailerService, weiXinService: WeiXinService, cache: AsyncCacheApi,
+  userAction: UserAction, config: Configuration, authenticateManager: AuthenticateManager, resourceRepo: MongoResourceRepository, userRepo: MongoUserRepository, boardRepo: MongoBoardRepository)(implicit ec: ExecutionContext, mat: Materializer, parser: BodyParsers.Default, futures: Futures) extends AbstractController(cc) {
 
   // 分页大小
   val PAGE_SIZE = 15
@@ -101,9 +103,11 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
     cache.set(s"app_code_${uuid}", promise, 180.seconds)
 
     // 等待扫码结果
-    promise.future.withTimeout(180.seconds).map{ u =>
-      Ok(Json.obj("code" -> 0))
-        .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.WEIXIN)
+    promise.future.withTimeout(180.seconds).flatMap{ u =>
+      authenticateManager.generateSession(u).map{ session =>
+        Ok(Json.obj("code" -> 0))
+          .withSession((session ::: List("loginType" -> LoginType.WEIXIN.toString)): _*)
+      }
     } recover {
       case e: scala.concurrent.TimeoutException =>
         Logger.error("Scan app code timeout for " + uuid)
@@ -124,16 +128,13 @@ class Application @Inject()(cc: ControllerComponents, mongo: Mongo, counterServi
       tuple => {
         val (login, password, verifyCode) = tuple
         if (HashUtil.sha256(verifyCode.toLowerCase) == request.session.get("verifyCode").getOrElse("")) {
-          passwordEncoder.findUserAndUpgrade(login, password) map {
-            case Some(u) =>
-              if (u.activeCode.nonEmpty) {
-                Redirect("/user/activate")
-                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "0", "loginType" -> LoginType.PASSWORD)
-              } else {
-                Redirect(s"/user/home?uid=${u._id}")
-                  .withSession("uid" -> u._id, "login" -> u.login, "name" -> u.setting.name, "headImg" -> u.setting.headImg, "role" -> u.role, "active" -> "1", "loginType" -> LoginType.PASSWORD)
+          authenticateManager.login(login, password) map {
+            case LoginResult(0, _, Some(u), session) =>
+              u.activeCode match {
+                case Some(_) => Redirect("/user/activate").withSession(session: _*)
+                case None => Redirect("/").withSession(session: _*)
               }
-            case None =>
+            case _ =>
               Redirect(routes.Application.message("系统提示", "用户名或密码错误！"))
           }
         } else {

@@ -1,4 +1,4 @@
-package infrastructure.repository
+package domain.infrastructure.repository
 
 import models.Resource
 import scala.concurrent.Future

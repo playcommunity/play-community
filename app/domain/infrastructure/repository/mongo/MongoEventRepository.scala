@@ -1,7 +1,7 @@
-package infrastructure.repository.mongo
+package domain.infrastructure.repository.mongo
 
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.EventRepository
+import domain.infrastructure.repository.EventRepository
 import javax.inject.{ Inject, Singleton }
 import models.Event
 import play.api.libs.json.JsObject

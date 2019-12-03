@@ -1,4 +1,4 @@
-package infrastructure.repository
+package domain.infrastructure.repository
 
 /**
   * Created by xjpz on 2019/11/8.

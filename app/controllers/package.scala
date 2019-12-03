@@ -1,6 +1,6 @@
 import javax.inject.Inject
 import cn.playscala.mongo.Mongo
-import infrastructure.repository.mongo.MongoUserRepository
+import domain.infrastructure.repository.mongo.MongoUserRepository
 import models.User
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
