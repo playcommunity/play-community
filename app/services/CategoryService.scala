@@ -38,12 +38,12 @@ class CategoryService @Inject() (mongo: Mongo) {
         if(parentNamePath == "/"){
           val idPath = s"/${cid}"
           categoryNamePathToIdPathMap(namePath) = idPath
-          Category(cid, cname, "", idPath, "/", 1000, false, None, None, None, Instant.now(), Instant.now())
+          Category(cid, cname, "", idPath, "/", 1000, false, None, Instant.now(), Instant.now())
         } else {
           val parentIdPath = categoryNamePathToIdPathMap(parentNamePath)
           val idPath = s"${parentIdPath}/${cid}"
           categoryNamePathToIdPathMap(namePath) = idPath
-          Category(cid, cname, "", idPath, parentIdPath, 1000, false, None, None, None, Instant.now(), Instant.now())
+          Category(cid, cname, "", idPath, parentIdPath, 1000, false, None, Instant.now(), Instant.now())
         }
       }
 

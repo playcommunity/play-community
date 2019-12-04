@@ -13,10 +13,7 @@ case class Category(
   parentPath: String,
   index: Int,
   disabled: Boolean,
-  //avatarUrl: String,
-  ownerId: Option[String],
-  ownerName: Option[String],
-  ownerAvatarUrl: Option[String],
+  owner: Option[Owner],
   createTime: Instant,
   updateTime: Instant
 )

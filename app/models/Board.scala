@@ -14,7 +14,7 @@ case class Board (
   parentPath: String,
   index: Int,
   disabled: Boolean,
-  owner: Option[Owner],
+  owner: Option[Owner], // 版主
   createTime: Instant,
   updateTime: Instant
 ) {

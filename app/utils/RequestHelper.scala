@@ -67,6 +67,10 @@ object RequestHelper {
     }
   }
 
+  def getBoards(implicit request: RequestHeader): List[String] = {
+    request.session("boards").split(",").toList
+  }
+
   def generateId(implicit request: RequestHeader): String = {
     getUid + "-" + ObjectId.get().toHexString
   }

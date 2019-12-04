@@ -6,7 +6,8 @@ import cn.playscala.mongo.annotations.Entity
 import models._
 import org.bson.types.ObjectId
 import play.api.libs.json.Json
-import utils.{BitmapUtil, DateTimeUtil, RequestHelper}
+import utils.{BitmapUtil, BoardUtil, DateTimeUtil, RequestHelper}
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -35,6 +36,8 @@ case class Resource (
   doc: Option[DocInfo] = None, //额外文档信息(resType == Resource.Doc)
   exam: Option[ExamInfo] = None //额外试题信息(resType == Resource.Exam)
 ){
+
+  def getBoard(): Option[String] = BoardUtil.getBoardPath(categoryPath)
 
   /**
    * 检查已查看用户列表是否包含指定用户。

@@ -42,6 +42,15 @@ class MongoResourceRepository @Inject()(mongo: Mongo) extends ResourceRepository
   }
 
   /**
+    * 根据Id构建领域实体，忽略资源正文。
+    * @param id 实体标识。
+    * @return 领域实体。
+    */
+  def findContentlessById(id: String): Future[Option[Resource]] = {
+    mongo.find[Resource](obj("_id" -> id), obj("content" -> 0)).first
+  }
+
+  /**
    * 根据Id查询标题。
    *
    * @param id 实体标识。

@@ -1,10 +1,10 @@
 import javax.inject.Inject
 import cn.playscala.mongo.Mongo
 import domain.infrastructure.repository.mongo.MongoUserRepository
-import models.User
+import models.{DomainRegistry, User}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc._
-import utils.RequestHelper
+import utils.RequestHelper._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -25,7 +25,7 @@ package object controllers {
 
   def checkLogin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) with Rendering with AcceptExtractors {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (RequestHelper.isLogin(request)) {
+      if (isLogin(request)) {
         block(request)
       } else {
         Future.successful {
@@ -40,7 +40,7 @@ package object controllers {
 
   def checkActive[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) with Rendering with AcceptExtractors {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (RequestHelper.isActive(request)) {
+      if (isActive(request)) {
         block(request)
       } else {
         Future.successful {
@@ -57,7 +57,7 @@ package object controllers {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
         case Some(_id) =>
-          if (_id.startsWith(RequestHelper.getUid(request) + "-")) {
+          if (_id.startsWith(getUid(request) + "-")) {
             block(request)
           } else {
             Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -70,7 +70,7 @@ package object controllers {
 
   def checkAdmin[A](implicit parser: BodyParser[A], ec: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
-      if (RequestHelper.isAdmin(request)) {
+      if (isAdmin(request)) {
         block(request)
       } else {
         Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -82,7 +82,7 @@ package object controllers {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
         case Some(_id) =>
-          if (RequestHelper.isAdmin(request) || _id.startsWith(RequestHelper.getUid(request) + "-")) {
+          if (isLogin(request) && (isAdmin(request) || _id.startsWith(getUid(request) + "-"))) {
             block(request)
           } else {
             Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
@@ -93,6 +93,33 @@ package object controllers {
     }
   }
 
+  /**
+   * 检查当前用户是否拥有当前资源上的权限。管理员、版主和作者可以编辑和删除帖子。
+   */
+  def checkResourcePermission[A](_idField: String) (implicit parser: BodyParser[A], executionContext: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
+    override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
+      parseField[A](_idField, request) match {
+        case Some(_id) =>
+          DomainRegistry.resourceRepo.findById(_id).flatMap {
+            case Some(res) =>
+              val board = res.getBoard().getOrElse("-")
+              if (isLogin(request) && (isAdmin(request) || getBoards(request).contains(board) || _id.startsWith(getUid(request) + "-"))) {
+                block(request)
+              } else {
+                Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
+              }
+            case None =>
+              Future.successful(Results.Ok(views.html.message("系统提示", "您操作的资源不存在！")(request)))
+          }
+        case None =>
+          Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
+      }
+    }
+  }
+
+  /**
+   * 从请求的查询参数和Body中解析指定参数值。
+   */
   def parseField[A](field: String, request: Request[A]): Option[String] = {
     val _idOptInQuery = request.getQueryString(field)
     val _idOptInBody = request.body match {
