@@ -60,7 +60,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
     Ok(views.html.resource.edit(resType, None))
   }
 
-  def edit(_id: String) = checkResourcePermission("_id").async { implicit request: Request[AnyContent] =>
+  def edit(_id: String) = checkPermissionOnResource("_id").async { implicit request: Request[AnyContent] =>
     resourceRepo.findById(_id) map {
       case Some(r) =>
         Ok(views.html.resource.edit(r.resType, Some(r)))
@@ -74,7 +74,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   /**
     * 新增或更新资源
     */
-  def doAdd = (checkResourcePermission("_id") andThen userAction).async { implicit request =>
+  def doAdd = (checkPermissionOnResource("_id") andThen userAction).async { implicit request =>
     Form(tuple("_id" -> optional(text), "title" -> nonEmptyText,"content" -> nonEmptyText, "keywords" -> text, "categoryPath" -> nonEmptyText, "resType" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(views.html.message("系统提示", "您的输入有误！"))),
       tuple => {
@@ -110,7 +110,8 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
           }
         } yield {
           if(success){
-            Redirect(routes.ResourceController.index(categoryPath, resType, "0", 1))
+            //Redirect(routes.ResourceController.index(categoryPath, resType, "0", 1))
+            Redirect(routes.BoardController.index(categoryPath, resType, "0", 1))
           } else {
             Ok(views.html.message("系统提示", "请稍后再试！"))
           }
@@ -189,7 +190,7 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
   /**
     * 删除资源
     */
-  def doRemove = (checkResourcePermission("_id") andThen userAction).async { implicit request =>
+  def doRemove = (checkPermissionOnResource("_id") andThen userAction).async { implicit request =>
     Form(tuple("resType" -> nonEmptyText,"resId" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "输入有误！"))),
       tuple => {

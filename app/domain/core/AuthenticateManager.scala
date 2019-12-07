@@ -28,7 +28,7 @@ class AuthenticateManager @Inject()(passwordEncoder: PasswordEncoder, resourceRe
       if(boards.nonEmpty) {
         roles = roles ::: List(Role.BOARDER)
       }
-      var session: List[(String, String)] = List(
+      val session: List[(String, String)] = List(
         "uid" -> user._id,
         "login" -> user.login,
         "name" -> user.setting.name,
@@ -38,10 +38,9 @@ class AuthenticateManager @Inject()(passwordEncoder: PasswordEncoder, resourceRe
         "boards" -> boards.mkString(",")
       )
       user.activeCode match {
-        case Some(_) => session =  session ::: List("active" -> "0")
+        case Some(_) => session ::: List("active" -> "0")
         case None => session ::: List("active" -> "1")
       }
-      session
     }
   }
 }

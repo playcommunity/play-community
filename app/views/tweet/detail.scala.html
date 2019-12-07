@@ -4,8 +4,9 @@
 
 @uid() = @{request.session.get("uid").getOrElse("-1").toInt}
 @main(s"${app.Global.siteSetting.name} - ${tweet.title}", "community", "tweet", "", "") {
-<link rel="stylesheet" href="/assets/plugins/quill/quill.snow.css">
-<link rel="stylesheet" href="/assets/plugins/quill/quill-emoji.css">
+<link rel="stylesheet" href="/assets/plugins/quill/1.3.6/quill.snow.css">
+<link rel="stylesheet" href="/assets/plugins/quill/1.3.6/quill-emoji.css">
+<link rel="stylesheet" href="/assets/plugins/quill-mention/quill.mention.min.css">
 <link rel="stylesheet" href="/assets/plugins/highlight/styles/monokai-sublime.css">
 <style>
 /* Set default font-family */
@@ -44,7 +45,7 @@
           <div class="fly-admin-box"></div>
           <span class="fly-list-nums">
             <i class="iconfont icon-zan" title="点赞"></i> <em id="vote-count">@tweet.voteStat.count</em>
-            <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @tweet.replies.size</a>
+            <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @tweet.replyStat.replyCount</a>
           </span>
         </div>
         <div class="detail-about">
@@ -78,7 +79,7 @@
         </fieldset>
 
         <ul class="jieda" id="jieda">
-          @for(r <- tweet.replies){
+          @for(r <- tweet.replyStat.replies){
           @defining(utils.BitmapUtil.fromBase64String(r.voteStat.bitmap)){ bitmap =>
           <li data-id="@{tweet._id}" data-rid="@{r._id}" data-type="tweet" data-title="说说 中 @{r.author.name} 的回复" class="jieda-daan">
             <a name="item-@{r._id}"></a>
@@ -131,7 +132,7 @@
           }
           }
 
-          @if(tweet.replies.isEmpty){
+          @if(tweet.replyStat.replies.isEmpty){
           <li class="fly-none">消灭零回复</li>
           }
         </ul>
@@ -157,13 +158,30 @@
   </div>
 </div>
 }
-<script type="text/javascript" src="/assets/plugins/quill/quill.min.js"></script>
-<script type="text/javascript" src="/assets/plugins/quill/quill-emoji.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/1.3.6/quill.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill/1.3.6/quill-emoji.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill-blot-formatter/quill-blot-formatter.min.js"></script>
+<script type="text/javascript" src="/assets/plugins/quill-mention/quill.mention.min.js"></script>
 <script src="/assets/plugins/highlight/highlight.pack.js"></script>
 <script>
 layui.cache.page = 'resource';
 
 @if(RequestHelper.isLogin){
+
+Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+
+async function findUsers(searchTerm) {
+  return new Promise(function(resolve, reject) {
+    $.get("/user/find?searchTerm=" + searchTerm, function(resp){
+      if(resp.code == 0){
+        resolve(resp.data);
+      } else {
+        reject(new Error("error"));
+      }
+    });
+  });
+}
+
 var quill = new Quill('#quill-container', {
   theme: 'snow',
   modules: {
@@ -185,7 +203,18 @@ var quill = new Quill('#quill-container', {
     },
     "emoji-toolbar": true,
     "emoji-shortname": true,
-    "emoji-textarea": false
+    "emoji-textarea": false,
+    blotFormatter: {},
+    mention: {
+      allowedChars: /^[A-Za-z\sÅÄÖåäö]*$/,
+      mentionDenotationChars: ["@@", "#"],
+      dataAttributes: ['data'],
+      spaceAfterInsert: true,
+      source: async function (searchTerm, renderList) {
+        const matchedPeople = await findUsers(searchTerm);
+        renderList(matchedPeople);
+      }
+    }
   }
 });
 

@@ -35,7 +35,6 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
     }
 
     status match {
-      case "0" =>
       case "1" =>
         q ++= Json.obj("closed" -> false)
       case "2" =>
@@ -62,7 +61,7 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
               total <- resourceRepo.count(q)
             } yield {
               if (total > 0 && cPage > math.ceil(1.0*total/PAGE_SIZE).toInt) {
-                Redirect(s"/${resType}s")
+                Redirect(routes.BoardController.index(path, resType, status, 1))
               } else {
                 Ok(views.html.board.index(board, path, resType, status, resources, topViewResources, categoryList, (todayTraffic, totalTraffic, newResCount, totalResCount), cPage, total.toInt))
               }

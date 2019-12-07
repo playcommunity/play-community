@@ -96,7 +96,7 @@ package object controllers {
   /**
    * 检查当前用户是否拥有当前资源上的权限。管理员、版主和作者可以编辑和删除帖子。
    */
-  def checkResourcePermission[A](_idField: String) (implicit parser: BodyParser[A], executionContext: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
+  def checkPermissionOnResource[A](_idField: String)(implicit parser: BodyParser[A], executionContext: ExecutionContext): ActionBuilderImpl[A] = new ActionBuilderImpl(parser) {
     override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
       parseField[A](_idField, request) match {
         case Some(_id) =>
@@ -112,7 +112,11 @@ package object controllers {
               Future.successful(Results.Ok(views.html.message("系统提示", "您操作的资源不存在！")(request)))
           }
         case None =>
-          Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
+          if(isLogin(request) && isAdmin(request)) {
+            block(request)
+          } else {
+            Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
+          }
       }
     }
   }
