@@ -112,7 +112,7 @@ package object controllers {
               Future.successful(Results.Ok(views.html.message("系统提示", "您操作的资源不存在！")(request)))
           }
         case None =>
-          if(isLogin(request) && isAdmin(request)) {
+          if(isLogin(request)) {
             block(request)
           } else {
             Future.successful(Results.Ok(views.html.message("系统提示", "您无权执行该操作！")(request)))
