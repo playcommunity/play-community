@@ -246,10 +246,12 @@ var app = new Vue({
   data: { tweets: [], hotTweets: [] }
 });
 
+/*
 var socket = io("/tweet");
 socket.on('chat message', function(tweet) {
     app.tweets.unshift(JSON.parse(tweet));
 });
+*/
 
 $('#tweet-form').submit(function(){
   var tweet = $('#tweet').val();
@@ -262,7 +264,8 @@ $('#tweet-form').submit(function(){
     success: function(res){
       if(res.status === 0) {
         $('#tweet').val('');
-        socket.emit('chat message', JSON.stringify(res.tweet));
+        app.tweets.unshift(JSON.parse(res.tweet));
+        //socket.emit('chat message', JSON.stringify(res.tweet));
       } else {
         layer.msg(res.msg||res.code);
       }
@@ -273,8 +276,8 @@ $('#tweet-form').submit(function(){
   return false;
 });
 
-$(function () {
- $.ajax({
+function loadTweets(){
+  $.ajax({
     type: 'get',
     dataType: 'json',
     url: '/tweet/json?count=5',
@@ -287,6 +290,12 @@ $(function () {
       }
     }
   });
+}
+
+$(function () {
+ loadTweets();
+
+ setInterval(loadTweets, 60000);
 });
 
 $(document).on('click', 'i.zan-resource', function(){

@@ -3,7 +3,8 @@ package domain.infrastructure.repository.mongo
 import cn.playscala.mongo.Mongo
 import domain.infrastructure.repository.TweetRepository
 import javax.inject.Inject
-import models.Tweet
+import models.{Message, Tweet}
+import play.api.libs.json.Json.obj
 import play.api.libs.json.{JsObject, Json}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -48,6 +49,13 @@ class MongoTweetRepository @Inject()(mongo: Mongo) extends TweetRepository {
     */
   def findHotList(limit: Int):Future[List[Tweet]] ={
     mongo.find[Tweet]().sort(Json.obj("voteStat.count" -> -1)).limit(limit).list
+  }
+
+  /**
+    * 删除
+    */
+  def delete(id: String) = {
+    mongo.deleteMany[Tweet](obj("_id" -> id))
   }
 
 }

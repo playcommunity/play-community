@@ -62,6 +62,21 @@ class TweetController @Inject()(cc: ControllerComponents, mongo: Mongo, commonSe
     )
   }
 
+  /**
+    * 删除资源
+    */
+  def doRemove(_id: String) = checkAdminOrOwner("_id").async { implicit request =>
+    for{
+      r <- tweetRepo.delete(_id)
+    } yield {
+      if(r.getDeletedCount == 1){
+        Redirect(routes.TweetController.index())
+      } else {
+        Ok(views.html.message("系统提示", "操作失败!"))
+      }
+    }
+  }
+
   def view(_id: String) = Action.async { implicit request: Request[AnyContent] =>
     for {
       tweetOpt <- tweetRepo.findById(_id)

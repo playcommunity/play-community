@@ -132,10 +132,12 @@ var app = new Vue({
   data: { tweets: @Html(tweetsJson), hotTweets: @Html(hotTweetsJson)}
 });
 
+/*
 var socket = io("/tweet");
 socket.on('chat message', function(tweet) {
     app.tweets.unshift(JSON.parse(tweet));
 });
+*/
 
 $('#tweet-form').submit(function(){
   var tweet = $('#tweet').val();

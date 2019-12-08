@@ -42,7 +42,11 @@
       <div class="fly-panel detail-box">
         <h1>@{tweet.author.name}的说说</h1>
         <div class="fly-detail-info">
-          <div class="fly-admin-box"></div>
+          <div class="fly-admin-box">
+            @if(RequestHelper.isAdmin || RequestHelper.isOwnerOf(tweet._id)){
+            <span class="layui-btn layui-btn-xs jie-admin"><a href="/tweet/remove?_id=@{tweet._id}" style="color:#fff;">删除</a></span>
+            }
+          </div>
           <span class="fly-list-nums">
             <i class="iconfont icon-zan" title="点赞"></i> <em id="vote-count">@tweet.voteStat.count</em>
             <a href="#comment"><i class="iconfont" title="回答">&#xe60c;</i> @tweet.replyStat.replyCount</a>
