@@ -61,7 +61,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
                 Redirect(controllers.routes.UserController.setting("pass"))
                   .addingToSession((session ::: List("loginType" -> LoginType.GITHUB.toString)): _*)
               } else {
-                Redirect(controllers.routes.Application.index("0", "/", 1))
+                Redirect(controllers.routes.Application.index())
                   .addingToSession((session ::: List("loginType" -> LoginType.GITHUB.toString)): _*)
               }
             }
@@ -90,7 +90,7 @@ class InternalApiController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     userFuture.flatMap{
       case Some(u) =>
         authenticateManager.generateSession(u).map{ session =>
-          Ok(Json.obj("code" -> 0))
+          Redirect("/")
             .withSession((session ::: List("loginType" -> LoginType.QQ.toString)): _*)
         }
       case None =>
