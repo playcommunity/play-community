@@ -77,9 +77,21 @@ class MongoBoardRepository @Inject()(mongo: Mongo) extends BoardRepository {
 
   def getTodayTraffic(boardPath: String): Future[Long] = {
     val dayStr = DateTimeUtil.toString(DateTimeUtil.now(), "yyyy-MM-dd")
-    mongo.find[StatBoardTraffic](obj("boardPath" -> boardPath, "dayStr" -> dayStr)).first map {
-      case Some(t) => t.count
-      case None => 0
+    val it = mongo.collection[StatBoardTraffic].aggregate[BsonDocument](
+      Seq(
+        obj("$match" -> obj("boardPath" -> boardPath, "dayStr" -> dayStr)),
+        obj(
+          "$group" -> obj(
+            "_id" -> "dayStr",
+            "totalCount" -> obj("$sum" -> "$count")
+          )
+        )
+      ))
+    AsyncResultHelper.toFuture(it) map { list =>
+      list.headOption match {
+        case Some(bs) => bs.getInt32("totalCount").getValue
+        case None => 0L
+      }
     }
   }
 

@@ -88,8 +88,8 @@ class BoardController @Inject()(cc: ControllerComponents, categoryService: Categ
     }
   }
 
-  def recordTraffic(boardPath: String) = checkLogin.async { implicit request: Request[AnyContent] =>
-    val uid = RequestHelper.getUid
+  def recordTraffic(boardPath: String) = Action.async { implicit request: Request[AnyContent] =>
+    val uid = RequestHelper.getUidOpt.getOrElse("")
     boardRepo.recordTraffic(boardPath, uid).map {
       case true => Ok(Json.obj("code" -> 0))
       case false => Ok(Json.obj("code" -> 1, "message" -> "error"))

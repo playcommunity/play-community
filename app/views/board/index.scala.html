@@ -144,16 +144,11 @@ var isFollowed = false;
 
 $(function () {
 
-@if(RequestHelper.isLogin){
-  // 访问计数
-  $.get('/board/recordTraffic?boardPath=@board.path');
-
   // 读取状态
   $.get('/board/getRelateStatus?boardPath=@board.path', function(data){
     isFollowed = data.isFollowed;
     renderFollowBtn();
   });
-}
 
 });
 
@@ -174,4 +169,7 @@ $('#follow-btn').click(function(){
     }
   });
 });
+
+// 访问计数
+$.get('/board/recordTraffic?boardPath=@board.path');
 </script>

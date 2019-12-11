@@ -303,4 +303,7 @@ $(document).ready(function() {
     hljs.highlightBlock(block);
   });
 });
+
+// 访问计数
+$.get('/board/recordTraffic?boardPath=@resource.categoryPath');
 </script>
