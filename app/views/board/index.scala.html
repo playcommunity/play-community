@@ -114,10 +114,10 @@
         <div class="layui-card-header">社区版主</div>
         <div class="layui-card-body" style="">
           @if(board.owner.nonEmpty){
-            <a href="" style="color:#009688;vertical-align: middle!important;line-height:28px;">
+            <a href="/user/home?uid=@{board.owner.get._id}" style="color:#009688;vertical-align: middle!important;line-height:28px;">
                 <img class="board-owner-avatar" src="@board.owner.get.headImg">
             </a>
-            <a href="" style="color:#636b6f;vertical-align: middle!important;line-height:28px;font-size:14px;">@board.owner.get.name</a>
+            <a href="/user/home?uid=@{board.owner.get._id}" style="color:#636b6f;vertical-align: middle!important;line-height:28px;font-size:14px;">@board.owner.get.name</a>
             <span class="layui-badge layui-bg-gray">码农</span>
           }else{
           暂无版主
