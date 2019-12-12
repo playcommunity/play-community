@@ -16,20 +16,20 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
-class CorporationController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService,
-                                      corporationRepo: MongoCorporationRepository)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
+class CircleController @Inject()(cc: ControllerComponents, mongo: Mongo, commonService: CommonService, eventService: EventService,
+                                 corporationRepo: MongoCorporationRepository)(implicit ec: ExecutionContext, parser: BodyParsers.Default) extends AbstractController(cc) {
 
-  def index(sortBy: String) = Action.async { implicit request: Request[AnyContent] =>
+  def corporations(sortBy: String) = Action.async { implicit request: Request[AnyContent] =>
     val sort = sortBy match {
       case "time" => obj("createTime" -> -1)
       case _ => obj("voteStat.count" -> -1)
     }
     corporationRepo.findActiveList(sort).map { list =>
-      Ok(views.html.corporation.index(sortBy, list))
+      Ok(views.html.circle.corporation(sortBy, list))
     }
   }
 
-  def doAdd = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+  def doAddCorporation = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(tuple("title" -> nonEmptyText, "city" -> nonEmptyText, "grade" -> nonEmptyText, "link" -> nonEmptyText, "desc" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "您的输入有误！"))),
       tuple => {
@@ -44,7 +44,7 @@ class CorporationController @Inject()(cc: ControllerComponents, mongo: Mongo, co
     )
   }
 
-  def doVote = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
+  def doVoteCorporation = (checkLogin andThen checkActive).async { implicit request: Request[AnyContent] =>
     Form(single("id" -> nonEmptyText)).bindFromRequest().fold(
       errForm => Future.successful(Ok(Json.obj("status" -> 1, "msg" -> "invalid args."))),
       id => {

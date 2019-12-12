@@ -14,9 +14,9 @@ GET     /board/tree/json                          controllers.BoardController.ca
 GET     /board/path/name                          controllers.BoardController.getPathName(path: String)
 
 # Cases
-GET     /corporations                             controllers.CorporationController.index(sortBy: String ?= "vote")
-POST    /corporation/add                          controllers.CorporationController.doAdd
-POST    /corporation/vote                         controllers.CorporationController.doVote
+GET     /corporations                             controllers.CircleController.corporations(sortBy: String ?= "vote")
+POST    /corporation/add                          controllers.CircleController.doAddCorporation
+POST    /corporation/vote                         controllers.CircleController.doVoteCorporation
 
 # Resource
 GET     /articles                                 controllers.ResourceController.index(category: String ?= "/", resType: String = "article", status: String ?= "0", page: Int ?= 1)

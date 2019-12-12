@@ -461,7 +461,7 @@ body .fly-user-main{position: relative; min-height: 600px;}
 .app-bind .app-havebind .icon-weibo{color:#E6162D}
 
 /* 案例 */
-.fly-case-header{position: relative; height: 260px; text-align: center; background: #393D49;}
+.fly-case-header{position: relative; height: 150px; text-align: center; background: #393D49;}
 .fly-case-year{position: absolute; top: 30px; width: 100%; line-height: 50px; font-size: 50px; text-align: center; color: #fff; font-weight: 300;}
 .fly-case-banner{position: absolute; left: 50%; top: 100px; width: 670px; margin-left: -335px;}
 .fly-case-btn{position: absolute; bottom: 30px; left: 0; width: 100%; text-align: center;}

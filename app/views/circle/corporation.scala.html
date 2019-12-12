@@ -62,17 +62,16 @@
 </div>
 
 <div class="fly-case-header">
-    <p class="fly-case-year" style="top:70px;">发现 Scala 技术栈公司</p>
+    <p class="fly-case-year" style="top:50px;">发现 Scala 技术圈</p>
     <div class="fly-case-btn">
-        <a href="javascript:;" class="layui-btn layui-btn-big fly-case-active" data-type="push">提交公司</a>
     </div>
 </div>
 
 <div class="fly-main" style="overflow: hidden;">
     <div class="layui-tab layui-tab-brief">
         <ul class="layui-tab-title">
-            <li @if(sortBy == "vote"){class="layui-this"}><a href="/corporations?sortBy=vote">按点赞排行</a></li>
-            <li @if(sortBy == "time"){class="layui-this"}><a href="/corporations?sortBy=time">按提交时间</a></li>
+            <li @if(sortBy == "vote"){class="layui-this"}><a href="/corporations?sortBy=vote">Scala 公司</a></li>
+            <li @if(sortBy == "time"){class="layui-this"}><a href="/corporations?sortBy=time">Scala 博客</a></li>
         </ul>
     </div>
     <ul class="fly-case-list" style="padding-top: 30px;">
@@ -99,6 +98,9 @@
         </li>
         }
     </ul>
+    <div style="text-align:center;margin-top: 30px;">
+        <a href="javascript:;" class="layui-btn layui-btn-lg fly-case-active" data-type="push">提交公司</a>
+    </div>
 
 </div>
 
