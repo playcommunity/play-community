@@ -11,7 +11,7 @@ import play.api._
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
-import services.{CommonService, ElasticService, IPHelper, WatchService}
+import services.{CommonService, ElasticService, IPHelper, LeaderService, WatchService}
 import utils.{HanLPUtil, HashUtil, VersionComparator}
 
 import scala.concurrent.duration._
@@ -21,7 +21,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * 执行系统初始化任务
   */
 @Singleton
-class Initializer @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService, watchService: WatchService)(implicit ec: ExecutionContext, mat: Materializer) {
+class Initializer @Inject()(mongo: Mongo, application: Application, actorSystem: ActorSystem, env: Environment, config: Configuration, ws: WSClient, elasticService: ElasticService, appLifecycle: ApplicationLifecycle, ipHelper: IPHelper, commonService: CommonService, watchService: WatchService, leaderService: LeaderService)(implicit ec: ExecutionContext, mat: Materializer) {
   val settingCol = mongo.collection("common-setting")
   val esEnabled = config.getOptional[Boolean]("es.enabled").getOrElse(false)
   val homeUrl = config.getOptional[String]("homeUrl").getOrElse("https://www.playscala.cn")
@@ -107,6 +107,10 @@ class Initializer @Inject()(mongo: Mongo, application: Application, actorSystem:
     }
   }
 
+  //扫描博客更新时间
+  actorSystem.scheduler.schedule(60 minutes, 60 minutes){
+    leaderService.crawlLeaders()
+  }
 
   appLifecycle.addStopHook { () =>
     Logger.info(s"Stopping application at ${LocalDateTime.now()}")

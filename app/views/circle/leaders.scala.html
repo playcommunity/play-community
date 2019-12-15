@@ -1,31 +1,23 @@
-@(sortBy: String, list: List[Corporation])(implicit request: RequestHeader)
+@(list: List[Leader])(implicit request: RequestHeader)
 
 @import utils._
 
-@prettyGrade(grade: String) = @{
-  grade match {
-    case "0" => "10人以下"
-    case "1" => "10-100人"
-    case "2" => "100-500人"
-    case "3" => "500-1000人"
-    case "4" => "1000人以上"
-    case _ => "-"
-  }
-}
 <!DOCTYPE html>
 <html style="background-color: #e2e2e2;">
 <head>
-    <meta charset="utf-8">
-    <meta name="keywords" content="{{ lay.base.keywords }}">
-    <meta name="description" content="{{ lay.base.description }}">
-    <meta name="renderer" content="webkit">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <title>发现 Scala 技术栈公司</title>
-    <link rel="stylesheet" href="/assets/fly3/res/layui/css/layui.css">
-    <link rel="stylesheet" href="/assets/fly3/res/css/global.css">
-    <style>
+  <meta charset="utf-8">
+  <meta name="keywords" content="{{ lay.base.keywords }}">
+  <meta name="description" content="{{ lay.base.description }}">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>发现 Scala 技术圈</title>
+  <link rel="stylesheet" href="/assets/fly3/res/layui/css/layui.css">
+  <link rel="stylesheet" href="/assets/fly3/res/css/global.css">
+  <link rel="stylesheet" href="/assets/css/time.css">
+  <style>
   .header{border-bottom: 1px solid #404553; border-right: 1px solid #404553;}
+  .raised i {color: green!important;}
   </style>
 </head>
 <body class="fly-full">
@@ -49,7 +41,7 @@
                 <a href="/dict"><i class="layui-icon layui-icon-read"></i>词典</a>
             </li>
             <li class='layui-nav-item layui-this'>
-                <a href="/leaders"><i class="iconfont icon-logo"></i>圈子</a>
+                <a href="/corporations"><i class="iconfont icon-logo"></i>圈子</a>
             </li>
             <li class='layui-nav-item'>
                 <a href="/tweets"><i class="iconfont icon-logo"></i>说说</a>
@@ -70,36 +62,36 @@
 <div class="fly-main" style="overflow: hidden;">
     <div class="layui-tab layui-tab-brief">
         <ul class="layui-tab-title">
-            <li><a href="/leaders">精选博客</a></li>
-            <li class="layui-this"><a href="/corporations?sortBy=vote">金牌雇主</a></li>
+            <li class="layui-this"><a href="/leaders">精选博客</a></li>
+            <li><a href="/corporations?sortBy=vote">金牌雇主</a></li>
         </ul>
     </div>
     <ul class="fly-case-list" style="padding-top: 30px;">
         @for(c <- list){
-        <li data-id="@c._id">
-            <a class="fly-case-img" href="@c.url" target="_blank" >
-                <img src="@c.logo" alt="@c.title">
-                <cite class="layui-btn layui-btn-primary layui-btn-small">去围观</cite>
+        <li data-id="@c._id" style="padding: 30px 10px 0px;">
+            <a class="fly-case-img" href='@c.site.map(_.url).getOrElse("")' target="_blank"  style="text-align:center;">
+                <img src="@c.avatar" alt="@c.name" style="width:130px;height:130px;box-shadow: 0 0 0 4px rgba(0,0,0,.1);border-radius: 50%;">
             </a>
-            <h2 title="@prettyGrade(c.grade)"><a href="@c.url" target="_blank">@c.title</a></h2>
-            <p class="fly-case-desc" title="@c.description">@c.description</p>
-            <div class="fly-case-info">
-                <a href="/user/home?uid=@{c.author._id}" class="fly-case-user" target="_blank"><img src="@c.author.headImg"></a>
-                <p class="layui-elip" style="font-size: 12px;"><span style="color: #666;">@c.author.name</span> @utils.DateTimeUtil.toPrettyString(c.createTime)</p>
-                <p>
-                    获得<a class="fly-case-nums fly-case-active" href="javascript:;" style=" padding:0 5px; color: #01AAED;">@c.voteStat.count</a>个赞
+            <h2><a href='@c.site.map(_.url).getOrElse("")' target="_blank">@c.name</a></h2>
+            <div class="fly-case-info" style="padding: 10px 0;margin: 0;">
+                <p class="layui-elip" style="padding-top:5px;">
+                    <a style="font-size:14px;color:rgba(0,0,0,.65);">
+                        <i class="layui-icon layui-icon-refresh" style="position: relative; top:1px;font-size:15px;"></i>
+                        <cite title="更新时间">@{utils.DateTimeUtil.toPrettyString(c.updateTime)} @if(System.currentTimeMillis()/1000 - c.updateTime.getEpochSecond <= 45*86400){<span class="layui-badge-dot layui-bg-green" style="position: absolute;top: 50%;margin: -4px 6px 0;"></span>}</cite>
+                    </a>
+
+                    <a data-type="praise" class="fly-case-active @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(c.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){raised}" href="javascript:void(0);" style="font-size:14px;position: absolute; right: 0; top: 15px;color:rgba(0,0,0,.65);">
+                        <i class="iconfont icon-zan" style="position: relative; top:0px;font-size:18px;color:rgba(0,0,0,.5);"></i>
+                        <cite id="praise-text">@{c.voteStat.count}个赞</cite>
+                    </a>
                 </p>
-                @if(RequestHelper.isLogin && utils.BitmapUtil.fromBase64String(c.voteStat.bitmap).contains(RequestHelper.getUid.toInt)){
-                <button class="layui-btn  fly-case-active" data-type="praise">已赞</button>
-                }else{
-                <button class="layui-btn layui-btn-primary fly-case-active" data-type="praise">点赞</button>
-                }
+
             </div>
         </li>
         }
     </ul>
     <div style="text-align:center;margin-top: 30px;">
-        <a href="javascript:;" class="layui-btn layui-btn-lg fly-case-active" data-type="push">提交公司</a>
+        <a href="javascript:;" class="layui-btn layui-btn-lg fly-case-active" data-type="pushLeader">提交博客</a>
     </div>
 
 </div>
@@ -119,7 +111,7 @@
 <script src="/assets/js/copyright.js"></script>
 
 <script>
-layui.cache.page = 'case';
+layui.cache.page = 'leader';
 layui.cache.user = {
   username: '游客'
   ,uid: -1

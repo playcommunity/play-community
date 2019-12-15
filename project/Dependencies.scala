@@ -15,7 +15,7 @@ object Dependencies {
 
     val scala = "2.12.4"
     val scalatestplus = "3.0.0"
-    val mongo = "0.3.0"
+    val mongo = "0.3.1"
     val hanlp = "portable-1.3.4"
     val roaringbitmap = "0.6.44"
     val elasticsearch = "2.2.0"

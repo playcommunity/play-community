@@ -14,6 +14,11 @@ GET     /board/tree/json                          controllers.BoardController.ca
 GET     /board/path/name                          controllers.BoardController.getPathName(path: String)
 
 # Cases
+GET     /leaders                                  controllers.CircleController.leaders()
+GET     /leader/crawl                             controllers.CircleController.crawlLeader(_id: String)
+POST    /leader/add                               controllers.CircleController.doAddLeader
+POST    /leader/vote                              controllers.CircleController.doVoteLeader
+
 GET     /corporations                             controllers.CircleController.corporations(sortBy: String ?= "vote")
 POST    /corporation/add                          controllers.CircleController.doAddCorporation
 POST    /corporation/vote                         controllers.CircleController.doVoteCorporation
