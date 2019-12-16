@@ -56,6 +56,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       case SiteUpdateType.TIME_TAG_SELECTOR => getUpdateTimeByTimeTagSelector(site)
       case SiteUpdateType.SELECTOR => getUpdateTimeBySelector(site)
       case SiteUpdateType.RSS => getUpdateTimeByRss(site)
+      case SiteUpdateType.ATOM => getUpdateTimeByAtom(site)
       case SiteUpdateType.CNBLOGS => getUpdateTimeByCNBlogsRss(site)
       case SiteUpdateType.ZHIHU => getUpdateTimeByZhiHu(site)
       case _ => Future.successful(None)
@@ -138,6 +139,24 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
         case 200 =>
           val doc = XML.parser.loadString(resp.body)
           val datetimeStr = ((doc \ "channel" \ "item" \ "pubDate")(0)).text
+          //println("pubDate: " + datetimeStr)
+          DateTimeUtil.dateTimeStrToInstant(datetimeStr)
+        case o =>
+          Logger.error(s"Scan Site ${site.url} Error: ${o}")
+          None
+      }
+    }.recover{ case t: Throwable =>
+      Logger.error("Parse Rss Error: " + t.getMessage, t)
+      None
+    }
+  }
+
+  def getUpdateTimeByAtom(site: Site): Future[Option[Instant]] = {
+    ws.url(site.crawlUrl).withFollowRedirects(true).execute("GET").map{ resp =>
+      resp.status match {
+        case 200 =>
+          val doc = XML.parser.loadString(resp.body)
+          val datetimeStr = ((doc \ "entry" \ "updated")(0)).text
           //println("pubDate: " + datetimeStr)
           DateTimeUtil.dateTimeStrToInstant(datetimeStr)
         case o =>

@@ -43,6 +43,7 @@ object SiteUpdateType {
   val SELECTOR = "selector"
   val TIME_TAG_SELECTOR = "time-tag-selector"
   val RSS = "rss"
+  val ATOM = "atom"
   val CNBLOGS = "cnblogs"
   val ZHIHU = "zhihu"
 }
