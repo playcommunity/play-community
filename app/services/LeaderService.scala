@@ -59,6 +59,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       case SiteUpdateType.ATOM => getUpdateTimeByAtom(site)
       case SiteUpdateType.CNBLOGS => getUpdateTimeByCNBlogsRss(site)
       case SiteUpdateType.ZHIHU => getUpdateTimeByZhiHu(site)
+      case SiteUpdateType.SCALA => getUpdateTimeByScala(site)
       case _ => Future.successful(None)
     }
   }
@@ -184,6 +185,32 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       }
     }.recover{ case t: Throwable =>
       Logger.error("Parse CNBlogs Error: " + t.getMessage, t)
+      None
+    }
+  }
+
+  def getUpdateTimeByScala(site: Site): Future[Option[Instant]] = {
+    ws.url(site.crawlUrl).withFollowRedirects(true).execute("GET").map{ resp =>
+      resp.status match {
+        case 200 =>
+          val elements = Jsoup.parse(resp.body).select(site.crawlSelector)
+          if(elements != null && elements.size() > 0){
+            var arr = elements.get(0).text().trim.split("\\s+")
+            var month = arr(2).take(3)
+            month = month.head.toUpper + month.tail.toLowerCase
+            val dateStr = arr(1) + " " + month + " " + arr(3)
+            println(dateStr)
+
+            DateTimeUtil.dateStrToInstant(dateStr)
+          } else {
+            None
+          }
+        case o =>
+          Logger.error(s"Scan Site ${site.url} Error: ${o}")
+          None
+      }
+    }.recover{ case t: Throwable =>
+      Logger.error("Parse Selector Error: " + t.getMessage, t)
       None
     }
   }

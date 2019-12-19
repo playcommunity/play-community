@@ -46,4 +46,5 @@ object SiteUpdateType {
   val ATOM = "atom"
   val CNBLOGS = "cnblogs"
   val ZHIHU = "zhihu"
+  val SCALA = "scala"
 }
