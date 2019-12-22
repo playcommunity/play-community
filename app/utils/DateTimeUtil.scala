@@ -99,7 +99,8 @@ object DateTimeUtil {
   private val dateFormats = List(
     "yyyy-MM-dd",
     "dd/MM/yyyy",
-    "dd MMM yyyy"
+    "dd MMM yyyy",
+    "yyyy年MM月dd日"
   ).map{ str => DateTimeFormatter.ofPattern(str, Locale.ENGLISH) }
 
   def dateStrToInstant(dayStr: String): Option[Instant] = {

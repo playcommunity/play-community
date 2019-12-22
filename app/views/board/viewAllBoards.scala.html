@@ -15,10 +15,10 @@
             <a class="fly-case-img" href="/boards?path=@c.path" target="_blank" style="text-align:center;">
                 <img src="@c.avatarUrl" style="width:100px;height:100px;">
             </a>
-            <h2><a href="c.url" target="_blank">@c.name</a></h2>
+            <h2><a href="/boards?path=@c.path" target="_blank">@c.name</a></h2>
             <!--<p class="fly-case-desc">@c.description</p>-->
             <div class="fly-case-info">
-                <a href="/user/home?uid=@{c.owner.map(_._id).getOrElse("")}" class="fly-case-user" target="_blank"><img src='@c.owner.map(_.headImg).getOrElse("/assets/images/avatar/0.jpg")'></a>
+                <a href='/user/home?uid=@{c.owner.map(_._id).getOrElse("")}' class="fly-case-user" target="_blank"><img src='@c.owner.map(_.headImg).getOrElse("/assets/images/avatar/0.jpg")'></a>
                 <p>版主：@c.owner.map(_.name).getOrElse("暂无")</p>
                 <p class="layui-elip" style="font-size: 14px;"><span style="color: #666;">创建于 @{DateTimeUtil.toString(c.createTime, "yyyy-MM-dd")}</span></p>
                 <!--<button class="layui-btn layui-btn-primary fly-case-active" data-type="praise">竞选</button>-->
