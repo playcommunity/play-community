@@ -60,6 +60,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       case SiteUpdateType.CNBLOGS => getUpdateTimeByCNBlogsRss(site)
       case SiteUpdateType.ZHIHU => getUpdateTimeByZhiHu(site)
       case SiteUpdateType.SCALA => getUpdateTimeByScala(site)
+      case SiteUpdateType.SCALACOOL => getUpdateTimeByScalaCool(site)
       case _ => Future.successful(None)
     }
   }
@@ -157,7 +158,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       resp.status match {
         case 200 =>
           val doc = XML.parser.loadString(resp.body)
-          val datetimeStr = ((doc \ "entry" \ "updated")(0)).text
+          val datetimeStr = ((doc \ "entry" \ "published")(0)).text
           //println("pubDate: " + datetimeStr)
           DateTimeUtil.dateTimeStrToInstant(datetimeStr)
         case o =>
@@ -201,6 +202,27 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
             val dateStr = arr(1) + " " + month + " " + arr(3)
             println(dateStr)
 
+            DateTimeUtil.dateStrToInstant(dateStr)
+          } else {
+            None
+          }
+        case o =>
+          Logger.error(s"Scan Site ${site.url} Error: ${o}")
+          None
+      }
+    }.recover{ case t: Throwable =>
+      Logger.error("Parse Selector Error: " + t.getMessage, t)
+      None
+    }
+  }
+
+  def getUpdateTimeByScalaCool(site: Site): Future[Option[Instant]] = {
+    ws.url(site.crawlUrl).withFollowRedirects(true).execute("GET").map{ resp =>
+      resp.status match {
+        case 200 =>
+          val elements = Jsoup.parse(resp.body).select("time.post-time")
+          if(elements != null && elements.size() > 0){
+            val dateStr = DateTimeUtil.toString(Instant.now(), "yyyy") + "-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
             DateTimeUtil.dateStrToInstant(dateStr)
           } else {
             None

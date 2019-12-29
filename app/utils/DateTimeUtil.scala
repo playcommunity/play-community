@@ -98,6 +98,8 @@ object DateTimeUtil {
    */
   private val dateFormats = List(
     "yyyy-MM-dd",
+    "yyyy-M-dd",
+    "yyyy-MM-d",
     "dd/MM/yyyy",
     "dd MMM yyyy",
     "yyyy年MM月dd日"
