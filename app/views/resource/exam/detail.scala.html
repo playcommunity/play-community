@@ -82,6 +82,9 @@
         </div>
         <div class="detail-body photos ql-snow" style="margin-bottom: 20px;">
           <p>@resource.title</p>
+          @if(resource.content.getOrElse("") != ""){
+          @Html(resource.content.get)
+          }
           @defining(resource.exam.get.answers.find(_.uid == RequestHelper.getUid)){ answer =>
           <form class="layui-form">
             <ul>
