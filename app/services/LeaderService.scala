@@ -222,7 +222,8 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
         case 200 =>
           val elements = Jsoup.parse(resp.body).select("time.post-time")
           if(elements != null && elements.size() > 0){
-            val dateStr = DateTimeUtil.toString(Instant.now(), "yyyy") + "-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
+            //val dateStr = DateTimeUtil.toString(Instant.now(), "yyyy") + "-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
+            val dateStr =  "2019-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
             DateTimeUtil.dateStrToInstant(dateStr)
           } else {
             None
