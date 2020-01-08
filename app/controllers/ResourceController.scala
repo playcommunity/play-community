@@ -133,10 +133,13 @@ class ResourceController @Inject()(cc: ControllerComponents, mongo: Mongo, resou
 
           // 帖子访问计数
           var viewStat = r.viewStat
-          if(requestUid != -1 && !r.hasViewer(requestUid)){
+          /*if(requestUid != -1 && !r.hasViewer(requestUid)){
             viewStat = viewStat.copy(count = viewStat.count + 1)
             r.addViewer(requestUid)
-          }
+          }*/
+
+          viewStat = viewStat.copy(count = viewStat.count + 1)
+          r.incViewCount(1)
 
           // 根据资源类型展示页面
           r.resType match {

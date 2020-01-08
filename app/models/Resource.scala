@@ -71,8 +71,20 @@ case class Resource (
             "$inc" -> Json.obj("viewStat.count" -> 1)
           )
         ).map(_.getModifiedCount == 1)
-
     }
+  }
+
+  /**
+   * 增加访问计数。
+   * @return true/false
+   */
+  def incViewCount(count: Int): Future[Boolean] = {
+    DomainRegistry.mongo.updateOne[Resource](
+      Json.obj("_id" -> _id),
+      Json.obj(
+        "$inc" -> Json.obj("viewStat.count" -> count)
+      )
+    ).map(_.getModifiedCount == 1)
   }
 
   /**

@@ -68,14 +68,16 @@ class DocController @Inject()(cc: ControllerComponents, mongo: Mongo, commonServ
       docOpt match {
         case Some(doc) =>
           // 记录访问次数
-          if (RequestHelper.isLogin) {
+          /*if (RequestHelper.isLogin) {
             val uid = request.session("uid").toInt
             val viewBitmap = BitmapUtil.fromBase64String(doc.viewStat.bitmap)
             if (!viewBitmap.contains(uid)) {
               viewBitmap.add(uid)
               mongo.updateOne[Resource](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, BitmapUtil.toBase64String(viewBitmap)))))
             }
-          }
+          }*/
+          mongo.updateOne[Resource](obj("_id" -> doc._id), obj("$set" -> obj("viewStat" -> ViewStat(doc.viewStat.count + 1, doc.viewStat.bitmap))))
+
           Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, Some(doc)))
 
         case None => Ok(views.html.doc.index((catalog \ "nodes").as[JsArray], _id, None))
