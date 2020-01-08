@@ -61,6 +61,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       case SiteUpdateType.ZHIHU => getUpdateTimeByZhiHu(site)
       case SiteUpdateType.SCALA => getUpdateTimeByScala(site)
       case SiteUpdateType.SCALACOOL => getUpdateTimeByScalaCool(site)
+      case SiteUpdateType.JUEJIN => getUpdateTimeByJueJin(site)
       case _ => Future.successful(None)
     }
   }
@@ -225,6 +226,53 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
             //val dateStr = DateTimeUtil.toString(Instant.now(), "yyyy") + "-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
             val dateStr =  "2019-" + elements.get(0).text().trim.replace("月", "-").replace("日", "")
             DateTimeUtil.dateStrToInstant(dateStr)
+          } else {
+            None
+          }
+        case o =>
+          Logger.error(s"Scan Site ${site.url} Error: ${o}")
+          None
+      }
+    }.recover{ case t: Throwable =>
+      Logger.error("Parse Selector Error: " + t.getMessage, t)
+      None
+    }
+  }
+
+  def getUpdateTimeByJueJin(site: Site): Future[Option[Instant]] = {
+    ws.url(site.crawlUrl).withFollowRedirects(true).execute("GET").map{ resp =>
+      resp.status match {
+        case 200 =>
+          val elements = Jsoup.parse(resp.body).select("span.date")
+          if(elements != null && elements.size() > 0){
+            val dateStr = elements.get(0).text().trim
+            var secs = -1
+            if(dateStr.endsWith("刚刚")){
+              secs = 59
+            } else if(dateStr.endsWith("秒前") || dateStr.endsWith("秒钟前")){
+              secs = dateStr.replace("秒钟前", "").replace("秒前", "").trim.toInt
+            } else if(dateStr.endsWith("分钟前")){
+              val minutes = dateStr.replace("分钟前", "").trim.toInt
+              secs = minutes * 60
+            } else if(dateStr.endsWith("小时前")){
+              val hours = dateStr.replace("小时前", "").trim.toInt
+              secs = hours * 3600
+            } else if(dateStr.endsWith("天前")){
+              val days = dateStr.replace("天前", "").trim.toInt
+              secs = days * 86400
+            } else if(dateStr.endsWith("月前")){
+              val months = dateStr.replace("月前", "").trim.toInt
+              secs = months * 30 * 86400
+            } else if(dateStr.endsWith("年前")){
+              val years = dateStr.replace("年前", "").trim.toInt
+              secs = years * 365 * 86400
+            }
+
+            if(secs > 0) {
+              Some(Instant.now().minusSeconds(secs))
+            } else {
+              None
+            }
           } else {
             None
           }

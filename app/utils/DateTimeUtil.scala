@@ -52,7 +52,7 @@ object DateTimeUtil {
     } else if (minutes >= 1) {
       s"${minutes}分钟前"
     } else {
-      s"${seconds}秒前"
+      "刚刚"
     }
   }
 

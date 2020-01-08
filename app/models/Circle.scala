@@ -48,4 +48,5 @@ object SiteUpdateType {
   val ZHIHU = "zhihu"
   val SCALA = "scala"
   val SCALACOOL = "scala-cool"
+  val JUEJIN = "juejin"
 }
