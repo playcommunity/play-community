@@ -159,7 +159,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
       resp.status match {
         case 200 =>
           val doc = XML.parser.loadString(resp.body)
-          val datetimeStr = ((doc \ "entry" \ "published")(0)).text
+          val datetimeStr = (doc \ "entry" \ "published").headOption.getOrElse((doc \ "entry" \ "updated").head).text
           //println("pubDate: " + datetimeStr)
           DateTimeUtil.dateTimeStrToInstant(datetimeStr)
         case o =>
@@ -167,7 +167,7 @@ class LeaderService @Inject()(leaderRepo: MongoLeaderRepository, ws: WSClient, a
           None
       }
     }.recover{ case t: Throwable =>
-      Logger.error("Parse Rss Error: " + t.getMessage, t)
+      Logger.error("Parse Atom Error: " + t.getMessage, t)
       None
     }
   }
