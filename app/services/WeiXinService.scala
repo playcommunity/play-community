@@ -6,8 +6,8 @@ import cn.playscala.mongo.Mongo
 import javax.inject.Inject
 import play.api.cache.AsyncCacheApi
 import play.api.http.HttpEntity
-import play.api.libs.json.Json
-import play.api.{Configuration, Environment, Logger}
+import play.api.libs.json.{ JsObject, Json }
+import play.api.{ Configuration, Environment, Logger }
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.Future
@@ -34,12 +34,15 @@ class WeiXinService @Inject()(env: Environment, config: Configuration, mongo: Mo
             "secret" -> appKey
           ).get() flatMap { resp =>
           Logger.info("WeiXinService getAccessToken: " + resp.body)
+          val obj = Json.parse(resp.body).as[JsObject]
           resp.status match {
-            case 200 =>
-              val token = (Json.parse(resp.body) \ "access_token").as[String]
-              val secs = (Json.parse(resp.body) \ "expires_in").as[Long]
+            case 200 if obj.keys.exists(_ == "access_token") =>
+              val token = (obj \ "access_token").as[String]
+              val secs = (obj \ "expires_in").as[Long]
               cache.set(key, token, secs.seconds).map{ _ => Some(token) }
-            case _ => Future.successful(None)
+            case e: Any =>
+              Logger.error("WeiXinService get tokrn failed: " + e)
+              Future.successful(None)
           }
         }
     }
