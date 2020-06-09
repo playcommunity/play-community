@@ -58,8 +58,16 @@ class Initializer @Inject()(mongo: Mongo, application: Application, actorSystem:
   // 初始化管理员账户
   mongo.count[User](Json.obj("role" -> Role.ADMIN)).map{ count =>
     if (count <= 0) {
-      commonService.getNextSequence("user-sequence").map{ uid =>
-        mongo.insertOne[User](User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"), UserSetting("管理员", HanLPUtil.convertToPinyin("管理员"), "", "", "/assets/images/head.png", ""), UserStat.DEFAULT, 0, true, "register", "127.0.0.1", None, Nil, None))
+      commonService.getNextSequence("user-sequence").map { uid =>
+        mongo.insertOne[User](User(uid.toString, Role.ADMIN, "admin@playscala.cn", HashUtil.sha256("123456"),
+          UserSetting("管理员", HanLPUtil.convertToPinyin("管理员"), "", "", "/assets/images/head.png", ""),
+          UserStat.DEFAULT, 0, true, "register", "127.0.0.1", None, Nil, None))
+      }
+
+      commonService.getNextSequence("user-sequence").map { uid =>
+        mongo.insertOne[User](User(uid.toString, Role.ADMIN, "admin2@playscala.cn", HashUtil.sha256("123456"),
+          UserSetting("管理员2", HanLPUtil.convertToPinyin("管理员2"), "", "", "/assets/images/head.png", ""),
+          UserStat.DEFAULT, 0, true, "register", "127.0.0.1", None, Nil, None))
       }
     }
   }

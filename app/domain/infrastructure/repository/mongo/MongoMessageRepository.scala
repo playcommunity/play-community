@@ -44,7 +44,7 @@ class MongoMessageRepository @Inject()(mongo: Mongo) extends MessageRepository {
    * @return
    */
   def deleteMessage(id: String, uid: String) = {
-    mongo.deleteMany[Message](obj("id" -> id, "uid" -> uid))
+    mongo.deleteMany[Message](obj("_id" -> id, "uid" -> uid))
   }
 
   /**
