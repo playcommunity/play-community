@@ -2,17 +2,21 @@ package security.impl
 
 import java.nio.charset.Charset
 import java.security.SecureRandom
+import java.time.Instant
 import java.util.Base64
 
 import cn.playscala.mongo.Mongo
-import de.mkammerer.argon2.{Argon2Advanced, Argon2Factory}
+import de.mkammerer.argon2.{ Argon2Advanced, Argon2Factory }
 import domain.infrastructure.repository.mongo.MongoUserRepository
 import javax.inject.Inject
+import models.User
 import play.api.libs.json.Json
+import play.api.Logger
 import security.PasswordEncoder
 import utils.HashUtil
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{ Failure, Success }
 
 
 /**
@@ -79,6 +83,16 @@ class Argon2PasswordEncoder @Inject()(mongo: Mongo, mongoUserRepository: MongoUs
         mongoUserRepository.updateUser(u._id, Json.obj("salt" -> salt, "argon2Hash" -> passwordHash))
         Some(u.copy(salt = Some(salt), argon2Hash = Some(passwordHash)))
       case _ => None
+    }.andThen {
+      case Success(value) =>
+        value.fold[Option[User]](None)(u => {
+          val now = Instant.now()
+          mongoUserRepository.updateUser(u._id, Json.obj("stat.lastLoginTime" -> now))
+          Some(u.copy(stat = u.stat.copy(lastLoginTime = now)))
+        })
+      case Failure(exception) =>
+        Logger.logger.warn(s"login failed: ${exception.getLocalizedMessage}")
+
     }
   }
 

@@ -162,7 +162,7 @@ class UserController @Inject()(cc: ControllerComponents, userAction: UserAction,
   def findUserList(searchTerm: String, limit: Int) = Action.async { implicit request: Request[AnyContent] =>
     val queries = searchTerm.mkString(".*", ".*", ".*")
     for {
-      list <- userRepo.findList(obj("setting.pinyin" -> obj("$regex" -> queries)), obj("setting.name" -> 1), 0, limit)
+      list <- userRepo.findList(obj("setting.pinyin" -> obj("$regex" -> queries)), obj("stat.lastLoginTime" -> -1), 0, limit)
     } yield {
       val json = list map { u =>
         obj(
